@@ -1,0 +1,118 @@
+html, body {
+  height: 100%;
+  font-family: sans-serif; }
+
+.pagewrapper {
+  display: flex;
+  flex-flow: column nowrap;
+  height: 100%; }
+
+header, footer {
+  flex: 0 0 auto; }
+
+footer {
+  background: #333;
+  color: #eee;
+  font-size: 10px;
+  padding: 5px;
+  text-align: center; }
+
+.pagewrapper > div {
+  flex: 1 1 auto; }
+
+.conceptswrapper {
+  display: flex;
+  flex-flow: row nowrap; }
+
+.main {
+  flex: 1 1 auto;
+  order: 2; }
+
+.conceptnav {
+  flex: 0 0 30%;
+  order: 1; }
+
+@media all and (max-width: 600px) {
+  .conceptnav {
+    display: none; } }
+@media all and (min-width: 600px) {
+  .conceptnav {
+    display: flex;
+    flex-flow: column nowrap; } }
+.fa-spin {
+  transition: all 1s; }
+
+.main {
+  background: #fcfcfc;
+  overflow-y: auto; }
+
+.conceptnav {
+  background: aliceblue; }
+
+.conceptnav > * {
+  flex: 0 0 auto; }
+
+.scrollerwrapper {
+  overflow-y: auto;
+  flex: 0 1 auto; }
+
+h1 {
+  padding: 10px;
+  font-size: 20px;
+  margin: 0; }
+
+label {
+  display: block; }
+
+header {
+  background: GreenYellow; }
+
+h3 {
+  font-size: 16px;
+  font-weight: 500;
+  border-bottom: 1px solid #999; }
+
+.padded, header td {
+  padding: 4px 15px;
+  vertical-align: top; }
+
+.concepts a {
+  display: block;
+  padding: .3em 1em;
+  transition: background .4s; }
+
+.concepts .selected {
+  font-weight: bold;
+  background: #ffff88; }
+
+.concepts a:hover {
+  background: #eee; }
+
+.concepts a.selected:hover {
+  background: #ffff00; }
+
+ul {
+  list-style-type: none;
+  margin: 0;
+  padding: 0; }
+
+/**************************************************************
+ * Concept form
+ **************************************************************/
+.main input[type="text"] {
+  padding: 3px 6px;
+  width: 20em;
+  border-radius: 2px;
+  margin: 2px;
+  border: 1px solid #888; }
+  .main input[type="text"]:disabled {
+    background: #dedede;
+    color: #444; }
+
+.altLabels {
+  display: flex;
+  flex-flow: row wrap; }
+
+.altLabels > div {
+  flex: 0 0 auto;
+  margin: 5px; }

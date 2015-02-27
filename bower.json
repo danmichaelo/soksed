@@ -1,0 +1,27 @@
+{
+  "name": "realfagstermer-nn",
+  "version": "0.0.1",
+  "authors": [
+    "Dan Michael O. Heggø <danmichaelo@gmail.com>"
+  ],
+  "description": "Translation tool",
+  "license": "MIT",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "public/lib",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "angular-hotkeys": "chieffancypants/angular-hotkeys#~1.4.5",
+    "ngInfiniteScroll": "~1.2.0",
+    "angular-route": "~1.3.12",
+    "angular-sanitize": "~1.3.12",
+    "jquery": "~2.1.3",
+    "angular-ui-utils": "bower",
+    "angular-cookies": "~1.3.13"
+  }
+}

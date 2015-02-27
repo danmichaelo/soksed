@@ -1,0 +1,6 @@
+config.php
+vendor
+public/lib
+node_modules
+.sass-cache
+composer.lock

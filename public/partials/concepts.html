@@ -1,0 +1,16 @@
+<!-- TODO: Login should be checked by the router! -->
+
+<div class="conceptswrapper">
+	<!-- Current concept -->
+	<div class="main">
+		<div class="padded" style="background: burlywood;">
+			<strong>{{ currentConcept.id }} : &lt;{{ currentConcept.uri }}&gt;</strong>
+
+			<select ng-options="view.label for view in views" ng-model="selectedView" style="float:right;"></select>
+		</div>
+		<div class="padded" ui-view></div>
+	</div>
+
+	<!-- Concept list -->
+	<conceptnav class="conceptnav"/>
+</div>

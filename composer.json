@@ -1,0 +1,27 @@
+{
+    "name": "realfagstermer/translate",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Dan Michael O. Heggø",
+            "email": "danmichaelo@gmail.com"
+        }
+    ],
+    "minimum-stability": "dev",
+    "require": {
+        "ext-mongo": "*",
+        "lusitanian/oauth": "~0.3",
+        "rmccue/requests": ">=1.0",
+        "easyrdf/easyrdf": "*",
+        "illuminate/support": "5.0.*",
+        "monolog/monolog": "~1.12@dev",
+        "rhumsaa/uuid": "~2.8",
+        "nesbot/carbon": "~1.14",
+        "firebase/php-jwt": "~1.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Scriptotek\\RtWp\\": "src/"
+        }
+    }
+}

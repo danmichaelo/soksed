@@ -1,0 +1,11 @@
+<strong>{{lang ? lang : 'akronymer'}}:</strong>
+<ul id="list">
+    <li ng-repeat="(index, item) in items">
+	    <input type="text"
+	       value="{{ item.value }}"
+           ng-model="item.value"
+           ng-disabled="item.readonly"
+           ng-focus="setCurrentTerm($event)"
+           ng-keydown="keydown($event)">
+    </li>
+</ul>

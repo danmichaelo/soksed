@@ -14,12 +14,12 @@ class Auth extends Base
 	public $error;
 	protected $profile;
 
-	function __construct($config, $sparql = null)
+	function __construct($sparql = null)
 	{
 		parent::__construct();
 
 		// Session storage
-		$this->storage = new Session();
+		$this->storage = new Session(false);
 
 		$this->sparql = is_null($sparql) ? new Sparql : $sparql;
 
@@ -28,8 +28,8 @@ class Auth extends Base
 
 		// Setup the credentials for the requests
 		$this->credentials = new Credentials(
-			$config['github']['key'],
-			$config['github']['secret'],
+			Config::get('github.key'),
+			Config::get('github.secret'),
 			$this->currentUri->getAbsoluteUri()
 		);
 
@@ -41,8 +41,10 @@ class Auth extends Base
 			array('user:email')
 		);
 
-		if ($this->storage->hasAccessToken('GitHub') && isset($_SESSION['github.user.email'])) {
-			$this->setUser($_SESSION['github.user.email']);
+		// $this->storage->hasAccessToken('GitHub') &&
+
+		if (isset($_COOKIE['uotoken'])) {
+			$this->setUserFromToken($_COOKIE['uotoken']);
 		}
 
 		$this->checkState($_GET);
@@ -58,18 +60,20 @@ class Auth extends Base
 
 			// Use token to request email
 			$result = json_decode($this->github->request('user/emails'), true);
+
 			$this->setUser($result[0]);
-			$_SESSION['github.user.email'] = $this->email;
+			$token = $this->sparql->generateUserToken($this->profile['username'][0]);
+			setcookie('uotoken', $token, time() + 86400, '/');
 
 			header('Location: ' . $this->getCurrentUri());
 			exit;
 
-		} elseif (!empty($input['go']) && $input['go'] === 'logout') {
+		} elseif (isset($input['logout'])) {
 			$this->logout();
 			header('Location: ' . $this->getCurrentUri());
 			exit;
 
-		} elseif (!empty($input['go']) && $input['go'] === 'login') {
+		} elseif (isset($input['login'])) {
 			header('Location: ' . $this->getAuthorizationUri());
 			exit;
 		}
@@ -86,14 +90,19 @@ class Auth extends Base
 		return $this->profile ?: null;
 	}
 
+	public function setUserFromToken($token)
+	{
+		$this->profile = $this->sparql->findUser(null, $token) ?: null;		
+	}
+
 	protected function setUser($username) {
 		$this->profile = $username ? $this->sparql->findOrCreateUser($username) : null;
 	}
 
-	public function getUser()
-	{
-		return $this->profile;
-	}
+	// public function getUser()
+	// {
+	// 	return $this->profile;
+	// }
 
 	public function hasPermission($permission)
 	{
@@ -109,12 +118,12 @@ class Auth extends Base
 
 	public function getLogoutUrl()
 	{
-		return $this->getCurrentUri() . '?go=logout';
+		return $this->getCurrentUri() . '?logout';
 	}
 
 	public function getLoginUrl()
 	{
-		return $this->getCurrentUri() . '?go=login';
+		return $this->getCurrentUri() . '?login';
 	}
 
 	public function getAuthorizationUri()
@@ -130,7 +139,7 @@ class Auth extends Base
 	public function logout()
 	{
 		$this->storage->clearAllTokens();
-		unset($_SESSION['github.user.email']);
+		setcookie('uotoken', '', time() - 3600, '/');
 		$this->setUser(null);
 	}
 

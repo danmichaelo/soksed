@@ -117,7 +117,7 @@ class Concept
 		list($removed, $added) = $this->compareLabelLists($this->data['prefLabel'],
 			                                              $data['prefLabel']);
 		if (count($removed) || count($added)) {
-			if (!$this->sparql->updateLabels($this->auth->getUser(), $data['uri'], 'prefLabel', $removed, $added)) {
+			if (!$this->sparql->updateLabels($this->auth->getProfile(), $data['uri'], 'prefLabel', $removed, $added)) {
 				return 'update_preflabel_failed';
 			}
 			$modified = true;
@@ -129,7 +129,7 @@ class Concept
 			                                              $data['altLabel']);
 
 		if (count($removed) || count($added)) {
-			if (!$this->sparql->updateLabels($this->auth->getUser(), $data['uri'], 'altLabel', $removed, $added)) {
+			if (!$this->sparql->updateLabels($this->auth->getProfile(), $data['uri'], 'altLabel', $removed, $added)) {
 				return 'update_altlabel_failed';
 			}
 			$modified = true;

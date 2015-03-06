@@ -1,6 +1,6 @@
 
 // Declare app level module which depends on filters, and services
-angular.module('app.services.concept', ['app.services.backend'])
+angular.module('app.services.concept', ['app.services.backend', 'app.directives.altlabels', 'app.directives.term'])
 
 .factory('Concept', ['$q', '$rootScope', '$timeout', 'Backend', function($q, $rootScope, $timeout, Backend) {
   'use strict';
@@ -61,6 +61,14 @@ angular.module('app.services.concept', ['app.services.backend'])
     testDirty: function() {
       this.dirty = ! angular.equals(this.data, this.originalData);
       // if (this.dirty) this.saved = false;
+    },
+
+    markReviewed: function(uri) {
+      var that = this;
+      console.log('Mark as reviewed: ' + uri);
+      Backend.markReviewed(uri).then(function(response) {
+        that.load(true);  // Reload to get term URIs etc..
+      });
     },
 
     store: function() {

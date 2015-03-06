@@ -1,32 +1,43 @@
+$headerheight: 40px;
+$footerheight: 10px;
+$leftcolwidth: 350px;
+
 html, body {
   height: 100%;
   font-family: sans-serif;
 }
-.pagewrapper {
-  display: flex;
-  flex-flow: column nowrap;
-  height: 100%;
+.header {
+	position: fixed;
+	left:0;
+	right: 0;
+	top: 0;
+	height: $headerheight;
+	background: GreenYellow;
 }
-
-header, footer {
-  flex: 0 0 auto;
+.content {
+	position: fixed;
+	left:0;
+	right: 0;
+	top: $headerheight;
+	bottom: 0;
 }
-footer {
-	background: #333;
-	color: #eee;
-	font-size: 10px;
-	padding: 5px;
-	text-align: center;
+.main {
+	position: fixed;
+	left: $leftcolwidth;
+	right: 0;
+	top: $headerheight;
+	bottom: 0;
+    background: #fcfcfc;
+    overflow-y: auto;
 }
-.pagewrapper > div {
-  flex: 1 1 auto;
+.conceptnav {
+	position: fixed;
+	left: 0;
+	width: $leftcolwidth;
+	top: $headerheight;
+	bottom: 0;
+    background: aliceblue;
 }
-.conceptswrapper {
-  display: flex;
-  flex-flow: row nowrap;	
-}
-.main    { flex: 1 1 auto; order: 2; }
-.conceptnav     { flex: 0 0 30%; order: 1;}
 
 @media all and (max-width: 600px) {
   .conceptnav {
@@ -43,21 +54,17 @@ footer {
 .fa-spin {
 	transition: all 1s;
 }
-.main {
-  background: #fcfcfc;
-  overflow-y: auto;
-}
-.conceptnav {
-  background: aliceblue;
-}
 .conceptnav > * {
 	flex: 0 0 auto;
 }
 .scrollerwrapper {
-	overflow-y: auto;
 	flex: 0 1 auto;
+	overflow-y: auto;
 }
-#scroller {
+.scrollerwrapper > div {
+	width:100%;	
+	overflow-x: hidden;
+	white-space: nowrap;
 }
 
 h1 {
@@ -67,9 +74,6 @@ h1 {
 }
 label {
 	display: block;
-}
-header {
-	background: GreenYellow;
 }
 h3 {
 	font-size: 16px;
@@ -111,9 +115,16 @@ ul li {
  * Concept form
  **************************************************************/
 
+.terms > div {
+  flex: 1 1 auto;
+}
+.terms > div:nth-child(1) {
+  flex: 0 0 21em;
+}
+
 .main input[type="text"] {
 	padding: 3px 6px;
-	width: 20em;
+	width:20em;
 	border-radius: 2px;
 	margin: 2px;
 	border: 1px solid #888;
@@ -124,11 +135,20 @@ ul li {
 	}
 }
 
+.prefLabel, .altLabel {
+	display: block;
+}
+
+.prefLabel input {
+	font-weight: 700;
+}
+
 .altLabels {
 	display: flex;
 	flex-flow: row wrap;
 }
+
 .altLabels > div {
-	flex: 0 0 auto;
+	flex: 0 1 auto;
 	margin: 5px;
 }

@@ -7,7 +7,7 @@ angular.module('app.directives.altlabels', ['app.services.state'])
     restrict : 'E',  // element names only
     templateUrl: '/partials/altlabels.html',
     replace: false,
-    scope: { items: '=', lang: '=' },
+    scope: { items: '=', originalItems: '=', lang: '@', disabled: '@' },
 
     link: function(scope, element, attrs) {
       // console.log(element);
@@ -42,9 +42,17 @@ angular.module('app.directives.altlabels', ['app.services.state'])
         StateService.setTerm(term);
       };
 
+      scope.markReviewed = function(uri) {
+        console.log('Mark reviewed: ' + uri);
+        alert('not implemented');
+      };
+
       function bind(lang, items) {
-        // console.log('Linking <altlabels>');
+        // ?
       }
+      /*if (attrs.disabled) {
+        scope.disabled = true;
+      }*/
 
       if (attrs.items) {
         bind(attrs.lang, attrs.items);

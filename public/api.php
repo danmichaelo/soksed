@@ -4,14 +4,13 @@ require_once __DIR__ . '/../bootstrap.php';
 
 use Scriptotek\RtWp\Auth;
 use Scriptotek\RtWp\Concept;
+use Scriptotek\RtWp\Label;
 use Scriptotek\RtWp\MediaWikiApi;
 use Scriptotek\RtWp\Sparql as SparqlClient;
 
-$mock = true;
-
 $sparql = new SparqlClient;
 
-$auth = new Auth($config);
+$auth = new Auth;
 if ($mock)
 {
 	$auth->mock('me@soapland.com');
@@ -53,10 +52,12 @@ function gzippedOutput($data)
 
 switch ($action) {
 
+	/** USER ACTIONS **/
+
 	case 'get_user':
 		$id = isset($_GET['$id']) ? $_GET['$id'] : null;
 		jsonOut([
-			'user' => $auth->getUser($id),
+			'user' => $auth->getProfile(),
 			'loginUrl' => $auth->getLoginUrl(),
 			'logoutUrl' => $auth->getLogoutUrl(),
 		]);
@@ -65,11 +66,14 @@ switch ($action) {
 
 		jsonOut($sparql->getUsers());
 
+	/** CONCEPT ACTIONS **/
+
 	case 'get_concepts':
 
 		$concepts = $sparql->getConcepts(
+			intval(array_get($_GET, 'cursor', 0)),
 			array_get($_GET, 'filter'),
-			array_get($_GET, 'transOnly', 0)
+			intval(array_get($_GET, 'transOnly', 0))
 		);
 
 		jsonOut($concepts);
@@ -89,6 +93,31 @@ switch ($action) {
 
 		$concept = new Concept($input['data']['uri'], $auth);
 		$status = $concept->putData($input['data']);
+
+		jsonOut(array(
+			'status' => $status,
+		));
+
+
+	/** LABEL ACTIONS **/
+
+	case 'get_label':
+
+		$label = new Label($_GET['uri'], $auth);
+		jsonOut($label->toArray());
+
+	case 'mark_reviewed':
+
+		if (!$auth->hasPermission('review')) {
+			jsonOut(array(
+				'status' => 'no_permission',
+			));
+		}
+
+		$label = new Label($input['uri'], $auth);
+		$status = $label->markReviewed();
+
+		// TODO: term not found
 
 		jsonOut(array(
 			'status' => $status,

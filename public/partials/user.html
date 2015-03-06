@@ -1,5 +1,17 @@
+<div class="padded">
+	<ol class="breadcrumb">
+	  <li><a href="/">Hjem</a></li>
+	  <li><a href="/users">Brukere</a></li>
+	  <li class="active">{{ user.username[0] }}</li>
+	</ol>
+	<p>
+		Bruker: {{ user.username[0] }}
+	</p>
+	<p>
+		Tilganger:
+		<span ng-repeat-start="permission in user.permission"></span>
+			<span class="label label-info">{{ permission }}</span> 
+		<span ng-repeat-end></span>
+	</p>
 
-
-<p>
-	Hei {{ user.username[0] }}
-</p>
+</div>

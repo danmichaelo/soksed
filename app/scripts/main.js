@@ -1,7 +1,7 @@
  
 // Declare app level module which depends on filters, and services
 angular.module('app', ['ngSanitize',
-                       'infinite-scroll',
+                       'vs-repeat',
                        'cfp.hotkeys',
                        'ui.router',
 
@@ -28,6 +28,9 @@ angular.module('app', ['ngSanitize',
   $logProvider.debugEnabled(true);
   hotkeysProvider.includeCheatSheet = true;
 
+
+  var defaultView = 'nn';
+
   // For any unmatched url, redirect to /
   //$urlRouterProvider.otherwise('/concepts');
 
@@ -36,44 +39,29 @@ angular.module('app', ['ngSanitize',
   };
 
   $stateProvider
-    // .state('home', {
-    //   url: '/',
-    //   templateUrl: 'partials/home.html'
-    // })
+    .state('home', {
+      url: '/',
+      templateUrl: 'partials/home.html'
+    })
     .state('concepts', {
       url: '/concepts',
       templateUrl: 'partials/concepts.html',
       needsPermission: 'edit',
       controller: 'ConceptsController'
     })
-    // .state('concepts.default', {
-    //   url: '/default?id',
-    //   controller: 'ConceptController',
-    //   views: {
-    //     mainModule: {
-    //       templateUrl: 'partials/concept.html'
-    //     },
-    //     'conceptModule@concepts.default': {
-    //       templateUrl: 'partials/concept.default.html'
-    //     }
-    //   }
-    // })
     .state('concepts.concept', {
+      needsPermission: 'edit',
       url: '/:id?view',
       templateUrl: function ($stateParams) {
-        return '/partials/concept.' + ($stateParams.view ? $stateParams.view : 'default') + '.html';
+        return '/partials/concept.' + ($stateParams.view ? $stateParams.view : defaultView) + '.html';
       },
       controller: 'ConceptController',
-      // controller: ['$scope', function($scope) {
-      //   console.log('--- Hello worLLLLD ---');
-      // }],
-      // http://stackoverflow.com/a/19213892
       resolve: {
         // An optional map of dependencies which should be injected into the controller. 
         // If any of these dependencies are promises, the router will wait for them all
         // to be resolved or one to be rejected before the controller is instantiated.
         view: ['$stateParams', function ($stateParams) {
-          var view = $stateParams.view;
+          var view = $stateParams.view ? $stateParams.view : defaultView ;
           return view;
         }],
         concept: ['$stateParams', 'Concepts', function ($stateParams, Concepts) {
@@ -104,7 +92,7 @@ angular.module('app', ['ngSanitize',
       needsPermission: 'edit',
       resolve: {
         users: ['$http', function($http) {
-          return $http({ method: 'GET', url: 'backend.php', params: {action: 'get_users'} });
+          return $http({ method: 'GET', url: 'api.php', params: {action: 'get_users'} });
         }]
       }
     })
@@ -120,9 +108,14 @@ angular.module('app', ['ngSanitize',
       }
     })
     .state('auth', {
-      url: '/auth',
+      url: '/auth?returnTo',
       templateUrl: 'partials/auth.html',
-      controller: 'AuthController'
+      controller: 'AuthController',
+      resolve: {
+        returnTo: ['$stateParams', function($stateParams) {
+          return $stateParams.returnTo;
+        }]
+      }
     })
     ;
     // .state('state2', {
@@ -163,16 +156,17 @@ angular.module('app', ['ngSanitize',
 
 }])
 
-.run(['$rootScope', '$location', 'Auth', function ($rootScope, $location, Auth) {
+.run(['$rootScope', '$location', '$state', 'Auth', function ($rootScope, $location, $state, Auth) {
 
-    $rootScope.$on('$stateChangeStart', function (event, next, current) {
-      console.log('$stateChangeStart: ' + next.needsPermission + ' : ' + (Auth.hasPermission(next.needsPermission) ? 'true':'false'));
-      if (!Auth.hasPermission(next.needsPermission)) {
+    $rootScope.$on('$stateChangeStart', function (event, toState, toParams, fromState, fromParams) {
+      console.log('$stateChangeStart: has "' + toState.needsPermission + '" permission ? ' + (Auth.hasPermission(toState.needsPermission) ? 'yes' : 'no'));
+      if (!Auth.hasPermission(toState.needsPermission)) {
         event.preventDefault();
-        if(Auth.isLoggedIn()) {
-          $state.go('user', { id: Auth.getUser().username[0] });
+        var url = $state.href(toState, toParams);
+        if (Auth.isLoggedIn()) {
+          $state.go('user', { id: Auth.user.username[0] });
         } else {
-          $state.go('auth');
+          $state.go('auth', { returnTo: url });
         }
       }
     });

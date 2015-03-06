@@ -1,31 +1,39 @@
 
 	<div class="padded" style="background: #eee;">
-		<label>Søk: <input type="text"></label>
+		<form ng-submit="filter()">
+			<input type="text" placeholder="Søk" ng-model="filterQuery" style="width:100%;">
 
 		<div style="font-size: 90%;">
 			<label class="radio-inline">
-			  <input type="radio" ng-model="filter" value=""> Vis alt		
+			  <input type="radio" ng-model="filterNn" value=""> Vis alt		
 			</label>
 
 			<label class="radio-inline">
-			  <input type="radio" ng-model="filter" value="-prefLabel.lang:nn"> Mangler nn
+			  <input type="radio" ng-model="filterNn" value="-exists:prefLabel@nn"> Mangler nn
 			</label>
 
 			<label class="radio-inline">
-			  <input type="radio" ng-model="filter" value="prefLabel.lang:nn"> Har nn
+			  <input type="radio" ng-model="filterNn" value="exists:prefLabel@nn"> Har nn
 			</label>	
 		</div>
-
-		<div>
+		<label>
+			<input type="checkbox" disabled>
+			Venter på godkjenning		
+		</label>
+		<div style="float:right;">
 			Viser {{ concepts.length }} av {{ totalCount }}
 		</div>
 
+		<button type="submit" ng-disabled="busy">Vis</button>
+		<i class="fa fa-cog fa-spin" ng-show="busy"></i>
+		</form>
+
 	</div>
 
-	<div class="scrollerwrapper">
+	<div class="scrollerwrapper concepts" vs-repeat vs-autoresize>
 
-		<div id="scroller" class="concepts">
 		<!--
+		<div id="scroller" class="concepts" >
 		 infinite-scroll="fetchMoreConcepts()" infinite-scroll-distance="3" style="overflow-y:scroll;" class="concepts">-->
 		  <div ng-repeat="concept in concepts">
 			<a ui-sref='concepts.concept({ id: concept.id })'
@@ -40,6 +48,6 @@
 				{{ concept.label }}
 			</a>
 		  </div>
-		</div>
+<!--		</div>-->
 		
 	</div>

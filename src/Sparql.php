@@ -22,7 +22,7 @@ class Sparql extends Base
 {
 
 	// Fields to be transformed from DateTimes to strings
-	protected $dateFields = array('created', 'modified');
+	protected $dateFields = array('created', 'modified', 'proofread');
 
 	protected $logger;
 	protected $client;
@@ -55,7 +55,7 @@ class Sparql extends Base
 
 	protected function bind($query, $parameters = [])
 	{
-		$query = preg_replace_callback('/<%([a-zA-Z]+)%>/', function($matches) use ($parameters) {
+		$query = preg_replace_callback('/<%([A-Za-z0-9]+)%>/', function($matches) use ($parameters) {
 			if (!isset($parameters[$matches[1]])) {
 				die('Sparql::bind - Could not bind parameter "' . $matches[1] . '", no value supplied!');
 			}
@@ -65,7 +65,7 @@ class Sparql extends Base
 
 		}, $query);
 
-		$query = preg_replace_callback('/"%([a-zA-Z]+)%"/', function($matches) use ($parameters) {
+		$query = preg_replace_callback('/"%([A-Za-z0-9]+)%"/', function($matches) use ($parameters) {
 			if (!isset($parameters[$matches[1]])) {
 				die('Sparql::bind - Could not bind parameter "' . $matches[1] . '", no value supplied!');
 			}
@@ -81,41 +81,76 @@ class Sparql extends Base
 	protected function query($query, $parameters = [])
 	{
 		$query = $this->bind($query, $parameters);
-		return $this->client->query($query);
+		# print $query;
+		try {
+			return $this->client->query($query);
+		} catch (\EasyRdf\Http\Exception $e) {
+			$this->logger->error("SPARQL QUERY failed: " . $e->getBody() . " --- Query: " . $query . " --- Trace: " . $e->getTraceAsString());
+			die('Sparql query error, see log');
+		}
 	}
 
 	protected function update($query, $parameters = [])
 	{
 		$query = $this->bind($query, $parameters);
-		$response = $this->updateClient->update($query);
+		try {
+			$response = $this->updateClient->update($query);
+		} catch (\EasyRdf\Http\Exception $e) {
+			$this->logger->error("SPARQL UPDATE failed: " . $e->getBody() . " --- Query: " . $query . " --- Trace: " . $e->getTraceAsString());
+			die('Sparql update error, see log');
+		}
 		return $response->isSuccessful();
 	}
 
-	public function getConcepts($filter, $transOnly)
+	public function getConcepts($cursor, $filters, $transOnly)
 	{
-		$cursor = 0;
-		$limit = 500;
+		$limit = 1500;
 
-		$filterQuery = '';
+		$filterQueries = [];
 		$parameters = [];
-		if (!empty($filter)) {
+		if (!empty($filters)) {
 			if ($transOnly) {
 				$graph = '<%transGraphUri%>';
 				$parameters['transGraphUri'] = $this->transGraphUri;
 			} else {
-				$graph = '?graph2';
+				$graph = null;
 			}
-			if (preg_match('/^(-)?prefLabel.lang:([a-z]{2,3})/', $filter, $m)) {
-				$op = ($m[1] == '-') ? 'NOT EXISTS' : 'EXISTS';
-				$langcode = $m[2];
-				$filterQuery = '
-					?concept xl:prefLabel ?labelNode2 . 
-					?labelNode2 xl:literalForm ?label2 .
-					FILTER(langMatches(lang(?label2), "%lang%"))
-				';
-				$parameters['lang'] = $langcode;
-				$filterQuery = 'GRAPH ' . $graph . ' { ' . $filterQuery . '}';
-				$filterQuery = 'FILTER ' . $op . ' { ' . $filterQuery . '}';
+			$filters = explode(',', $filters);
+
+			$n = 1;
+
+			foreach ($filters as $filter) {
+				$n++;
+
+				if (preg_match('/^(-)?exists:prefLabel@([a-z]{2,3})/', $filter, $m)) {
+					$op = ($m[1] == '-') ? 'NOT EXISTS' : 'EXISTS';
+					$langcode = $m[2];
+					$filterQuery = "
+						?concept xl:prefLabel ?labelNode$n . 
+						?labelNode$n xl:literalForm ?label$n .
+						FILTER(langMatches(lang(?label$n), \"%lang$n%\"))
+					";
+					$parameters["lang$n"] = $langcode;
+					$filterQuery = 'GRAPH ' . ($graph ?: "?graph$n") . ' { ' . $filterQuery . '}';
+					$filterQueries[] = 'FILTER ' . $op . ' { ' . $filterQuery . '}';
+
+				} elseif (preg_match('/^(.*)\*$/', $filter, $m)) {
+					$filterQuery = "
+						FILTER(strstarts(lcase(str(?label)), \"%startswith$n%\"))
+					";
+					$parameters["startswith$n"] = strtolower($m[1]);
+					$filterQueries[] = $filterQuery;
+
+				} elseif (preg_match('/^(.*)$/', $filter, $m)) {
+					$filterQuery = "
+						FILTER(regex(str(?label), \"%regexp$n%\", \"i\"))
+					";
+					$parameters["regexp$n"] = $m[1];
+					$filterQueries[] = $filterQuery;
+
+				} else {
+					die("Unknown filter found");
+				}
 			}
 		}
 		$whereQuery = ' WHERE {
@@ -126,14 +161,17 @@ class Sparql extends Base
 					?labelNode xl:literalForm ?label
 					FILTER(langMatches(lang(?label), "nb"))
 				}
-				' . $filterQuery . '
+				' . implode("\n", $filterQueries) . '
 			}';
+
 		$countQuery = 'SELECT (COUNT(?concept) AS ?count)' . $whereQuery;
 		$selectQuery = 'SELECT ?graph ?concept ?id ?label' . $whereQuery . '
 			ORDER BY ?label ?id
 			OFFSET '. $cursor . '
 			LIMIT ' . $limit . '
 		';
+
+		// print $selectQuery; die;
 
 		$result = $this->query($countQuery, $parameters);
 		$count = $result[0]->count->getValue();
@@ -168,12 +206,15 @@ class Sparql extends Base
 	{
 		$result = $this->query('
 			SELECT * WHERE {
-				GRAPH ?graph {
+				{GRAPH ?graph2 {
+					<%uri%> a skos:Concept
+				}}
+				{GRAPH ?graph {
 					<%uri%> ?prop ?value .
 					OPTIONAL {
 						?value a xl:Label ; ?labelProp ?labelValue .
 					}
-				}
+				}}
 			}',
 			['uri' => $uri]
 		);
@@ -256,6 +297,73 @@ class Sparql extends Base
 		return ['data' => $xld];
 	}
 
+
+	/* Get skoxl:Label object as Label */
+	public function getLabel($uri)
+	{
+		$result = $this->query('
+			SELECT ?graph ?prop ?value WHERE {
+				GRAPH ?graph {
+					<%uri%> a xl:Label ; 
+					        ?prop ?value .
+				}
+			}',
+			['uri' => $uri]
+		);
+		if (!count($result)) {
+			return ['error' => 'Label not found'];
+		}
+		$xld = [
+			'uri' => $uri,
+		];
+		foreach ($result as $row) {
+			$prop = RdfNamespace::splitUri($row->prop->getUri())[1];
+			$xld[$prop] = $this->valueToString($prop, $row->value);
+
+			if ($prop == 'literalForm') {
+				$xld['language'] = $row->value->getLang();
+				$xld['graph'] = $row->graph->getUri();
+				$xld['readonly'] = ($xld['graph'] != $this->transGraphUri);
+			}
+		}
+
+		// foreach ($labels as $labelType => $labels) {
+		// 	foreach ($labels as $uri => $label) {
+		// 		if (!isset($label['literalForm'])) {
+		// 			// Invalid label
+		// 			$this->logger->error('Invalid label found: '. $uri);
+		// 			continue;
+		// 		}
+
+		// 		$lab = ['uri' => $uri];
+		// 		foreach ($label as $key => $val) {
+		// 			if ($key == 'literalForm') {
+		// 				$lab['value'] = $val->getValue();
+		// 				$lab['language'] = $val->getLang() ?: '';
+		// 			} elseif ($key == 'graph') {
+		// 				$lab['graph'] = $val->getUri();
+		// 				$lab['readonly'] = ($lab['graph'] != $this->transGraphUri);
+		// 			} elseif ($val instanceof Literal) {
+		// 				$lab[$key] = $val->getValue();
+		// 				if (in_array($key, $this->dateFields)) {
+		// 					$lab[$key] = $this->dateFieldToStr($lab[$key]);
+		// 				}
+		// 			} elseif ($val instanceof Resource) {
+		// 				$x = RdfNamespace::splitUri($val->getUri());
+		// 				if (!empty($x[1])) {
+		// 					$lab[$key] = $x[0] . ':' . $x[1];
+		// 				}
+		// 			}
+
+
+		// 		}
+		// 		if (!isset($xld[$labelType][$lab['language']])) $xld[$labelType][$lab['language']] = [];
+		// 		$xld[$labelType][$lab['language']][] = $lab;
+		// 	}
+		// }
+
+		return ['data' => $xld];
+	}
 
 
 	/**
@@ -355,16 +463,26 @@ class Sparql extends Base
 		', ['transGraphUri' => $this->transGraphUri, 'uri' => $uri]);
 	}
 
-	public function findUser($username)
+	public function findUser($username=null, $token=null)
 	{
+		$props = ['graph' => $this->userGraphUri];
+		if ($username) {
+			$filter = '?user uo:username "%username%"';
+			$props['username'] = $username;
+		} elseif ($token) {
+			$filter = '?user uo:token "%token%"';
+			$props['token'] = $token;
+		} else {
+			die('no findUser criteria given');
+		}
+
 		$result = $this->query('
 			SELECT * WHERE {
 				GRAPH <%graph%> {
-					?user uo:username "%username%" ;
+					' . $filter . ';
 						?prop ?value
 				}
-			}',
-			['graph' => $this->userGraphUri, 'username' => $username]
+			}', $props
 		);
 
 		if (count($result) == 0) {
@@ -398,11 +516,44 @@ class Sparql extends Base
 			$triples->add($uri, 'dct:created', new DateTimeLiteral);
 			$response = $this->updateClient->insert($triples, $this->userGraphUri);
 			if (!$response->isSuccessful()) {
+				$this->logger->error('Failed to create new DB user for ' . $username);
 				die('Failed to create new DB user');
 			}
+			$this->logger->info('Created new user: ' . $username);
 			$user = $this->findUser($username);
 		}
 		return $user;
+	}
+
+	public function generateUserToken($username)
+	{
+		$user = $this->findUser($username);
+
+		if (!$user) {
+			die('User not found');
+		}
+
+		$bytes = openssl_random_pseudo_bytes(24, $strong);
+		$token = bin2hex($bytes);
+		
+		$userUri = $user['uri'];
+
+		if (!$this->update('
+			DELETE WHERE
+			{ GRAPH <%userGraphUri%>
+			  { <%uri%> uo:token ?x } 
+			};
+
+			INSERT DATA
+			{ GRAPH <%userGraphUri%>
+			  { <%uri%> uo:token "' . $token . '" }
+			}
+		', ['userGraphUri' => $this->userGraphUri, 'uri' => $userUri])) {
+			$this->logger->error('Failed to update login token for: ' . $username);
+			die('Failed to update login token');
+		}
+		$this->logger->info('Generated new login token for: ' . $username);
+		return $token;
 	}
 
 	public function valueToString($prop, $value)
@@ -438,10 +589,34 @@ class Sparql extends Base
 		foreach ($triples as $tr) {            
 			$uri = strval($tr->user->getUri());
 			$prop = RdfNamespace::splitUri($tr->prop->getUri())[1];
+			if ($prop == 'token') continue;
 			if (!isset($users[$uri])) $users[$uri] = [];
-			$users[$uri][$prop] = $this->valueToString($prop, $tr->value);
+			$users[$uri][$prop][] = $this->valueToString($prop, $tr->value);
 		}
 		return ['users' => $users];
+	}
+
+	public function markReviewed($uri, $user)
+	{
+		return $this->update('
+			DELETE 
+			{ GRAPH <%transGraphUri%>
+			  { <%uri%> ?p ?x } 
+			}
+			WHERE
+			{ GRAPH <%transGraphUri%>
+			  { <%uri%> ?p ?x .
+                VALUES ?p { uo:proofread uo:proofreader }
+			  } 
+			};
+
+			INSERT
+			{ GRAPH <%transGraphUri%>
+			  { <%uri%> uo:proofread ?now ; uo:proofreader <%proofreader%> }
+			}
+			WHERE
+			{ BIND(NOW() as ?now) }
+		', ['transGraphUri' => $this->transGraphUri, 'uri' => $uri, 'proofreader' => $user['uri']]);
 	}
 
 }

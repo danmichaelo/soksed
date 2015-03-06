@@ -6,34 +6,55 @@
 			<a ng-href="{{ currentConcept.githubUrl }}" target="_blank">Meld fra om problem</a> |
 			<a ng-href="{{ currentConcept.katapiUrl }}" target="katapi">Vis katalogposter</a>
 		</p>
-		<h3>Foretrukne termer</h3>
-		<table>
-			<tr ng-repeat="lang in ['nb','nn']">
-				<td>
-					<strong>{{ lang }}:</strong>
-				</td>
-				<td>
-					<input type="text" ng-model="currentConcept.data.prefLabel[lang][0].value" ng-disabled="currentConcept.data.prefLabel[lang][0].readonly" >
-				</td>
-				<td>
-					<a href="#" ng-click="selectHint(hint)" ng-repeat="hint in currentConcept.data.prefLabel[lang][0].hints" style="padding-right:1em;">{{ hint }}</a>
-				</td>
-			</tr>
-		</table>
 
-		<h3>Alternative termer</h3>
+		<strong>Definisjon:</strong>
+		<span ng-repeat="def in currentConcept.data.definition">{{ def }}</span>
+		<em ng-show="!currentConcept.data.definition">(Mangler)</em>
 
-		<!-- // contenteditable="true" : åpner for html + ikke kompat med angular uten mye arbeid-->
-		<div class="altLabels">
-			<div ng-repeat="lang in ['nb', 'nn']">
-				<altlabels lang="lang" items="currentConcept.data.altLabel[lang]"/>
+		<h3>Termer</h3>
+
+		<div style="display:flex;" class="terms">
+			<div ng-repeat="lang in ['nb','nn']">
+
+				<div>{{ lang }}</div>
+
+				<term ng-repeat="(index,label) in currentConcept.data.prefLabel[lang]"
+				      readonly="lang=='nb'"
+				      data="label"
+				      original-data="currentConcept.originalData.prefLabel[lang][index]"
+				      class="prefLabel">
+
+					<a ng-show="!currentConcept.originalData.prefLabel[lang][index].value" href="#"
+					ng-click="selectHint(hint)" ng-repeat="hint in currentConcept.data.prefLabel[lang][index].hints" style="padding-right:1em;">{{ hint }}</a>
+
+				</term>
+
+				<term ng-repeat="(index,label) in currentConcept.data.altLabel[lang]"
+					  readonly="lang=='nb'"
+				      data="label"
+				      original-data="currentConcept.originalData.altLabel[lang][index]"
+				      class="altLabel">
+
+				</term>
+
 			</div>
-			<altlabels lang="" items="currentConcept.data.altLabel['']"/>
 		</div>
 
+		<h3>Noter</h3>
+		<!-- TODO -->
+		<textarea disabled="true" 
+		cols="60" rows="3" placeholder="Noter" ng-model="currentConcept.data.note"></textarea>
+
+		<!-- // contenteditable="true" : åpner for html + ikke kompat med angular uten mye arbeid-->
+
 		<div style="padding-top:2em;">
-			<button ng-click="submit()" ng-disabled="!currentConcept.data || currentConcept.saving" class="btn btn-primary">
-				Lagre og gå til neste [alt-s]
+
+			<button ng-click="storeAndGo()" ng-disabled="!currentConcept.data || currentConcept.saving" class="btn btn-primary">
+				Lagre og gå til neste
+			</button>
+
+			<button ng-click="store()" ng-disabled="!currentConcept.data || currentConcept.saving" class="btn btn-default">
+				Lagre
 			</button>
 
 			<button ng-click="reload()" ng-disabled="!currentConcept.data || currentConcept.saving" class="btn btn-default">

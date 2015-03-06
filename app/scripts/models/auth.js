@@ -15,7 +15,7 @@ angular.module('app.services.auth', ['ngCookies', 'app.services.backend'])
   this.hasPermission = function(permission) {
     if (!permission) return true;
     if (permission == 'view') return that.isLoggedIn();
-    return that.user.permission[permission] ? true : false;
+    return that.user.permission.indexOf(permission) != -1 ? true : false;
   };
 
   this.isLoggedIn = function(user) {

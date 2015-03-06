@@ -39,6 +39,20 @@ angular.module('app.controllers.concept', ['app.services.backend',
     if (!p || !c) return;
     if (p.uri != c.uri) return;
     $scope.currentConcept.testDirty();
+
+    Backend.config.languages.forEach(function(lng) {
+        // There should be at least one text field, so we add
+        // one if there are none.
+        if (c.altLabel[lng][c.altLabel[lng].length-1].value !== '') {
+          c.altLabel[lng].push({ value: '' });
+        }
+
+        //console.log(c.altLabel[lng]);
+        // if (c.altLabel[lng].length > 2 && c.altLabel[lng][c.altLabel[lng].length-1].value === '' && c.altLabel[lng][c.altLabel[lng].length-2].value === '') {
+        //   c.altLabel[lng].slice(0, c.altLabel[lng].length-2);
+        // }
+      });
+
   }, true);
 
   $scope.$on('termChanged', function(evt, term) {
@@ -55,10 +69,14 @@ angular.module('app.controllers.concept', ['app.services.backend',
     $scope.currentConcept.data.prefLabel.nn[0].value = hint;
   };
 
-  $scope.submit = function() {
+  $scope.store = function() {
     if ($scope.currentConcept.dirty) {
       $scope.currentConcept.store();
     }
+  };
+
+  $scope.storeAndGo = function() {
+    $scope.store();
     Concepts.next();
   };
 
@@ -67,20 +85,39 @@ angular.module('app.controllers.concept', ['app.services.backend',
     $scope.currentConcept.load(true);
   };
 
+  $scope.markReviewed = function(uri) {
+    $scope.currentConcept.markReviewed(uri);
+  };
+
   // when you bind it to the controller's scope, it will automatically unbind
   // the hotkey when the scope is destroyed (due to ng-if or something that changes the DOM)
+  
+  var keyboardModifier = 'alt';
+  if (navigator.platform == 'MacIntel') {
+    keyboardModifier = 'ctrl';
+  }
+
   hotkeys.bindTo($scope)
     .add({
-      combo: 'alt+s',
+      combo: keyboardModifier + '+s',
       description: 'Lagre og hopp til neste',
       callback: function(event, hotkey) {
         event.preventDefault();
-        $scope.submit();
+        $scope.storeAndGo();
       },
       allowIn: ['INPUT']
     })
     .add({
-      combo: 'alt+down',
+      combo: keyboardModifier + '+shift+s',
+      description: 'Lagre',
+      callback: function(event, hotkey) {
+        event.preventDefault();
+        $scope.store();
+      },
+      allowIn: ['INPUT']
+    })
+    .add({
+      combo: keyboardModifier + '+down',
       description: 'Hopp til neste',
       callback: function(event, hotkey) {
         event.preventDefault();
@@ -89,7 +126,7 @@ angular.module('app.controllers.concept', ['app.services.backend',
       allowIn: ['INPUT']
     })
     .add({
-      combo: 'alt+up',
+      combo: keyboardModifier + '+up',
       description: 'Hopp til forrige',
       callback: function(event, hotkey) {
         event.preventDefault();

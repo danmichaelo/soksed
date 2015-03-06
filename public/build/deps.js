@@ -9205,7 +9205,7 @@ return jQuery;
 }));
 
 /**
- * @license AngularJS v1.3.13
+ * @license AngularJS v1.3.14
  * (c) 2010-2014 Google, Inc. http://angularjs.org
  * License: MIT
  */
@@ -9260,7 +9260,7 @@ function minErr(module, ErrorConstructor) {
       return match;
     });
 
-    message = message + '\nhttp://errors.angularjs.org/1.3.13/' +
+    message = message + '\nhttp://errors.angularjs.org/1.3.14/' +
       (module ? module + '/' : '') + code;
     for (i = 2; i < arguments.length; i++) {
       message = message + (i == 2 ? '?' : '&') + 'p' + (i - 2) + '=' +
@@ -11327,11 +11327,11 @@ function toDebugString(obj) {
  * - `codeName` – `{string}` – Code name of the release, such as "jiggling-armfat".
  */
 var version = {
-  full: '1.3.13',    // all of these placeholder strings will be replaced by grunt's
+  full: '1.3.14',    // all of these placeholder strings will be replaced by grunt's
   major: 1,    // package task
   minor: 3,
-  dot: 13,
-  codeName: 'meticulous-riffleshuffle'
+  dot: 14,
+  codeName: 'instantaneous-browserification'
 };
 
 
@@ -27060,20 +27060,23 @@ var htmlAnchorDirective = valueFn({
  *
  * @description
  *
- * We shouldn't do this, because it will make the button enabled on Chrome/Firefox but not on IE8 and older IEs:
+ * This directive sets the `disabled` attribute on the element if the
+ * {@link guide/expression expression} inside `ngDisabled` evaluates to truthy.
+ *
+ * A special directive is necessary because we cannot use interpolation inside the `disabled`
+ * attribute.  The following example would make the button enabled on Chrome/Firefox
+ * but not on older IEs:
+ *
  * ```html
- * <div ng-init="scope = { isDisabled: false }">
- *  <button disabled="{{scope.isDisabled}}">Disabled</button>
+ * <div ng-init="isDisabled = false">
+ *  <button disabled="{{isDisabled}}">Disabled</button>
  * </div>
  * ```
  *
- * The HTML specification does not require browsers to preserve the values of boolean attributes
- * such as disabled. (Their presence means true and their absence means false.)
+ * This is because the HTML specification does not require browsers to preserve the values of
+ * boolean attributes such as `disabled` (Their presence means true and their absence means false.)
  * If we put an Angular interpolation expression into such an attribute then the
  * binding information would be lost when the browser removes the attribute.
- * The `ngDisabled` directive solves this problem for the `disabled` attribute.
- * This complementary directive is not removed by the browser and so provides
- * a permanent reliable place to store the binding information.
  *
  * @example
     <example>
@@ -27092,7 +27095,7 @@ var htmlAnchorDirective = valueFn({
  *
  * @element INPUT
  * @param {expression} ngDisabled If the {@link guide/expression expression} is truthy,
- *     then special attribute "disabled" will be set on the element
+ *     then the `disabled` attribute will be set on the element
  */
 
 
@@ -29094,7 +29097,7 @@ function numberInputType(scope, element, attr, ctrl, $sniffer, $browser) {
     return value;
   });
 
-  if (attr.min || attr.ngMin) {
+  if (isDefined(attr.min) || attr.ngMin) {
     var minVal;
     ctrl.$validators.min = function(value) {
       return ctrl.$isEmpty(value) || isUndefined(minVal) || value >= minVal;
@@ -29110,7 +29113,7 @@ function numberInputType(scope, element, attr, ctrl, $sniffer, $browser) {
     });
   }
 
-  if (attr.max || attr.ngMax) {
+  if (isDefined(attr.max) || attr.ngMax) {
     var maxVal;
     ctrl.$validators.max = function(value) {
       return ctrl.$isEmpty(value) || isUndefined(maxVal) || value <= maxVal;
@@ -31916,6 +31919,7 @@ var NgModelController = ['$scope', '$exceptionHandler', '$attrs', '$element', '$
       ngModelGet = parsedNgModel,
       ngModelSet = parsedNgModelAssign,
       pendingDebounce = null,
+      parserValid,
       ctrl = this;
 
   this.$$setOptions = function(options) {
@@ -32188,16 +32192,12 @@ var NgModelController = ['$scope', '$exceptionHandler', '$attrs', '$element', '$
     // the model although neither viewValue nor the model on the scope changed
     var modelValue = ctrl.$$rawModelValue;
 
-    // Check if the there's a parse error, so we don't unset it accidentially
-    var parserName = ctrl.$$parserName || 'parse';
-    var parserValid = ctrl.$error[parserName] ? false : undefined;
-
     var prevValid = ctrl.$valid;
     var prevModelValue = ctrl.$modelValue;
 
     var allowInvalid = ctrl.$options && ctrl.$options.allowInvalid;
 
-    ctrl.$$runValidators(parserValid, modelValue, viewValue, function(allValid) {
+    ctrl.$$runValidators(modelValue, viewValue, function(allValid) {
       // If there was no change in validity, don't update the model
       // This prevents changing an invalid modelValue to undefined
       if (!allowInvalid && prevValid !== allValid) {
@@ -32215,12 +32215,12 @@ var NgModelController = ['$scope', '$exceptionHandler', '$attrs', '$element', '$
 
   };
 
-  this.$$runValidators = function(parseValid, modelValue, viewValue, doneCallback) {
+  this.$$runValidators = function(modelValue, viewValue, doneCallback) {
     currentValidationRunId++;
     var localValidationRunId = currentValidationRunId;
 
     // check parser error
-    if (!processParseErrors(parseValid)) {
+    if (!processParseErrors()) {
       validationDone(false);
       return;
     }
@@ -32230,21 +32230,22 @@ var NgModelController = ['$scope', '$exceptionHandler', '$attrs', '$element', '$
     }
     processAsyncValidators();
 
-    function processParseErrors(parseValid) {
+    function processParseErrors() {
       var errorKey = ctrl.$$parserName || 'parse';
-      if (parseValid === undefined) {
+      if (parserValid === undefined) {
         setValidity(errorKey, null);
       } else {
-        setValidity(errorKey, parseValid);
-        if (!parseValid) {
+        if (!parserValid) {
           forEach(ctrl.$validators, function(v, name) {
             setValidity(name, null);
           });
           forEach(ctrl.$asyncValidators, function(v, name) {
             setValidity(name, null);
           });
-          return false;
         }
+        // Set the parse error last, to prevent unsetting it, should a $validators key == parserName
+        setValidity(errorKey, parserValid);
+        return parserValid;
       }
       return true;
     }
@@ -32339,7 +32340,7 @@ var NgModelController = ['$scope', '$exceptionHandler', '$attrs', '$element', '$
   this.$$parseAndValidate = function() {
     var viewValue = ctrl.$$lastCommittedViewValue;
     var modelValue = viewValue;
-    var parserValid = isUndefined(modelValue) ? undefined : true;
+    parserValid = isUndefined(modelValue) ? undefined : true;
 
     if (parserValid) {
       for (var i = 0; i < ctrl.$parsers.length; i++) {
@@ -32365,7 +32366,7 @@ var NgModelController = ['$scope', '$exceptionHandler', '$attrs', '$element', '$
 
     // Pass the $$lastCommittedViewValue here, because the cached viewValue might be out of date.
     // This can happen if e.g. $setViewValue is called from inside a parser
-    ctrl.$$runValidators(parserValid, modelValue, ctrl.$$lastCommittedViewValue, function(allValid) {
+    ctrl.$$runValidators(modelValue, ctrl.$$lastCommittedViewValue, function(allValid) {
       if (!allowInvalid) {
         // Note: Don't check ctrl.$valid here, as we could have
         // external validators (e.g. calculated on the server),
@@ -32486,6 +32487,7 @@ var NgModelController = ['$scope', '$exceptionHandler', '$attrs', '$element', '$
     // TODO(perf): why not move this to the action fn?
     if (modelValue !== ctrl.$modelValue) {
       ctrl.$modelValue = ctrl.$$rawModelValue = modelValue;
+      parserValid = undefined;
 
       var formatters = ctrl.$formatters,
           idx = formatters.length;
@@ -32498,7 +32500,7 @@ var NgModelController = ['$scope', '$exceptionHandler', '$attrs', '$element', '$
         ctrl.$viewValue = ctrl.$$lastCommittedViewValue = viewValue;
         ctrl.$render();
 
-        ctrl.$$runValidators(undefined, modelValue, viewValue, noop);
+        ctrl.$$runValidators(modelValue, viewValue, noop);
       }
     }
 
@@ -33314,6 +33316,55 @@ var ngPluralizeDirective = ['$locale', '$interpolate', function($locale, $interp
  * when keys are deleted and reinstated.
  *
  *
+ * # Tracking and Duplicates
+ *
+ * When the contents of the collection change, `ngRepeat` makes the corresponding changes to the DOM:
+ *
+ * * When an item is added, a new instance of the template is added to the DOM.
+ * * When an item is removed, its template instance is removed from the DOM.
+ * * When items are reordered, their respective templates are reordered in the DOM.
+ *
+ * By default, `ngRepeat` does not allow duplicate items in arrays. This is because when
+ * there are duplicates, it is not possible to maintain a one-to-one mapping between collection
+ * items and DOM elements.
+ *
+ * If you do need to repeat duplicate items, you can substitute the default tracking behavior
+ * with your own using the `track by` expression.
+ *
+ * For example, you may track items by the index of each item in the collection, using the
+ * special scope property `$index`:
+ * ```html
+ *    <div ng-repeat="n in [42, 42, 43, 43] track by $index">
+ *      {{n}}
+ *    </div>
+ * ```
+ *
+ * You may use arbitrary expressions in `track by`, including references to custom functions
+ * on the scope:
+ * ```html
+ *    <div ng-repeat="n in [42, 42, 43, 43] track by myTrackingFunction(n)">
+ *      {{n}}
+ *    </div>
+ * ```
+ *
+ * If you are working with objects that have an identifier property, you can track
+ * by the identifier instead of the whole object. Should you reload your data later, `ngRepeat`
+ * will not have to rebuild the DOM elements for items it has already rendered, even if the
+ * JavaScript objects in the collection have been substituted for new ones:
+ * ```html
+ *    <div ng-repeat="model in collection track by model.id">
+ *      {{model.name}}
+ *    </div>
+ * ```
+ *
+ * When no `track by` expression is provided, it is equivalent to tracking by the built-in
+ * `$id` function, which tracks items by their identity:
+ * ```html
+ *    <div ng-repeat="obj in collection track by $id(obj)">
+ *      {{obj.prop}}
+ *    </div>
+ * ```
+ *
  * # Special repeat start and end points
  * To repeat a series of elements instead of just one parent element, ngRepeat (as well as other ng directives) supports extending
  * the range of the repeater by defining explicit start and end points by using **ng-repeat-start** and **ng-repeat-end** respectively.
@@ -33381,12 +33432,12 @@ var ngPluralizeDirective = ['$locale', '$interpolate', function($locale, $interp
  *
  *     For example: `(name, age) in {'adam':10, 'amalie':12}`.
  *
- *   * `variable in expression track by tracking_expression` – You can also provide an optional tracking function
- *     which can be used to associate the objects in the collection with the DOM elements. If no tracking function
- *     is specified the ng-repeat associates elements by identity in the collection. It is an error to have
- *     more than one tracking function to resolve to the same key. (This would mean that two distinct objects are
- *     mapped to the same DOM element, which is not possible.)  Filters should be applied to the expression,
- *     before specifying a tracking expression.
+ *   * `variable in expression track by tracking_expression` – You can also provide an optional tracking expression
+ *     which can be used to associate the objects in the collection with the DOM elements. If no tracking expression
+ *     is specified, ng-repeat associates elements by identity. It is an error to have
+ *     more than one tracking expression value resolve to the same key. (This would mean that two distinct objects are
+ *     mapped to the same DOM element, which is not possible.)  If filters are used in the expression, they should be
+ *     applied before the tracking expression.
  *
  *     For example: `item in items` is equivalent to `item in items track by $id(item)`. This implies that the DOM elements
  *     will be associated by item identity in the array.
@@ -35335,7 +35386,7 @@ var minlengthDirective = function() {
 
 !window.angular.$$csp() && window.angular.element(document).find('head').prepend('<style type="text/css">@charset "UTF-8";[ng\\:cloak],[ng-cloak],[data-ng-cloak],[x-ng-cloak],.ng-cloak,.x-ng-cloak,.ng-hide:not(.ng-hide-animate){display:none !important;}ng\\:form{display:block;}</style>');
 /**
- * @license AngularJS v1.3.12
+ * @license AngularJS v1.3.14
  * (c) 2010-2014 Google, Inc. http://angularjs.org
  * License: MIT
  */
@@ -35677,7 +35728,8 @@ function htmlParser(html, handler) {
       }
 
     } else {
-      html = html.replace(new RegExp("(.*)<\\s*\\/\\s*" + stack.last() + "[^>]*>", 'i'),
+      // IE versions 9 and 10 do not understand the regex '[^]', so using a workaround with [\W\w].
+      html = html.replace(new RegExp("([\\W\\w]*)<\\s*\\/\\s*" + stack.last() + "[^>]*>", 'i'),
         function(all, text) {
           text = text.replace(COMMENT_REGEXP, "$1").replace(CDATA_REGEXP, "$1");
 
@@ -35751,7 +35803,6 @@ function htmlParser(html, handler) {
 }
 
 var hiddenPre=document.createElement("pre");
-var spaceRe = /^(\s*)([\s\S]*?)(\s*)$/;
 /**
  * decodes all entities into regular string
  * @param value
@@ -35760,22 +35811,10 @@ var spaceRe = /^(\s*)([\s\S]*?)(\s*)$/;
 function decodeEntities(value) {
   if (!value) { return ''; }
 
-  // Note: IE8 does not preserve spaces at the start/end of innerHTML
-  // so we must capture them and reattach them afterward
-  var parts = spaceRe.exec(value);
-  var spaceBefore = parts[1];
-  var spaceAfter = parts[3];
-  var content = parts[2];
-  if (content) {
-    hiddenPre.innerHTML=content.replace(/</g,"&lt;");
-    // innerText depends on styling as it doesn't display hidden elements.
-    // Therefore, it's better to use textContent not to cause unnecessary
-    // reflows. However, IE<9 don't support textContent so the innerText
-    // fallback is necessary.
-    content = 'textContent' in hiddenPre ?
-      hiddenPre.textContent : hiddenPre.innerText;
-  }
-  return spaceBefore + content + spaceAfter;
+  hiddenPre.innerHTML = value.replace(/</g,"&lt;");
+  // innerText depends on styling as it doesn't display hidden elements.
+  // Therefore, it's better to use textContent not to cause unnecessary reflows.
+  return hiddenPre.textContent;
 }
 
 /**
@@ -36016,7 +36055,7 @@ angular.module('ngSanitize').filter('linky', ['$sanitize', function($sanitize) {
 })(window, window.angular);
 
 /**
- * @license AngularJS v1.3.13
+ * @license AngularJS v1.3.14
  * (c) 2010-2014 Google, Inc. http://angularjs.org
  * License: MIT
  */
@@ -36221,184 +36260,6 @@ angular.module('ngCookies', ['ng']).
 
 
 })(window, window.angular);
-
-/* ng-infinite-scroll - v1.2.0 - 2014-12-02 */
-var mod;
-
-mod = angular.module('infinite-scroll', []);
-
-mod.value('THROTTLE_MILLISECONDS', null);
-
-mod.directive('infiniteScroll', [
-  '$rootScope', '$window', '$interval', 'THROTTLE_MILLISECONDS', function($rootScope, $window, $interval, THROTTLE_MILLISECONDS) {
-    return {
-      scope: {
-        infiniteScroll: '&',
-        infiniteScrollContainer: '=',
-        infiniteScrollDistance: '=',
-        infiniteScrollDisabled: '=',
-        infiniteScrollUseDocumentBottom: '='
-      },
-      link: function(scope, elem, attrs) {
-        var changeContainer, checkWhenEnabled, container, handleInfiniteScrollContainer, handleInfiniteScrollDisabled, handleInfiniteScrollDistance, handleInfiniteScrollUseDocumentBottom, handler, height, immediateCheck, offsetTop, pageYOffset, scrollDistance, scrollEnabled, throttle, useDocumentBottom, windowElement;
-        windowElement = angular.element($window);
-        scrollDistance = null;
-        scrollEnabled = null;
-        checkWhenEnabled = null;
-        container = null;
-        immediateCheck = true;
-        useDocumentBottom = false;
-        height = function(elem) {
-          elem = elem[0] || elem;
-          if (isNaN(elem.offsetHeight)) {
-            return elem.document.documentElement.clientHeight;
-          } else {
-            return elem.offsetHeight;
-          }
-        };
-        offsetTop = function(elem) {
-          if (!elem[0].getBoundingClientRect || elem.css('none')) {
-            return;
-          }
-          return elem[0].getBoundingClientRect().top + pageYOffset(elem);
-        };
-        pageYOffset = function(elem) {
-          elem = elem[0] || elem;
-          if (isNaN(window.pageYOffset)) {
-            return elem.document.documentElement.scrollTop;
-          } else {
-            return elem.ownerDocument.defaultView.pageYOffset;
-          }
-        };
-        handler = function() {
-          var containerBottom, containerTopOffset, elementBottom, remaining, shouldScroll;
-          if (container === windowElement) {
-            containerBottom = height(container) + pageYOffset(container[0].document.documentElement);
-            elementBottom = offsetTop(elem) + height(elem);
-          } else {
-            containerBottom = height(container);
-            containerTopOffset = 0;
-            if (offsetTop(container) !== void 0) {
-              containerTopOffset = offsetTop(container);
-            }
-            elementBottom = offsetTop(elem) - containerTopOffset + height(elem);
-          }
-          if (useDocumentBottom) {
-            elementBottom = height((elem[0].ownerDocument || elem[0].document).documentElement);
-          }
-          remaining = elementBottom - containerBottom;
-          shouldScroll = remaining <= height(container) * scrollDistance + 1;
-          if (shouldScroll) {
-            checkWhenEnabled = true;
-            if (scrollEnabled) {
-              if (scope.$$phase || $rootScope.$$phase) {
-                return scope.infiniteScroll();
-              } else {
-                return scope.$apply(scope.infiniteScroll);
-              }
-            }
-          } else {
-            return checkWhenEnabled = false;
-          }
-        };
-        throttle = function(func, wait) {
-          var later, previous, timeout;
-          timeout = null;
-          previous = 0;
-          later = function() {
-            var context;
-            previous = new Date().getTime();
-            $interval.cancel(timeout);
-            timeout = null;
-            func.call();
-            return context = null;
-          };
-          return function() {
-            var now, remaining;
-            now = new Date().getTime();
-            remaining = wait - (now - previous);
-            if (remaining <= 0) {
-              clearTimeout(timeout);
-              $interval.cancel(timeout);
-              timeout = null;
-              previous = now;
-              return func.call();
-            } else {
-              if (!timeout) {
-                return timeout = $interval(later, remaining, 1);
-              }
-            }
-          };
-        };
-        if (THROTTLE_MILLISECONDS != null) {
-          handler = throttle(handler, THROTTLE_MILLISECONDS);
-        }
-        scope.$on('$destroy', function() {
-          return container.unbind('scroll', handler);
-        });
-        handleInfiniteScrollDistance = function(v) {
-          return scrollDistance = parseFloat(v) || 0;
-        };
-        scope.$watch('infiniteScrollDistance', handleInfiniteScrollDistance);
-        handleInfiniteScrollDistance(scope.infiniteScrollDistance);
-        handleInfiniteScrollDisabled = function(v) {
-          scrollEnabled = !v;
-          if (scrollEnabled && checkWhenEnabled) {
-            checkWhenEnabled = false;
-            return handler();
-          }
-        };
-        scope.$watch('infiniteScrollDisabled', handleInfiniteScrollDisabled);
-        handleInfiniteScrollDisabled(scope.infiniteScrollDisabled);
-        handleInfiniteScrollUseDocumentBottom = function(v) {
-          return useDocumentBottom = v;
-        };
-        scope.$watch('infiniteScrollUseDocumentBottom', handleInfiniteScrollUseDocumentBottom);
-        handleInfiniteScrollUseDocumentBottom(scope.infiniteScrollUseDocumentBottom);
-        changeContainer = function(newContainer) {
-          if (container != null) {
-            container.unbind('scroll', handler);
-          }
-          container = newContainer;
-          if (newContainer != null) {
-            return container.bind('scroll', handler);
-          }
-        };
-        changeContainer(windowElement);
-        handleInfiniteScrollContainer = function(newContainer) {
-          if ((newContainer == null) || newContainer.length === 0) {
-            return;
-          }
-          if (newContainer instanceof HTMLElement) {
-            newContainer = angular.element(newContainer);
-          } else if (typeof newContainer.append === 'function') {
-            newContainer = angular.element(newContainer[newContainer.length - 1]);
-          } else if (typeof newContainer === 'string') {
-            newContainer = angular.element(document.querySelector(newContainer));
-          }
-          if (newContainer != null) {
-            return changeContainer(newContainer);
-          } else {
-            throw new Exception("invalid infinite-scroll-container attribute.");
-          }
-        };
-        scope.$watch('infiniteScrollContainer', handleInfiniteScrollContainer);
-        handleInfiniteScrollContainer(scope.infiniteScrollContainer || []);
-        if (attrs.infiniteScrollParent != null) {
-          changeContainer(angular.element(elem.parent()));
-        }
-        if (attrs.infiniteScrollImmediateCheck != null) {
-          immediateCheck = scope.$eval(attrs.infiniteScrollImmediateCheck);
-        }
-        return $interval((function() {
-          if (immediateCheck) {
-            return handler();
-          }
-        }), 0, 1);
-      }
-    };
-  }
-]);
 
 /*! 
  * angular-hotkeys v1.4.5
@@ -42155,4 +42016,426 @@ function $IncludedByStateFilter($state) {
 angular.module('ui.router.state')
   .filter('isState', $IsStateFilter)
   .filter('includedByState', $IncludedByStateFilter);
+})(window, window.angular);
+//
+// Copyright Kamil Pękala http://github.com/kamilkp
+// Angular Virtual Scroll Repeat v1.0.0-rc5 2014/08/01
+//
+
+(function(window, angular){
+	'use strict';
+	/* jshint eqnull:true */
+	/* jshint -W038 */
+
+	// DESCRIPTION:
+	// vsRepeat directive stands for Virtual Scroll Repeat. It turns a standard ngRepeated set of elements in a scrollable container
+	// into a component, where the user thinks he has all the elements rendered and all he needs to do is scroll (without any kind of
+	// pagination - which most users loath) and at the same time the browser isn't overloaded by that many elements/angular bindings etc.
+	// The directive renders only so many elements that can fit into current container's clientHeight/clientWidth.
+
+	// LIMITATIONS:
+	// - current version only supports an Array as a right-hand-side object for ngRepeat
+	// - all rendered elements must have the same height/width or the sizes of the elements must be known up front
+
+	// USAGE:
+	// In order to use the vsRepeat directive you need to place a vs-repeat attribute on a direct parent of an element with ng-repeat
+	// example:
+	// <div vs-repeat>
+	//		<div ng-repeat="item in someArray">
+	//			<!-- content -->
+	//		</div>
+	// </div>
+	// 
+	// You can also measure the single element's height/width (including all paddings and margins), and then speficy it as a value
+	// of the attribute 'vs-repeat'. This can be used if one wants to override the automatically computed element size.
+	// example:
+	// <div vs-repeat="50"> <!-- the specified element height is 50px -->
+	//		<div ng-repeat="item in someArray">
+	//			<!-- content -->
+	//		</div>
+	// </div>
+	// 
+	// IMPORTANT! 
+	// 
+	// - the vsRepeat directive must be applied to a direct parent of an element with ngRepeat
+	// - the value of vsRepeat attribute is the single element's height/width measured in pixels. If none provided, the directive
+	//		will compute it automatically
+	
+	// OPTIONAL PARAMETERS (attributes):
+	// vs-scroll-parent="selector" - selector to the scrollable container. The directive will look for a closest parent matching
+	//								he given selector (defaults to the current element)
+	// vs-horizontal - stack repeated elements horizontally instead of vertically
+	// vs-offset-before="value" - top/left offset in pixels (defaults to 0)
+	// vs-offset-after="value" - bottom/right offset in pixels (defaults to 0)
+	// vs-excess="value" - an integer number representing the number of elements to be rendered outside of the current container's viewport
+	//						(defaults to 2)
+	// vs-size-property - a property name of the items in collection that is a number denoting the element size (in pixels)
+	// vs-autoresize - use this attribute without vs-size-property and without specifying element's size. The automatically computed element style will
+	//				readjust upon window resize if the size is dependable on the viewport size
+
+	// EVENTS:
+	// - 'vsRepeatTrigger' - an event the directive listens for to manually trigger reinitialization
+	// - 'vsRepeatReinitialized' - an event the directive emits upon reinitialization done
+
+	var isMacOS = navigator.appVersion.indexOf('Mac') != -1,
+		wheelEventName = typeof window.onwheel !== 'undefined' ? 'wheel' : typeof window.onmousewheel !== 'undefined' ? 'mousewheel' : 'DOMMouseScroll',
+		dde = document.documentElement,
+		matchingFunction = dde.matches ? 'matches' :
+							dde.matchesSelector ? 'matchesSelector' :
+							dde.webkitMatches ? 'webkitMatches' :
+							dde.webkitMatchesSelector ? 'webkitMatchesSelector' :
+							dde.msMatches ? 'msMatches' :
+							dde.msMatchesSelector ? 'msMatchesSelector' :
+							dde.mozMatches ? 'mozMatches' :
+							dde.mozMatchesSelector ? 'mozMatchesSelector' : null;
+
+	var closestElement = angular.element.prototype.closest || function (selector){
+		var el = this[0].parentNode;
+		while(el !== document.documentElement && el != null && !el[matchingFunction](selector)){
+			el = el.parentNode;
+		}
+
+		if(el && el[matchingFunction](selector))
+			return angular.element(el);
+		else
+			return angular.element();
+	};
+
+	angular.module('vs-repeat', []).directive('vsRepeat', ['$compile', function($compile){
+		return {
+			restrict: 'A',
+			scope: true,
+			require: '?^vsRepeat',
+			controller: ['$scope', function($scope){
+				this.$scrollParent = $scope.$scrollParent;
+				this.$fillElement = $scope.$fillElement;
+			}],
+			compile: function($element, $attrs){
+				var ngRepeatChild = $element.children().eq(0),
+					ngRepeatExpression = ngRepeatChild.attr('ng-repeat'),
+					childCloneHtml = ngRepeatChild[0].outerHTML,
+					expressionMatches = /^\s*(\S+)\s+in\s+([\S\s]+?)(track\s+by\s+\S+)?$/.exec(ngRepeatExpression),
+					lhs = expressionMatches[1],
+					rhs = expressionMatches[2],
+					rhsSuffix = expressionMatches[3],
+					collectionName = '$vs_collection',
+					attributesDictionary = {
+						'vsRepeat': 'elementSize',
+						'vsOffsetBefore': 'offsetBefore',
+						'vsOffsetAfter': 'offsetAfter',
+						'vsExcess': 'excess'
+					};
+
+				$element.empty();
+				if(!window.getComputedStyle || window.getComputedStyle($element[0]).position !== 'absolute')
+					$element.css('position', 'relative');
+				return {
+					pre: function($scope, $element, $attrs, $ctrl){
+						var childClone = angular.element(childCloneHtml),
+							originalCollection = [],
+							originalLength,
+							$$horizontal = typeof $attrs.vsHorizontal !== "undefined",
+							$wheelHelper,
+							$fillElement,
+							autoSize = !$attrs.vsRepeat,
+							sizesPropertyExists = !!$attrs.vsSizeProperty,
+							$scrollParent = $attrs.vsScrollParent ? closestElement.call($element, $attrs.vsScrollParent) : $element,
+							positioningPropertyTransform = $$horizontal ? 'translateX' : 'translateY',
+							positioningProperty = $$horizontal ? 'left' : 'top',
+
+							clientSize =  $$horizontal ? 'clientWidth' : 'clientHeight',
+							offsetSize =  $$horizontal ? 'offsetWidth' : 'offsetHeight',
+							scrollPos =  $$horizontal ? 'scrollLeft' : 'scrollTop';
+
+						if($scrollParent.length === 0) throw 'Specified scroll parent selector did not match any element';
+						$scope.$scrollParent = $scrollParent;
+
+						if(sizesPropertyExists) $scope.sizesCumulative = [];
+
+						//initial defaults
+						$scope.elementSize = $scrollParent[0][clientSize] || 50;
+						$scope.offsetBefore = 0;
+						$scope.offsetAfter = 0;
+						$scope.excess = 2;
+
+						Object.keys(attributesDictionary).forEach(function(key){
+							if($attrs[key]){
+								$attrs.$observe(key, function(value){
+									$scope[attributesDictionary[key]] = +value;
+									reinitialize();
+								});
+							}
+						});
+
+
+						$scope.$watchCollection(rhs, function(coll){
+							originalCollection = coll || [];
+							if(!originalCollection || originalCollection.length < 1){
+								$scope[collectionName] = [];
+								originalLength = 0;
+								resizeFillElement(0);
+								$scope.sizesCumulative = [0];
+								return;
+							}
+							else{
+								originalLength = originalCollection.length;
+								if(sizesPropertyExists){
+									$scope.sizes = originalCollection.map(function(item){
+										return item[$attrs.vsSizeProperty];
+									});
+									var sum = 0;
+									$scope.sizesCumulative = $scope.sizes.map(function(size){
+										var res = sum;
+										sum += size;
+										return res;
+									});
+									$scope.sizesCumulative.push(sum);
+								}
+								setAutoSize();
+							}
+							reinitialize();
+						});
+
+						function setAutoSize(){
+							if(autoSize){
+								$scope.$$postDigest(function(){
+									if($element[0].offsetHeight || $element[0].offsetWidth){ // element is visible
+										var children = $element.children(),
+											i = 0;
+										while(i < children.length){
+											if(children[i].attributes['ng-repeat'] != null){
+												if(children[i][offsetSize]){
+													$scope.elementSize = children[i][offsetSize];
+													reinitialize();
+													autoSize = false;
+													if($scope.$root && !$scope.$root.$$phase)
+														$scope.$apply();
+												}
+												break;
+											}
+											i++;
+										}
+									}
+									else{
+										var dereg = $scope.$watch(function(){
+											if($element[0].offsetHeight || $element[0].offsetWidth){
+												dereg();
+												setAutoSize();
+											}
+										});
+									}
+								});
+							}
+						}
+
+						childClone.attr('ng-repeat', lhs + ' in ' + collectionName + (rhsSuffix ? ' ' + rhsSuffix : ''))
+								.addClass('vs-repeat-repeated-element');
+
+						var offsetCalculationString = sizesPropertyExists ?
+							'(sizesCumulative[$index + startIndex] + offsetBefore)' :
+							'(($index + startIndex) * elementSize + offsetBefore)';
+
+						if(typeof document.documentElement.style.transform !== "undefined"){ // browser supports transform css property
+							childClone.attr('ng-style', '{ "transform": "' + positioningPropertyTransform + '(" + ' + offsetCalculationString + ' + "px)"}');
+						}
+						else if(typeof document.documentElement.style.webkitTransform !== "undefined"){ // browser supports -webkit-transform css property
+							childClone.attr('ng-style', '{ "-webkit-transform": "' + positioningPropertyTransform + '(" + ' + offsetCalculationString + ' + "px)"}');
+						}
+						else{
+							childClone.attr('ng-style', '{' + positioningProperty + ': ' + offsetCalculationString + ' + "px"}');
+						}
+
+						$compile(childClone)($scope);
+						$element.append(childClone);
+
+						$fillElement = angular.element('<div class="vs-repeat-fill-element"></div>')
+							.css({
+								'position':'relative',
+								'min-height': '100%',
+								'min-width': '100%'
+							});
+						$element.append($fillElement);
+						$compile($fillElement)($scope);
+						$scope.$fillElement = $fillElement;
+
+						var _prevMouse = {};
+						if(isMacOS){
+							$wheelHelper = angular.element('<div class="vs-repeat-wheel-helper"></div>')
+								.on(wheelEventName, function(e){
+									e.preventDefault();
+									e.stopPropagation();
+									if(e.originalEvent) e = e.originalEvent;
+									$scrollParent[0].scrollLeft += (e.deltaX || -e.wheelDeltaX);
+									$scrollParent[0].scrollTop += (e.deltaY || -e.wheelDeltaY);
+								}).on('mousemove', function(e){
+									if(_prevMouse.x !== e.clientX || _prevMouse.y !== e.clientY)
+										angular.element(this).css('display', 'none');
+									_prevMouse = {
+										x: e.clientX,
+										y: e.clientY
+									};
+								}).css('display', 'none');
+							$fillElement.append($wheelHelper);
+						}
+
+						$scope.startIndex = 0;
+						$scope.endIndex = 0;
+
+						$scrollParent.on('scroll', function scrollHandler(e){
+							if(updateInnerCollection())
+								$scope.$apply();
+						});
+
+						if(isMacOS){
+							$scrollParent.on(wheelEventName, wheelHandler);
+						}
+						function wheelHandler(e){
+							var elem = e.currentTarget;
+							if(elem.scrollWidth > elem.clientWidth || elem.scrollHeight > elem.clientHeight)
+								$wheelHelper.css('display', 'block');
+						}
+
+						function onWindowResize(){
+							if(typeof $attrs.vsAutoresize !== 'undefined'){
+								autoSize = true;
+								setAutoSize();
+								if($scope.$root && !$scope.$root.$$phase)
+									$scope.$apply();
+							}
+							if(updateInnerCollection())
+								$scope.$apply();
+						}
+
+						angular.element(window).on('resize', onWindowResize);
+						$scope.$on('$destroy', function(){
+							angular.element(window).off('resize', onWindowResize);
+						});
+
+						$scope.$on('vsRepeatTrigger', reinitialize);
+						$scope.$on('vsRepeatResize', function(){
+							autoSize = true;
+							setAutoSize();
+						});
+
+						var _prevStartIndex,
+							_prevEndIndex;
+						function reinitialize(){
+							_prevStartIndex = void 0;
+							_prevEndIndex = void 0;
+							updateInnerCollection();
+							resizeFillElement(sizesPropertyExists ?
+												$scope.sizesCumulative[originalLength] :
+												$scope.elementSize*originalLength
+											);
+							$scope.$emit('vsRepeatReinitialized');
+						}
+
+						function resizeFillElement(size){
+							if($$horizontal){
+								$fillElement.css({
+									'width': $scope.offsetBefore + size + $scope.offsetAfter + 'px',
+									'height': '100%'
+								});
+								if($ctrl && $ctrl.$fillElement){
+									var referenceElement = $ctrl.$fillElement[0].parentNode.querySelector('[ng-repeat]');
+									if(referenceElement)
+										$ctrl.$fillElement.css({
+											'width': referenceElement.scrollWidth + 'px'
+										});
+								}
+							}
+							else{
+								$fillElement.css({
+									'height': $scope.offsetBefore + size + $scope.offsetAfter + 'px',
+									'width': '100%'
+								});
+								if($ctrl && $ctrl.$fillElement){
+									referenceElement = $ctrl.$fillElement[0].parentNode.querySelector('[ng-repeat]');
+									if(referenceElement)
+										$ctrl.$fillElement.css({
+											'height': referenceElement.scrollHeight + 'px'
+										});
+								}
+							}
+						}
+
+						var _prevClientSize;
+						function reinitOnClientHeightChange(){
+							var ch = $scrollParent[0][clientSize];
+							if(ch !== _prevClientSize){
+								reinitialize();
+								if($scope.$root && !$scope.$root.$$phase)
+									$scope.$apply();
+							}
+							_prevClientSize = ch;
+						}
+
+						$scope.$watch(function(){
+							if(typeof window.requestAnimationFrame === "function")
+								window.requestAnimationFrame(reinitOnClientHeightChange);
+							else
+								reinitOnClientHeightChange();
+						});
+
+						function updateInnerCollection(){
+							if(sizesPropertyExists){
+								$scope.startIndex = 0;
+								while($scope.sizesCumulative[$scope.startIndex] < $scrollParent[0][scrollPos] - $scope.offsetBefore)
+									$scope.startIndex++;
+								if($scope.startIndex > 0) $scope.startIndex--;
+
+								$scope.endIndex = $scope.startIndex;
+								while($scope.sizesCumulative[$scope.endIndex] < $scrollParent[0][scrollPos] - $scope.offsetBefore + $scrollParent[0][clientSize])
+									$scope.endIndex++;
+							}
+							else{
+								$scope.startIndex = Math.max(
+									Math.floor(
+										($scrollParent[0][scrollPos] - $scope.offsetBefore) / $scope.elementSize + $scope.excess/2
+									) - $scope.excess,
+									0
+								);
+
+								$scope.endIndex = Math.min(
+									$scope.startIndex + Math.ceil(
+										$scrollParent[0][clientSize] / $scope.elementSize
+									) + $scope.excess,
+									originalLength
+								);
+							}
+							
+
+							var digestRequired = $scope.startIndex !== _prevStartIndex || $scope.endIndex !== _prevEndIndex;
+
+							if(digestRequired)
+								$scope[collectionName] = originalCollection.slice($scope.startIndex, $scope.endIndex);
+
+							_prevStartIndex = $scope.startIndex;
+							_prevEndIndex = $scope.endIndex;
+
+							return digestRequired;
+						}
+					}
+				};
+			}
+		};
+	}]);
+
+	angular.element(document.head).append([
+		'<style>' +
+		'.vs-repeat-wheel-helper{' +
+			'position: absolute;' +
+			'top: 0;' +
+			'bottom: 0;' +
+			'left: 0;' +
+			'right: 0;' +
+			'z-index: 99999;' +
+			'background: rgba(0, 0, 0, 0);' +
+		'}' +
+		'.vs-repeat-repeated-element{' +
+			'position: absolute;' +
+			'z-index: 1;' +
+		'}' +
+		'</style>'
+	].join(''));
 })(window, window.angular);

@@ -1,7 +1,7 @@
  
 // Declare app level module which depends on filters, and services
 angular.module('app', ['ngSanitize',
-                       'infinite-scroll',
+                       'vs-repeat',
                        'cfp.hotkeys',
                        'ui.router',
 
@@ -28,6 +28,9 @@ angular.module('app', ['ngSanitize',
   $logProvider.debugEnabled(true);
   hotkeysProvider.includeCheatSheet = true;
 
+
+  var defaultView = 'nn';
+
   // For any unmatched url, redirect to /
   //$urlRouterProvider.otherwise('/concepts');
 
@@ -36,44 +39,29 @@ angular.module('app', ['ngSanitize',
   };
 
   $stateProvider
-    // .state('home', {
-    //   url: '/',
-    //   templateUrl: 'partials/home.html'
-    // })
+    .state('home', {
+      url: '/',
+      templateUrl: 'partials/home.html'
+    })
     .state('concepts', {
       url: '/concepts',
       templateUrl: 'partials/concepts.html',
       needsPermission: 'edit',
       controller: 'ConceptsController'
     })
-    // .state('concepts.default', {
-    //   url: '/default?id',
-    //   controller: 'ConceptController',
-    //   views: {
-    //     mainModule: {
-    //       templateUrl: 'partials/concept.html'
-    //     },
-    //     'conceptModule@concepts.default': {
-    //       templateUrl: 'partials/concept.default.html'
-    //     }
-    //   }
-    // })
     .state('concepts.concept', {
+      needsPermission: 'edit',
       url: '/:id?view',
       templateUrl: function ($stateParams) {
-        return '/partials/concept.' + ($stateParams.view ? $stateParams.view : 'default') + '.html';
+        return '/partials/concept.' + ($stateParams.view ? $stateParams.view : defaultView) + '.html';
       },
       controller: 'ConceptController',
-      // controller: ['$scope', function($scope) {
-      //   console.log('--- Hello worLLLLD ---');
-      // }],
-      // http://stackoverflow.com/a/19213892
       resolve: {
         // An optional map of dependencies which should be injected into the controller. 
         // If any of these dependencies are promises, the router will wait for them all
         // to be resolved or one to be rejected before the controller is instantiated.
         view: ['$stateParams', function ($stateParams) {
-          var view = $stateParams.view;
+          var view = $stateParams.view ? $stateParams.view : defaultView ;
           return view;
         }],
         concept: ['$stateParams', 'Concepts', function ($stateParams, Concepts) {
@@ -104,7 +92,7 @@ angular.module('app', ['ngSanitize',
       needsPermission: 'edit',
       resolve: {
         users: ['$http', function($http) {
-          return $http({ method: 'GET', url: 'backend.php', params: {action: 'get_users'} });
+          return $http({ method: 'GET', url: 'api.php', params: {action: 'get_users'} });
         }]
       }
     })
@@ -120,9 +108,14 @@ angular.module('app', ['ngSanitize',
       }
     })
     .state('auth', {
-      url: '/auth',
+      url: '/auth?returnTo',
       templateUrl: 'partials/auth.html',
-      controller: 'AuthController'
+      controller: 'AuthController',
+      resolve: {
+        returnTo: ['$stateParams', function($stateParams) {
+          return $stateParams.returnTo;
+        }]
+      }
     })
     ;
     // .state('state2', {
@@ -163,16 +156,17 @@ angular.module('app', ['ngSanitize',
 
 }])
 
-.run(['$rootScope', '$location', 'Auth', function ($rootScope, $location, Auth) {
+.run(['$rootScope', '$location', '$state', 'Auth', function ($rootScope, $location, $state, Auth) {
 
-    $rootScope.$on('$stateChangeStart', function (event, next, current) {
-      console.log('$stateChangeStart: ' + next.needsPermission + ' : ' + (Auth.hasPermission(next.needsPermission) ? 'true':'false'));
-      if (!Auth.hasPermission(next.needsPermission)) {
+    $rootScope.$on('$stateChangeStart', function (event, toState, toParams, fromState, fromParams) {
+      console.log('$stateChangeStart: has "' + toState.needsPermission + '" permission ? ' + (Auth.hasPermission(toState.needsPermission) ? 'yes' : 'no'));
+      if (!Auth.hasPermission(toState.needsPermission)) {
         event.preventDefault();
-        if(Auth.isLoggedIn()) {
-          $state.go('user', { id: Auth.getUser().username[0] });
+        var url = $state.href(toState, toParams);
+        if (Auth.isLoggedIn()) {
+          $state.go('user', { id: Auth.user.username[0] });
         } else {
-          $state.go('auth');
+          $state.go('auth', { returnTo: url });
         }
       }
     });
@@ -219,9 +213,10 @@ angular.module('app', ['ngSanitize',
 // Declare app level module which depends on filters, and services
 angular.module('app.controllers.auth', ['app.services.auth'])
 
-.controller('AuthController', ['$scope', 'Auth', function($scope, Auth) {
+.controller('AuthController', ['$scope', 'Auth', 'returnTo', function($scope, Auth, returnTo) {
   'use strict';
 
+  $scope.returnTo = window.encodeURIComponent(returnTo);
 
 }]);
  
@@ -265,6 +260,20 @@ angular.module('app.controllers.concept', ['app.services.backend',
     if (!p || !c) return;
     if (p.uri != c.uri) return;
     $scope.currentConcept.testDirty();
+
+    Backend.config.languages.forEach(function(lng) {
+        // There should be at least one text field, so we add
+        // one if there are none.
+        if (c.altLabel[lng][c.altLabel[lng].length-1].value !== '') {
+          c.altLabel[lng].push({ value: '' });
+        }
+
+        //console.log(c.altLabel[lng]);
+        // if (c.altLabel[lng].length > 2 && c.altLabel[lng][c.altLabel[lng].length-1].value === '' && c.altLabel[lng][c.altLabel[lng].length-2].value === '') {
+        //   c.altLabel[lng].slice(0, c.altLabel[lng].length-2);
+        // }
+      });
+
   }, true);
 
   $scope.$on('termChanged', function(evt, term) {
@@ -281,10 +290,14 @@ angular.module('app.controllers.concept', ['app.services.backend',
     $scope.currentConcept.data.prefLabel.nn[0].value = hint;
   };
 
-  $scope.submit = function() {
+  $scope.store = function() {
     if ($scope.currentConcept.dirty) {
       $scope.currentConcept.store();
     }
+  };
+
+  $scope.storeAndGo = function() {
+    $scope.store();
     Concepts.next();
   };
 
@@ -293,20 +306,39 @@ angular.module('app.controllers.concept', ['app.services.backend',
     $scope.currentConcept.load(true);
   };
 
+  $scope.markReviewed = function(uri) {
+    $scope.currentConcept.markReviewed(uri);
+  };
+
   // when you bind it to the controller's scope, it will automatically unbind
   // the hotkey when the scope is destroyed (due to ng-if or something that changes the DOM)
+  
+  var keyboardModifier = 'alt';
+  if (navigator.platform == 'MacIntel') {
+    keyboardModifier = 'ctrl';
+  }
+
   hotkeys.bindTo($scope)
     .add({
-      combo: 'alt+s',
+      combo: keyboardModifier + '+s',
       description: 'Lagre og hopp til neste',
       callback: function(event, hotkey) {
         event.preventDefault();
-        $scope.submit();
+        $scope.storeAndGo();
       },
       allowIn: ['INPUT']
     })
     .add({
-      combo: 'alt+down',
+      combo: keyboardModifier + '+shift+s',
+      description: 'Lagre',
+      callback: function(event, hotkey) {
+        event.preventDefault();
+        $scope.store();
+      },
+      allowIn: ['INPUT']
+    })
+    .add({
+      combo: keyboardModifier + '+down',
       description: 'Hopp til neste',
       callback: function(event, hotkey) {
         event.preventDefault();
@@ -315,7 +347,7 @@ angular.module('app.controllers.concept', ['app.services.backend',
       allowIn: ['INPUT']
     })
     .add({
-      combo: 'alt+up',
+      combo: keyboardModifier + '+up',
       description: 'Hopp til forrige',
       callback: function(event, hotkey) {
         event.preventDefault();
@@ -333,15 +365,11 @@ angular.module('app.controllers.concepts', ['app.services.backend'])
                                   function($scope, $state, Backend, StateService) {
   'use strict';
 
-  var view = 'default'; // TODO: Get from ConceptController by event??
-
-  console.log('+++ ConceptsController:init, view: ' + view);
-
   $scope.selectedLanguages = Backend.config.languages;
 
   $scope.views = [
     {id: 1, name: 'default', label: 'Standard'},
-    {id: 2, name: 'nn', label: 'Nynorsk-oversettelse'},
+    {id: 2, name: 'nn', label: 'Omsetjing til nynorsk'},
   ];
 
   function setView(view) {
@@ -407,6 +435,192 @@ angular.module('app.controllers.users', ['app.services.backend',
   $scope.users = users.data.users;
 
 }]);
+// Declare app level module which depends on filters, and services
+angular.module('app.directives.altlabels', ['app.services.state'])
+
+.directive('altlabels', ['StateService', function (StateService) {
+  return { 
+
+    restrict : 'E',  // element names only
+    templateUrl: '/partials/altlabels.html',
+    replace: false,
+    scope: { items: '=', originalItems: '=', lang: '@', disabled: '@' },
+
+    link: function(scope, element, attrs) {
+      // console.log(element);
+      // console.log(attrs);
+
+      scope.keydown = function(evt) {
+        // console.log(this);
+        // console.log(evt);
+        if (evt.keyCode === 13) { // Enter
+          scope.items.push({value:''});
+        }
+        if (evt.keyCode === 40) {
+          // Down
+          var $li = $(evt.target).parent();
+          var $lis = $li.parent().children('li');
+          if ($lis.length <= 1) return;
+          var $next = $li.next('li');
+          //console.log($next);
+          if ($next.length === 0) $next = $($lis[0]);
+          $next.find('input').focus();
+          //console.log($next.find('input').val());
+        }
+        if (evt.keyCode === 38) {
+          // Up
+        }
+      };
+
+      scope.setCurrentTerm = function(evt) {
+        var $li = $(evt.target).parent();
+        var idx = $li.parent().children('li').index($li);
+        var term = scope.items[idx];
+        StateService.setTerm(term);
+      };
+
+      scope.markReviewed = function(uri) {
+        console.log('Mark reviewed: ' + uri);
+        alert('not implemented');
+      };
+
+      function bind(lang, items) {
+        // ?
+      }
+      /*if (attrs.disabled) {
+        scope.disabled = true;
+      }*/
+
+      if (attrs.items) {
+        bind(attrs.lang, attrs.items);
+      } else {
+        element.html('<em>No items provided</em>');
+      }
+
+    }
+  };
+}]);
+// Declare app level module which depends on filters, and services
+angular.module('app.directives.conceptnav', ['app.services.concepts', 'app.services.state'])
+
+.directive('conceptnav', ['StateService', 'Concepts', function (StateService, Concepts) {
+  return { 
+
+    restrict : 'E',  // element names only
+    templateUrl: '/partials/conceptnav.html',
+    replace: false,
+    scope: { },
+
+    link: function(scope, element, attrs) {
+      // console.log(element);
+      // console.log(attrs);
+      console.log('>>> Linking conceptnav');
+
+      scope.concepts = [];
+      scope.busy = true;
+      scope.filterNn = '';
+      scope.totalCount = Concepts.count;
+
+      scope.fetchMoreConcepts = function() {
+        // called by infinite scroll
+        console.log('FETCH MORE');
+        Concepts.fetch();
+      };
+
+      scope.$on('loadedConcepts', function(evt, concepts) {
+        scope.concepts = concepts;
+        scope.totalCount = Concepts.count;
+        scope.busy = false;
+      });
+
+      scope.selectConcept = function() {
+        // console.log(this.concept);
+        Concepts.show(this.concept);
+      };
+
+      scope.currentConcept = StateService.getConcept();
+
+      scope.$on('conceptChanged', function(evt, concept) {
+        scope.currentConcept = concept;
+      });
+
+      // scope.$watch('filter', function filterChanged(value) {
+      //   console.log('Selected filter: ' + value);
+      //   Concepts.fetch(value);
+      // });
+
+      scope.filter = function() {
+        var q = [];
+        if (scope.filterQuery) {
+          q.push(scope.filterQuery);
+        }
+        if (scope.filterNn) {          
+          q.push(scope.filterNn);
+        }
+
+        q = q.join(',');
+        console.log(q);
+        scope.busy = true;
+        Concepts.fetch(q);
+      };
+
+      Concepts.fetch();
+
+    }
+  };
+}]);
+// Declare app level module which depends on filters, and services
+angular.module('app.directives.term', ['app.services.state'])
+
+.directive('term', ['StateService', function (StateService) {
+  return { 
+
+    restrict : 'E',  // element names only
+    transclude: true,
+    templateUrl: '/partials/term.html',
+    replace: false,
+    scope: { data: '=', originalData: '=', readonly: '=' },
+
+    link: function(scope, element, attrs) {
+      // console.log(element);
+      // console.log(attrs);
+
+      scope.markReviewed = function() {        
+        // "not normally recommended" (http://stackoverflow.com/a/17900556/489916)
+        scope.$parent.markReviewed(scope.originalData.uri);
+      };
+
+      scope.keydown = function(evt) {
+        // console.log(this);
+        if (evt.keyCode === 13) { // Enter
+          //scope.$parent.items.push({value:''});
+        }
+        if (evt.keyCode === 40 || evt.keyCode === 38) {
+          var $term = $(evt.target).parent();
+          var $terms = $term.parent().children('term');
+          var $next;
+
+          if ($terms.length <= 1) return;
+          // Down
+          if (evt.keyCode == 40) {
+             $next = $term.next('term');
+            if ($next.length === 0) $next = $($terms[0]);
+          } else {
+            $next = $term.prev('term');
+            if ($next.length === 0) $next = $($terms[$terms.length-1]);
+          }
+          $next.find('input').focus();
+        }
+      };
+
+      scope.focus = function(evt) {
+        StateService.setTerm(scope.data);
+        $(evt.target).select();
+      };
+
+    }
+  };
+}]);
 
 // Declare app level module which depends on filters, and services
 angular.module('app.services.auth', ['ngCookies', 'app.services.backend'])
@@ -424,7 +638,7 @@ angular.module('app.services.auth', ['ngCookies', 'app.services.backend'])
   this.hasPermission = function(permission) {
     if (!permission) return true;
     if (permission == 'view') return that.isLoggedIn();
-    return that.user.permission[permission] ? true : false;
+    return that.user.permission.indexOf(permission) != -1 ? true : false;
   };
 
   this.isLoggedIn = function(user) {
@@ -453,7 +667,7 @@ angular.module('app.services.backend', [])
     params.action = method;
     return $http({
       method: 'GET',
-      url: 'backend.php',
+      url: 'api.php',
       params: params
     });
   }
@@ -463,7 +677,7 @@ angular.module('app.services.backend', [])
     data.action = method;
     return $http({
       method: 'POST',
-      url: 'backend.php',
+      url: 'api.php',
       data: data
     });
   }
@@ -478,8 +692,8 @@ angular.module('app.services.backend', [])
     return getRequest('get_users');
   };
 
-  this.getConcepts = function(filter) {
-    return getRequest('get_concepts', {filter: filter});
+  this.getConcepts = function(cursor, filter) {
+    return getRequest('get_concepts', {cursor: cursor, filter: filter});
   };
 
   this.getConcept = function(uri) {
@@ -490,11 +704,15 @@ angular.module('app.services.backend', [])
     return postRequest('put_concept', {data: data});
   };
 
+  this.markReviewed = function(uri) {
+    return postRequest('mark_reviewed', {uri: uri});
+  };
+
 }]);
 
 
 // Declare app level module which depends on filters, and services
-angular.module('app.services.concept', ['app.services.backend'])
+angular.module('app.services.concept', ['app.services.backend', 'app.directives.altlabels', 'app.directives.term'])
 
 .factory('Concept', ['$q', '$rootScope', '$timeout', 'Backend', function($q, $rootScope, $timeout, Backend) {
   'use strict';
@@ -555,6 +773,14 @@ angular.module('app.services.concept', ['app.services.backend'])
     testDirty: function() {
       this.dirty = ! angular.equals(this.data, this.originalData);
       // if (this.dirty) this.saved = false;
+    },
+
+    markReviewed: function(uri) {
+      var that = this;
+      console.log('Mark as reviewed: ' + uri);
+      Backend.markReviewed(uri).then(function(response) {
+        that.load(true);  // Reload to get term URIs etc..
+      });
     },
 
     store: function() {
@@ -666,7 +892,7 @@ angular.module('app.services.concepts', ['app.services.backend', 'app.services.c
 
   $rootScope.$on('conceptLabelChanged', function(evt, concept) {
     console.log('Label changed, re-sort list');
-    that.sort();
+//    that.sort();
   });
 
   function fetch(filter) {
@@ -680,7 +906,7 @@ angular.module('app.services.concepts', ['app.services.backend', 'app.services.c
     console.log('[Concepts] fetchConcepts');
 
     busy = true;
-    Backend.getConcepts(filter).success(function(results) {
+    Backend.getConcepts(that.cursor, filter).success(function(results) {
       busy = false;
       if (!results.concepts) {
         console.log('[Concepts] Fetch failed!');
@@ -688,15 +914,27 @@ angular.module('app.services.concepts', ['app.services.backend', 'app.services.c
         return;
       }
       that.count = results.count;
+      if (that.count != that.concepts.length) {
+        that.concepts = [];
+        // for (var i = 0; i < that.count; i++) {
+        //   that.concepts.push({'label': '(not loaded yet)', 'idx': i});
+        // }
+        // console.log(that.concepts.length + ', ' + that.count);
+
+        // console.log(that.concepts);
+
+      }
       that.cursor = results.cursor;
 
-      results.concepts.forEach(function(concept) {
+      results.concepts.forEach(function(concept, idx) {
+        var n = that.cursor + idx;
+        //that.concepts[n] = new Concept(concept.id, concept.uri, concept.label);
         if (!that.getByUri(concept.uri)) {
           that.concepts.push(new Concept(concept.id, concept.uri, concept.label));
         }
       });
 
-      that.sort();
+      //that.sort();
       console.log('[Concepts] Fetched');
       $rootScope.$broadcast('loadedConcepts', that.concepts);
     });
@@ -771,6 +1009,8 @@ angular.module('app.services.state', ['app.services.concepts'])
 
   this.setView = function(view) {
     state.view = view;
+    console.log('[state] > New view');
+    console.log(view);
     $rootScope.$broadcast('viewChanged', state.view);
   };
 
@@ -835,115 +1075,4 @@ angular.module('app.services.user', ['app.services.backend'])
 
   return User;
 
-}]);
-
-// Declare app level module which depends on filters, and services
-angular.module('app.directives.altlabels', ['app.services.state'])
-
-.directive('altlabels', ['StateService', function (StateService) {
-  return { 
-
-    restrict : 'E',  // element names only
-    templateUrl: '/partials/altlabels.html',
-    replace: false,
-    scope: { items: '=', lang: '=' },
-
-    link: function(scope, element, attrs) {
-      // console.log(element);
-      // console.log(attrs);
-
-      scope.keydown = function(evt) {
-        // console.log(this);
-        // console.log(evt);
-        if (evt.keyCode === 13) { // Enter
-          scope.items.push({value:''});
-        }
-        if (evt.keyCode === 40) {
-          // Down
-          var $li = $(evt.target).parent();
-          var $lis = $li.parent().children('li');
-          if ($lis.length <= 1) return;
-          var $next = $li.next('li');
-          //console.log($next);
-          if ($next.length === 0) $next = $($lis[0]);
-          $next.find('input').focus();
-          //console.log($next.find('input').val());
-        }
-        if (evt.keyCode === 38) {
-          // Up
-        }
-      };
-
-      scope.setCurrentTerm = function(evt) {
-        var $li = $(evt.target).parent();
-        var idx = $li.parent().children('li').index($li);
-        var term = scope.items[idx];
-        StateService.setTerm(term);
-      };
-
-      function bind(lang, items) {
-        // console.log('Linking <altlabels>');
-      }
-
-      if (attrs.items) {
-        bind(attrs.lang, attrs.items);
-      } else {
-        element.html('<em>No items provided</em>');
-      }
-
-    }
-  };
-}]);
-// Declare app level module which depends on filters, and services
-angular.module('app.directives.conceptnav', ['app.services.concepts', 'app.services.state'])
-
-.directive('conceptnav', ['StateService', 'Concepts', function (StateService, Concepts) {
-  return { 
-
-    restrict : 'E',  // element names only
-    templateUrl: '/partials/conceptnav.html',
-    replace: false,
-    scope: { },
-
-    link: function(scope, element, attrs) {
-      // console.log(element);
-      // console.log(attrs);
-      console.log('>>> Linking conceptnav');
-
-      scope.concepts = [];
-      scope.busy = false;
-      scope.filter = '';
-      scope.totalCount = Concepts.count;
-
-      scope.fetchMoreConcepts = function() {
-        // called by infinite scroll
-        Concepts.fetch();
-      };
-
-      scope.$on('loadedConcepts', function(evt, concepts) {
-        scope.concepts = concepts;
-        scope.totalCount = Concepts.count;
-        scope.busy = false;
-      });
-
-      scope.selectConcept = function() {
-        // console.log(this.concept);
-        Concepts.show(this.concept);
-      };
-
-      scope.currentConcept = StateService.getConcept();
-
-      scope.$on('conceptChanged', function(evt, concept) {
-        scope.currentConcept = concept;
-      });
-
-      scope.$watch('filter', function filterChanged(value) {
-        console.log('Selected filter: ' + value);
-        Concepts.fetch(value);
-      });
-
-      Concepts.fetch();
-
-    }
-  };
 }]);

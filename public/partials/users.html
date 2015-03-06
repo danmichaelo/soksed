@@ -1,10 +1,21 @@
 
-<div class="container">
+<div class="padded">
+	<ol class="breadcrumb">
+	  <li><a href="/">Hjem</a></li>
+	  <li class="active">Brukere</li>
+	</ol>
+
 	<h2>Users</h2>
 
 	<ul class="list-group">
 		<li ng-repeat="user in users" class="list-group-item">
-			{{ user.username[0] }} (created: {{ user.created }} )
+			<a ui-sref="user({ id: user.username[0] })">{{ user.username[0] }}</a>
+			- registrert {{ user.created[0] }}
+			- tilganger:
+			<span ng-repeat-start="permission in user.permission"></span>
+				<span class="label label-info">{{ permission }}</span> 
+			<span ng-repeat-end></span>
+
 		</li>
 	</ul>
 </div>

@@ -44,4 +44,4 @@ echo "Converting to SKOS-XL"
 python skos-to-xl.py
 
 echo "Pushing data to Fuseki"
-$FUSEKIDIR/bin/s-put http://localhost:3030/ds/data $GRAPH realfagstermer-xl.ttl
+$FUSEKIDIR/s-put http://localhost:3030/ds/data $GRAPH realfagstermer-xl.ttl

@@ -2,35 +2,37 @@ html, body {
   height: 100%;
   font-family: sans-serif; }
 
-.pagewrapper {
-  display: flex;
-  flex-flow: column nowrap;
-  height: 100%; }
+.header {
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 40px;
+  background: GreenYellow; }
 
-header, footer {
-  flex: 0 0 auto; }
-
-footer {
-  background: #333;
-  color: #eee;
-  font-size: 10px;
-  padding: 5px;
-  text-align: center; }
-
-.pagewrapper > div {
-  flex: 1 1 auto; }
-
-.conceptswrapper {
-  display: flex;
-  flex-flow: row nowrap; }
+.content {
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 40px;
+  bottom: 0; }
 
 .main {
-  flex: 1 1 auto;
-  order: 2; }
+  position: fixed;
+  left: 350px;
+  right: 0;
+  top: 40px;
+  bottom: 0;
+  background: #fcfcfc;
+  overflow-y: auto; }
 
 .conceptnav {
-  flex: 0 0 30%;
-  order: 1; }
+  position: fixed;
+  left: 0;
+  width: 350px;
+  top: 40px;
+  bottom: 0;
+  background: aliceblue; }
 
 @media all and (max-width: 600px) {
   .conceptnav {
@@ -42,19 +44,17 @@ footer {
 .fa-spin {
   transition: all 1s; }
 
-.main {
-  background: #fcfcfc;
-  overflow-y: auto; }
-
-.conceptnav {
-  background: aliceblue; }
-
 .conceptnav > * {
   flex: 0 0 auto; }
 
 .scrollerwrapper {
-  overflow-y: auto;
-  flex: 0 1 auto; }
+  flex: 0 1 auto;
+  overflow-y: auto; }
+
+.scrollerwrapper > div {
+  width: 100%;
+  overflow-x: hidden;
+  white-space: nowrap; }
 
 h1 {
   padding: 10px;
@@ -63,9 +63,6 @@ h1 {
 
 label {
   display: block; }
-
-header {
-  background: GreenYellow; }
 
 h3 {
   font-size: 16px;
@@ -99,6 +96,12 @@ ul {
 /**************************************************************
  * Concept form
  **************************************************************/
+.terms > div {
+  flex: 1 1 auto; }
+
+.terms > div:nth-child(1) {
+  flex: 0 0 21em; }
+
 .main input[type="text"] {
   padding: 3px 6px;
   width: 20em;
@@ -109,10 +112,16 @@ ul {
     background: #dedede;
     color: #444; }
 
+.prefLabel, .altLabel {
+  display: block; }
+
+.prefLabel input {
+  font-weight: 700; }
+
 .altLabels {
   display: flex;
   flex-flow: row wrap; }
 
 .altLabels > div {
-  flex: 0 0 auto;
+  flex: 0 1 auto;
   margin: 5px; }

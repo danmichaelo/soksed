@@ -1,11 +1,17 @@
 <strong>{{lang ? lang : 'akronymer'}}:</strong>
+
 <ul id="list">
     <li ng-repeat="(index, item) in items">
 	    <input type="text"
 	       value="{{ item.value }}"
            ng-model="item.value"
-           ng-disabled="item.readonly"
+           ng-disabled="item.readonly || disabled"
            ng-focus="setCurrentTerm($event)"
            ng-keydown="keydown($event)">
+
+		<a href="#" style="font-size:130%; background: #def; display:inline-block;padding:2px 10px;" ng-click="markReviewed(item.uri)" ng-show="!originalItems[index].readonly && originalItems[index].value && !originalItems[index].proofread"><i class="fa fa-check-circle "></i> Merk som godkjent</a>
+
+		<span style="font-size:130%; color:green; display:inline-block;padding:2px 10px;" ng-show="originalItems[index].proofread"><i class="fa fa-check-circle "></i> Godkjent</span>
+
     </li>
 </ul>

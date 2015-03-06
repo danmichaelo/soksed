@@ -15,7 +15,7 @@ angular.module('app.services.backend', [])
     params.action = method;
     return $http({
       method: 'GET',
-      url: 'backend.php',
+      url: 'api.php',
       params: params
     });
   }
@@ -25,7 +25,7 @@ angular.module('app.services.backend', [])
     data.action = method;
     return $http({
       method: 'POST',
-      url: 'backend.php',
+      url: 'api.php',
       data: data
     });
   }
@@ -40,8 +40,8 @@ angular.module('app.services.backend', [])
     return getRequest('get_users');
   };
 
-  this.getConcepts = function(filter) {
-    return getRequest('get_concepts', {filter: filter});
+  this.getConcepts = function(cursor, filter) {
+    return getRequest('get_concepts', {cursor: cursor, filter: filter});
   };
 
   this.getConcept = function(uri) {
@@ -50,6 +50,10 @@ angular.module('app.services.backend', [])
 
   this.putConcept = function(data) {
     return postRequest('put_concept', {data: data});
+  };
+
+  this.markReviewed = function(uri) {
+    return postRequest('mark_reviewed', {uri: uri});
   };
 
 }]);

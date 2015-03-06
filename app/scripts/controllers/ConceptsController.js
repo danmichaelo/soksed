@@ -6,15 +6,11 @@ angular.module('app.controllers.concepts', ['app.services.backend'])
                                   function($scope, $state, Backend, StateService) {
   'use strict';
 
-  var view = 'default'; // TODO: Get from ConceptController by event??
-
-  console.log('+++ ConceptsController:init, view: ' + view);
-
   $scope.selectedLanguages = Backend.config.languages;
 
   $scope.views = [
     {id: 1, name: 'default', label: 'Standard'},
-    {id: 2, name: 'nn', label: 'Nynorsk-oversettelse'},
+    {id: 2, name: 'nn', label: 'Omsetjing til nynorsk'},
   ];
 
   function setView(view) {

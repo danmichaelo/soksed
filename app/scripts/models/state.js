@@ -13,6 +13,8 @@ angular.module('app.services.state', ['app.services.concepts'])
 
   this.setView = function(view) {
     state.view = view;
+    console.log('[state] > New view');
+    console.log(view);
     $rootScope.$broadcast('viewChanged', state.view);
   };
 

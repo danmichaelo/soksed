@@ -56,9 +56,10 @@ gulp.task('deps', function() {
         // 'public/lib/angular-route/angular-route.js',
         'public/lib/angular-sanitize/angular-sanitize.js',
         'public/lib/angular-cookies/angular-cookies.js',
-        'public/lib/ngInfiniteScroll/build/ng-infinite-scroll.js',
+        //'public/lib/ngInfiniteScroll/build/ng-infinite-scroll.js',
         'public/lib/angular-hotkeys/build/hotkeys.js',
-        'public/lib/angular-ui-router/release/angular-ui-router.js'
+        'public/lib/angular-ui-router/release/angular-ui-router.js',
+        'public/lib/angular-vs-repeat/src/angular-vs-repeat.js'
       ])
     .pipe(concat('deps.js'))
     .pipe(gulp.dest('public/build'))

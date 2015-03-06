@@ -23,7 +23,7 @@ angular.module('app.services.concepts', ['app.services.backend', 'app.services.c
 
   $rootScope.$on('conceptLabelChanged', function(evt, concept) {
     console.log('Label changed, re-sort list');
-    that.sort();
+//    that.sort();
   });
 
   function fetch(filter) {
@@ -37,7 +37,7 @@ angular.module('app.services.concepts', ['app.services.backend', 'app.services.c
     console.log('[Concepts] fetchConcepts');
 
     busy = true;
-    Backend.getConcepts(filter).success(function(results) {
+    Backend.getConcepts(that.cursor, filter).success(function(results) {
       busy = false;
       if (!results.concepts) {
         console.log('[Concepts] Fetch failed!');
@@ -45,15 +45,27 @@ angular.module('app.services.concepts', ['app.services.backend', 'app.services.c
         return;
       }
       that.count = results.count;
+      if (that.count != that.concepts.length) {
+        that.concepts = [];
+        // for (var i = 0; i < that.count; i++) {
+        //   that.concepts.push({'label': '(not loaded yet)', 'idx': i});
+        // }
+        // console.log(that.concepts.length + ', ' + that.count);
+
+        // console.log(that.concepts);
+
+      }
       that.cursor = results.cursor;
 
-      results.concepts.forEach(function(concept) {
+      results.concepts.forEach(function(concept, idx) {
+        var n = that.cursor + idx;
+        //that.concepts[n] = new Concept(concept.id, concept.uri, concept.label);
         if (!that.getByUri(concept.uri)) {
           that.concepts.push(new Concept(concept.id, concept.uri, concept.label));
         }
       });
 
-      that.sort();
+      //that.sort();
       console.log('[Concepts] Fetched');
       $rootScope.$broadcast('loadedConcepts', that.concepts);
     });

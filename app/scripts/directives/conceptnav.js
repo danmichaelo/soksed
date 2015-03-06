@@ -15,12 +15,13 @@ angular.module('app.directives.conceptnav', ['app.services.concepts', 'app.servi
       console.log('>>> Linking conceptnav');
 
       scope.concepts = [];
-      scope.busy = false;
-      scope.filter = '';
+      scope.busy = true;
+      scope.filterNn = '';
       scope.totalCount = Concepts.count;
 
       scope.fetchMoreConcepts = function() {
         // called by infinite scroll
+        console.log('FETCH MORE');
         Concepts.fetch();
       };
 
@@ -41,10 +42,25 @@ angular.module('app.directives.conceptnav', ['app.services.concepts', 'app.servi
         scope.currentConcept = concept;
       });
 
-      scope.$watch('filter', function filterChanged(value) {
-        console.log('Selected filter: ' + value);
-        Concepts.fetch(value);
-      });
+      // scope.$watch('filter', function filterChanged(value) {
+      //   console.log('Selected filter: ' + value);
+      //   Concepts.fetch(value);
+      // });
+
+      scope.filter = function() {
+        var q = [];
+        if (scope.filterQuery) {
+          q.push(scope.filterQuery);
+        }
+        if (scope.filterNn) {          
+          q.push(scope.filterNn);
+        }
+
+        q = q.join(',');
+        console.log(q);
+        scope.busy = true;
+        Concepts.fetch(q);
+      };
 
       Concepts.fetch();
 

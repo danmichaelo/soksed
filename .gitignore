@@ -4,3 +4,7 @@ public/lib
 node_modules
 .sass-cache
 composer.lock
+import/realfagstermer
+export/prosjekt-nynorsk
+ENV
+

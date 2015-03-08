@@ -23,8 +23,8 @@ angular.module('app.controllers.concept', ['app.services.backend',
 
  function setFocus () {
     $timeout(function() {
-      // console.log(angular.element('.main input[type="text"]:enabled')[0]);
-      angular.element('.main input[type="text"]:enabled')[0].focus();
+      var field = angular.element('.main input[type="text"]:enabled');
+      if (field.length) field[0].focus();
     }, 0);
  }
 

@@ -21,6 +21,14 @@ var assets      = '',
     jsSrcDir    = srcDir + 'js/',
     bowerDir    = assets + 'bower_components/';
 
+/* Linting
+------------------------------------- */
+gulp.task('lint', function () {
+    return gulp.src('app/scripts/**/*.js')
+        .pipe(jshint())
+        .pipe(jshint.reporter('jshint-stylish'));
+});
+
 /* Sass Task
 ------------------------------------- */
 gulp.task('sass', function() {
@@ -37,10 +45,8 @@ gulp.task('sass', function() {
 /* Concatenate & Minify JS
 ------------------------------------- */
 
-gulp.task('scripts', function() {
+gulp.task('scripts', ['lint'], function() {
   return gulp.src(['app/scripts/*.js', 'app/scripts/*/*.js'])
-    .pipe(jshint())
-    .pipe(jshint.reporter('default'))
     .pipe(concat('app.js'))
     .pipe(gulp.dest('public/build'))
     .pipe(rename('app.min.js'))

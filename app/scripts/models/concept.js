@@ -93,19 +93,19 @@ angular.module('app.services.concept', ['app.services.backend', 'app.directives.
         console.log(response);
         if (!response.data.status) {
           that.error = response.data;
-          alert('Save failed, see concept for more info.');
+          window.alert('Save failed, see concept for more info.');
           return;
         }
         if (response.data.status != 'success') {
           if (response.data.status == 'edit_conflict') {
             that.error = 'Redigeringskonflikt: Begrepet har blitt endret på serveren siden du begynte å redigere. Kopier ulagrede endringer og trykk så "Tilbakestill" (eller last siden på nytt) for å hente inn det oppdaterte begrepet.';
-            alert('Redigeringskonflikt, endringene dine har ikke blitt lagret.');
+            window.alert('Redigeringskonflikt, endringene dine har ikke blitt lagret.');
           } else if (response.data.status == 'no_permission') {
             that.error = 'Beklager, du har ikke redigeringstilgang. Hvis du nettopp har registrert deg må du vente på at kontoen blir godkjent.';
-            alert('Beklager, du har ikke redigeringstilgang. Hvis du nettopp har registrert deg må du vente på at kontoen blir godkjent.');
+            window.alert('Beklager, du har ikke redigeringstilgang. Hvis du nettopp har registrert deg må du vente på at kontoen blir godkjent.');
           } else {
             that.error = response.data.status;
-            alert('Save failed, see concept for more info.');
+            window.alert('Save failed, see concept for more info.');
           }
           return;
         }

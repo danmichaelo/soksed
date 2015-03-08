@@ -2,7 +2,9 @@
 angular.module('app.directives.altlabels', ['app.services.state'])
 
 .directive('altlabels', ['StateService', function (StateService) {
-  return { 
+  'use strict';
+
+  return {
 
     restrict : 'E',  // element names only
     templateUrl: '/partials/altlabels.html',
@@ -44,7 +46,7 @@ angular.module('app.directives.altlabels', ['app.services.state'])
 
       scope.markReviewed = function(uri) {
         console.log('Mark reviewed: ' + uri);
-        alert('not implemented');
+        window.alert('not implemented');
       };
 
       function bind(lang, items) {

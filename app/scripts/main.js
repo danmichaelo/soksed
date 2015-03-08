@@ -157,6 +157,7 @@ angular.module('app', ['ngSanitize',
 }])
 
 .run(['$rootScope', '$location', '$state', 'Auth', function ($rootScope, $location, $state, Auth) {
+  'use strict';
 
     $rootScope.$on('$stateChangeStart', function (event, toState, toParams, fromState, fromParams) {
       console.log('$stateChangeStart: has "' + toState.needsPermission + '" permission ? ' + (Auth.hasPermission(toState.needsPermission) ? 'yes' : 'no'));

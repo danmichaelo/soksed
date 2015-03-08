@@ -2,7 +2,9 @@
 angular.module('app.directives.conceptnav', ['app.services.concepts', 'app.services.state'])
 
 .directive('conceptnav', ['StateService', 'Concepts', function (StateService, Concepts) {
-  return { 
+  'use strict';
+
+  return {
 
     restrict : 'E',  // element names only
     templateUrl: '/partials/conceptnav.html',

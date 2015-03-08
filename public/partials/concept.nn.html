@@ -50,9 +50,10 @@
 		</div>
 
 		<h3>Noter</h3>
-		<!-- TODO -->
-		<textarea disabled="true" 
-		cols="60" rows="3" placeholder="Noter" ng-model="currentConcept.data.note"></textarea>
+
+		<textarea cols="60" rows="3" placeholder="Noter" 
+			ng-repeat="(idx, note) in currentConcept.data.editorialNote"
+			ng-model="note.value" ng-disabled="note.readonly"></textarea>
 
 		<!-- // contenteditable="true" : åpner for html + ikke kompat med angular uten mye arbeid-->
 

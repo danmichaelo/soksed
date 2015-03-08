@@ -135,6 +135,21 @@ class Concept
 			$modified = true;
 		}
 
+		// Update notes
+		if (json_encode(array_get($this->data, 'editorialNote')) != json_encode(array_get($data, 'editorialNote'))) {
+			$values = array_get($data, 'editorialNote');
+			$values = array_filter($values, function($v) {
+				if (empty($v['value'])) return false;
+				return (!isset($v['readonly']) || !$v['readonly']);
+			});
+			$this->sparql->setProperty(
+				$data['uri'],
+				'skos:editorialNote',
+				$values
+			);
+			$modified = true;
+		}
+
 		if ($modified) {
 			$this->sparql->touchModificationDate($data['uri']);
 		}

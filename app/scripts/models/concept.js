@@ -28,6 +28,13 @@ angular.module('app.services.concept', ['app.services.backend', 'app.directives.
     },
 
     setData: function(data) {
+      // If no (editable) editorialNote field, create one
+      if (!data.editorialNote) {
+        data.editorialNote = [{ value: '' }];
+      } else if (data.editorialNote[0].readonly) {
+        data.editorialNote.push({ value: '' });        
+      }
+
       if (!data.altLabel || !Object.keys(data.altLabel).length) data.altLabel = {};
       Backend.config.languages.forEach(function(lng) {
         // There should be at least one text field, so we add

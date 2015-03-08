@@ -134,6 +134,13 @@ class Sparql extends Base
 					$filterQuery = 'GRAPH ' . ($graph ?: "?graph$n") . ' { ' . $filterQuery . '}';
 					$filterQueries[] = 'FILTER ' . $op . ' { ' . $filterQuery . '}';
 
+				} elseif (preg_match('/^has:editorialNote/', $filter, $m)) {
+					$filterQuery = "
+						?concept skos:editorialNote ?ednote . 
+					";
+					$filterQuery = 'GRAPH ' . ($graph ?: "?graph$n") . ' { ' . $filterQuery . '}';
+					$filterQueries[] = 'FILTER EXISTS { ' . $filterQuery . '}';
+
 				} elseif (preg_match('/^(.*)\*$/', $filter, $m)) {
 					$filterQuery = "
 						FILTER(strstarts(lcase(str(?label)), \"%startswith$n%\"))
@@ -233,7 +240,16 @@ class Sparql extends Base
 
 			if (empty($row->labelValue)) {  // a skos:Concept triple
 				if ($row->value instanceof Literal) {
-					$xld[$prop][] = $row->value->getValue();
+					if (in_array($prop, $this->dateFields)) {
+						$xld[$prop][] = $row->value->getValue();
+					} else {
+						$xld[$prop][] = [
+							'value' => $row->value->getValue(),
+							'lang' => $row->value->getLang(),
+							'graph' => $row->graph->getUri(),
+							'readonly' => ($row->graph->getUri() != $this->transGraphUri),
+						];
+					}
 				} elseif ($row->value instanceof Resource) {
 					$val = RdfNamespace::splitUri($row->value->getUri());
 					if (!empty($val[1])) {
@@ -617,6 +633,23 @@ class Sparql extends Base
 			WHERE
 			{ BIND(NOW() as ?now) }
 		', ['transGraphUri' => $this->transGraphUri, 'uri' => $uri, 'proofreader' => $user['uri']]);
+	}
+
+	public function setProperty($uri, $property, $values)
+	{
+		$this->update('
+			DELETE WHERE
+			{ GRAPH <%transGraphUri%>
+			  { <%uri%> ' . $property . ' ?x } 
+			};
+		', ['transGraphUri' => $this->transGraphUri, 'uri' => $uri]);
+
+		$triples = new Graph;
+		foreach ($values as $value) {
+			$triples->add($uri, $property, new Literal($value['value'], array_get($value, 'lang')));
+		}
+		$response = $this->updateClient->insert($triples, $this->transGraphUri);
+		return $response->isSuccessful();
 	}
 
 }

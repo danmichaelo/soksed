@@ -112,6 +112,15 @@ ul {
     background: #dedede;
     color: #444; }
 
+.main textarea {
+  padding: 3px 6px;
+  border-radius: 2px;
+  margin: 2px;
+  border: 1px solid #888; }
+  .main textarea:disabled {
+    background: #dedede;
+    color: #444; }
+
 .prefLabel, .altLabel {
   display: block; }
 

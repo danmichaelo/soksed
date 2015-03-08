@@ -39,20 +39,6 @@ angular.module('app.controllers.concept', ['app.services.backend',
     if (!p || !c) return;
     if (p.uri != c.uri) return;
     $scope.currentConcept.testDirty();
-
-    Backend.config.languages.forEach(function(lng) {
-        // There should be at least one text field, so we add
-        // one if there are none.
-        if (c.altLabel[lng][c.altLabel[lng].length-1].value !== '') {
-          c.altLabel[lng].push({ value: '' });
-        }
-
-        //console.log(c.altLabel[lng]);
-        // if (c.altLabel[lng].length > 2 && c.altLabel[lng][c.altLabel[lng].length-1].value === '' && c.altLabel[lng][c.altLabel[lng].length-2].value === '') {
-        //   c.altLabel[lng].slice(0, c.altLabel[lng].length-2);
-        // }
-      });
-
   }, true);
 
   $scope.$on('termChanged', function(evt, term) {

@@ -29,12 +29,7 @@ angular.module('app.services.concept', ['app.services.backend', 'app.directives.
 
     setData: function(data) {
       if (!data.altLabel || !Object.keys(data.altLabel).length) data.altLabel = {};
-      Backend.config.languages.forEach(function(lng) {
-        // There should be at least one text field, so we add
-        // one if there are none.
-        if (!data.prefLabel[lng]) data.prefLabel[lng] = [{ value: '' }];
-        if (!data.altLabel[lng]) data.altLabel[lng] = [{ value: '' }];
-      });
+      this.ensureBlankFields(data);
 
       // DUMMY:
       data.prefLabel.nn[0].hints = [];
@@ -61,13 +56,29 @@ angular.module('app.services.concept', ['app.services.backend', 'app.directives.
     testDirty: function() {
       this.dirty = ! angular.equals(this.data, this.originalData);
       // if (this.dirty) this.saved = false;
+      this.ensureBlankFields(this.data);
     },
 
-    markReviewed: function(uri) {
-      var that = this;
-      console.log('Mark as reviewed: ' + uri);
-      Backend.markReviewed(uri).then(function(response) {
-        that.load(true);  // Reload to get term URIs etc..
+    /**
+     * Make sure there is always one blank field at the end of the term list to add new data to
+     * for each language
+     */
+    ensureBlankFields: function(data) {
+      Backend.config.languages.forEach(function(lng) {
+
+        // There should be at least one text field, so we add
+        // one if there are none.
+        if (!data.prefLabel[lng]) data.prefLabel[lng] = [{ value: '' }];
+        if (!data.altLabel[lng]) data.altLabel[lng] = [{ value: '' }];
+        
+        if (data.altLabel[lng].length === 0 || data.altLabel[lng][data.altLabel[lng].length - 1].value !== '') {
+          data.altLabel[lng].push({ value: '' });
+        }
+
+        if (data.altLabel[lng].length >= 2 && data.altLabel[lng][data.altLabel[lng].length - 1].value === '' && data.altLabel[lng][data.altLabel[lng].length - 2].value === '') {
+          data.altLabel[lng] = data.altLabel[lng].slice(0, data.altLabel[lng].length - 1);
+        }
+
       });
     },
 

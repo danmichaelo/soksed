@@ -75,7 +75,6 @@ angular.module('app', ['ngSanitize',
           });
           var concept = Concepts.getByUri(uri);
           if (!concept) {
-            console.log('[main] Add concept <' + uri + '>');
             concept = Concepts.add(id, uri);
           }
           // console.log(concept);

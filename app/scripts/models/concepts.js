@@ -61,7 +61,13 @@ angular.module('app.services.concepts', ['app.services.backend', 'app.services.c
         var n = that.cursor + idx;
         //that.concepts[n] = new Concept(concept.id, concept.uri, concept.label);
         if (!that.getByUri(concept.uri)) {
-          that.concepts.push(new Concept(concept.id, concept.uri, concept.label));
+
+          if (currentConcept.uri == concept.uri) {
+            that.concepts.push(currentConcept);
+          } else {
+            that.concepts.push(new Concept(concept.id, concept.uri, concept.label));
+          }
+
         }
       });
 
@@ -99,6 +105,7 @@ angular.module('app.services.concepts', ['app.services.backend', 'app.services.c
   };
 
   this.add = function(id, uri) {
+    console.log('[Concepts] Add <' + uri + '> to the current list of ' + that.concepts.length + ' concepts.');
     var concept = new Concept(id, uri, '(...)');
     that.concepts.push(concept);
     return concept;

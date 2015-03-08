@@ -16,6 +16,10 @@ class Logger
 
 	function __construct()
 	{
+
+		if (empty(Config::get('papertrail.host'))) {
+			return;
+		}
 		$host = gethostname();
 
 		// Set the format
@@ -32,11 +36,13 @@ class Logger
 
 	public function error($msg)
 	{
+		if (!isset($this->logger)) return;
 		$this->logger->addError($msg);
 	}
 
 	public function info($msg)
 	{
+		if (!isset($this->logger)) return;
 		$this->logger->addInfo($msg);
 	}
 

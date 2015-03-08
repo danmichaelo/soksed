@@ -31,6 +31,9 @@ angular.module('app.directives.conceptnav', ['app.services.concepts', 'app.servi
         scope.concepts = concepts;
         scope.totalCount = Concepts.count;
         scope.busy = false;
+        setTimeout(function() {
+          scope.checkScrollPos(scope.currentConcept);
+        });
       });
 
       scope.selectConcept = function() {
@@ -40,8 +43,28 @@ angular.module('app.directives.conceptnav', ['app.services.concepts', 'app.servi
 
       scope.currentConcept = StateService.getConcept();
 
+      scope.checkScrollPos = function(concept) {
+        // All elements have the same height since we are using angular-vs-repeat
+        var y = $('.scrollerwrapper').children().first().height(),
+            idx = scope.concepts.indexOf(concept),
+            ctop = idx * y,
+            cbottom = ctop + y,
+            wtop = $('.scrollerwrapper').scrollTop(),
+            wbottom = wtop + $('.scrollerwrapper').height();
+
+        if (idx === -1) return; 
+        if (!concept) return; 
+
+        if (cbottom >= wbottom) {
+          $('.scrollerwrapper').scrollTop( cbottom - $('.scrollerwrapper').height() );
+        } else if (ctop <= wtop) {
+          $('.scrollerwrapper').scrollTop( ctop );
+        }
+      };
+
       scope.$on('conceptChanged', function(evt, concept) {
         scope.currentConcept = concept;
+        scope.checkScrollPos(concept);
       });
 
       // scope.$watch('filter', function filterChanged(value) {

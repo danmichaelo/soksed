@@ -85,10 +85,6 @@ angular.module('app.controllers.concept', ['app.services.backend',
     $scope.currentConcept.load(true);
   };
 
-  $scope.markReviewed = function(uri) {
-    $scope.currentConcept.markReviewed(uri);
-  };
-
   // when you bind it to the controller's scope, it will automatically unbind
   // the hotkey when the scope is destroyed (due to ng-if or something that changes the DOM)
   

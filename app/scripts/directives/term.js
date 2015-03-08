@@ -1,8 +1,10 @@
 // Declare app level module which depends on filters, and services
-angular.module('app.directives.term', ['app.services.state'])
+angular.module('app.directives.term', ['app.services.state', 'app.services.backend'])
 
-.directive('term', ['StateService', function (StateService) {
-  return { 
+.directive('term', ['StateService', 'Backend', function (StateService, Backend) {
+  'use strict';
+
+  return {
 
     restrict : 'E',  // element names only
     transclude: true,
@@ -15,8 +17,10 @@ angular.module('app.directives.term', ['app.services.state'])
       // console.log(attrs);
 
       scope.markReviewed = function() {        
-        // "not normally recommended" (http://stackoverflow.com/a/17900556/489916)
-        scope.$parent.markReviewed(scope.originalData.uri);
+        Backend.markReviewed(scope.originalData.uri).then(function(response) {
+          // TODO: Something more elegant than scope.$parent ?
+          scope.$parent.reload();  // Reload to get term URIs etc..
+        });
       };
 
       scope.keydown = function(evt) {

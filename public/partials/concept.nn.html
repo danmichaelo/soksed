@@ -24,8 +24,11 @@
 				      original-data="currentConcept.originalData.prefLabel[lang][index]"
 				      class="prefLabel">
 
-					<a ng-show="!currentConcept.originalData.prefLabel[lang][index].value" href="#"
-					ng-click="selectHint(hint)" ng-repeat="hint in currentConcept.data.prefLabel[lang][index].hints" style="padding-right:1em;">{{ hint }}</a>
+					<a ng-show="!currentConcept.originalData.prefLabel[lang][index].value"
+					   href="#"
+					   ng-click="currentConcept.data.prefLabel[lang][index].value = hint"
+					   ng-repeat="hint in currentConcept.data.prefLabel[lang][index].hints"
+					   style="padding-right:1em; font-size: 90%;">{{ hint }}</a>
 
 				</term>
 
@@ -34,6 +37,12 @@
 				      data="label"
 				      original-data="currentConcept.originalData.altLabel[lang][index]"
 				      class="altLabel">
+
+					<a ng-show="!currentConcept.originalData.altLabel[lang][index].value"
+					   href="#"
+					   ng-click="currentConcept.data.altLabel[lang][index].value = hint"
+					   ng-repeat="hint in currentConcept.data.altLabel[lang][index].hints"
+					   style="padding-right:1em; font-size: 90%;">{{ hint }}</a>
 
 				</term>
 

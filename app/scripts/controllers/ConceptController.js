@@ -46,14 +46,6 @@ angular.module('app.controllers.concept', ['app.services.backend',
     $scope.currentTerm = term;
   });
 
-  $scope.nb2nn = function(value) {
-    return value + 'a';
-  };
-
-  $scope.selectHint = function(hint) {
-    $log.debug(hint);
-    $scope.currentConcept.data.prefLabel.nn[0].value = hint;
-  };
 
   $scope.store = function() {
     if ($scope.currentConcept.dirty) {

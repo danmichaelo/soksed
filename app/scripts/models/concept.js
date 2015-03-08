@@ -29,15 +29,14 @@ angular.module('app.services.concept', ['app.services.backend', 'app.directives.
 
     setData: function(data) {
       if (!data.altLabel || !Object.keys(data.altLabel).length) data.altLabel = {};
+      Backend.config.languages.forEach(function(lng) {
+        // There should be at least one text field, so we add
+        // one if there are none.
+        if (!data.prefLabel[lng]) data.prefLabel[lng] = [{ value: '' }];
+        if (!data.altLabel[lng]) data.altLabel[lng] = [{ value: '' }];
+      });
       this.ensureBlankFields(data);
-
-      // DUMMY:
-      data.prefLabel.nn[0].hints = [];
-      data.prefLabel.nn[0].hints.push(data.prefLabel.nb[0].value);
-      var m = data.prefLabel.nb[0].value.match('^(.*)er$');
-      if (m) {
-        data.prefLabel.nn[0].hints.push(m[1] + 'ar');
-      }
+      this.generateHints(data);
 
       var oldLabel = this.label;
       this.label = data.prefLabel.nb[0].value;
@@ -59,20 +58,39 @@ angular.module('app.services.concept', ['app.services.backend', 'app.directives.
       this.ensureBlankFields(this.data);
     },
 
+    generateHints: function(data) {
+      var m;
+
+      data.prefLabel.nn[0].hints = [];
+      data.prefLabel.nn[0].hints.push(data.prefLabel.nb[0].value);
+      m = data.prefLabel.nb[0].value.match('^(.*)er$');
+      if (m) {
+        data.prefLabel.nn[0].hints.push(m[1] + 'ar');
+      }
+      for (var i = 0; i < Math.min(data.altLabel.nn.length, data.altLabel.nb.length); i++) {
+        data.altLabel.nn[i].hints = [];
+        data.altLabel.nn[i].hints.push(data.altLabel.nb[i].value);
+        m = data.altLabel.nb[i].value.match('^(.*)er$');
+        if (m) {
+          data.altLabel.nn[i].hints.push(m[1] + 'ar');
+        }
+      };
+    },
+
     /**
      * Make sure there is always one blank field at the end of the term list to add new data to
      * for each language
      */
     ensureBlankFields: function(data) {
+      var that = this;
       Backend.config.languages.forEach(function(lng) {
 
         // There should be at least one text field, so we add
         // one if there are none.
-        if (!data.prefLabel[lng]) data.prefLabel[lng] = [{ value: '' }];
-        if (!data.altLabel[lng]) data.altLabel[lng] = [{ value: '' }];
         
         if (data.altLabel[lng].length === 0 || data.altLabel[lng][data.altLabel[lng].length - 1].value !== '') {
           data.altLabel[lng].push({ value: '' });
+          that.generateHints(data);
         }
 
         if (data.altLabel[lng].length >= 2 && data.altLabel[lng][data.altLabel[lng].length - 1].value === '' && data.altLabel[lng][data.altLabel[lng].length - 2].value === '') {

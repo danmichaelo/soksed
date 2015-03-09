@@ -343,41 +343,6 @@ class Sparql extends Base
 			}
 		}
 
-		// foreach ($labels as $labelType => $labels) {
-		// 	foreach ($labels as $uri => $label) {
-		// 		if (!isset($label['literalForm'])) {
-		// 			// Invalid label
-		// 			$this->logger->error('Invalid label found: '. $uri);
-		// 			continue;
-		// 		}
-
-		// 		$lab = ['uri' => $uri];
-		// 		foreach ($label as $key => $val) {
-		// 			if ($key == 'literalForm') {
-		// 				$lab['value'] = $val->getValue();
-		// 				$lab['language'] = $val->getLang() ?: '';
-		// 			} elseif ($key == 'graph') {
-		// 				$lab['graph'] = $val->getUri();
-		// 				$lab['readonly'] = ($lab['graph'] != $this->transGraphUri);
-		// 			} elseif ($val instanceof Literal) {
-		// 				$lab[$key] = $val->getValue();
-		// 				if (in_array($key, $this->dateFields)) {
-		// 					$lab[$key] = $this->dateFieldToStr($lab[$key]);
-		// 				}
-		// 			} elseif ($val instanceof Resource) {
-		// 				$x = RdfNamespace::splitUri($val->getUri());
-		// 				if (!empty($x[1])) {
-		// 					$lab[$key] = $x[0] . ':' . $x[1];
-		// 				}
-		// 			}
-
-
-		// 		}
-		// 		if (!isset($xld[$labelType][$lab['language']])) $xld[$labelType][$lab['language']] = [];
-		// 		$xld[$labelType][$lab['language']][] = $lab;
-		// 	}
-		// }
-
 		return ['data' => $xld];
 	}
 

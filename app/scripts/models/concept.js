@@ -136,6 +136,11 @@ angular.module('app.services.concept', ['app.services.backend', 'app.directives.
         }
         that.saved = true;
         that.load(true);  // Reload to get term URIs etc..
+      }).catch(function(err) {
+        that.saving = false;
+        console.log(err);
+        that.error = 'Invalid response received: ' + err.message;
+        window.alert('Save failed!');
       });
     },
 

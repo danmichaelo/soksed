@@ -16,17 +16,16 @@ angular.module('app.controllers.concept', ['app.services.backend',
   StateService.setView(view);
   $scope.currentConcept = concept;
 
-  // angular.element($window).bind('mousewheel', function(evt) {
-  //   console.log(evt);
-  //   evt.preventDefault();
-  // });
+  //-
+  // Focus first edit field once available
+  //-
 
- function setFocus () {
+  function setFocus () {
     $timeout(function() {
       var field = angular.element('.main input[type="text"]:enabled');
       if (field.length) field[0].focus();
     }, 0);
- }
+  }
 
   if (concept.isLoaded()) {
     setFocus();
@@ -35,17 +34,19 @@ angular.module('app.controllers.concept', ['app.services.backend',
     setFocus();
   });
 
+  //-
+  // Test dirtyness on data change
+  //-
+
   $scope.$watch('currentConcept.data', function(c, p) {
     if (!p || !c) return;
     if (p.uri != c.uri) return;
     $scope.currentConcept.testDirty();
   }, true);
 
-  $scope.$on('termChanged', function(evt, term) {
-    $log.debug('[main] Term changed: ' + term.value);
-    $scope.currentTerm = term;
-  });
-
+  //-
+  // Store
+  //-
 
   $scope.store = function() {
     if ($scope.currentConcept.dirty) {
@@ -62,6 +63,11 @@ angular.module('app.controllers.concept', ['app.services.backend',
     $log.debug('[main] Reload concept');
     $scope.currentConcept.load(true);
   };
+
+
+  //-
+  // Keyboard shortcuts
+  //-
 
   // when you bind it to the controller's scope, it will automatically unbind
   // the hotkey when the scope is destroyed (due to ng-if or something that changes the DOM)

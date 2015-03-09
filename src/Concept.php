@@ -111,8 +111,9 @@ class Concept
 			return 'edit_conflict';
 		}
 
-		// Update prefLabel
 		$modified = false;
+
+		// Update prefLabel
 
 		list($removed, $added) = $this->compareLabelLists($this->data['prefLabel'],
 			                                              $data['prefLabel']);
@@ -127,7 +128,6 @@ class Concept
 		// Update altLabel
 		list($removed, $added) = $this->compareLabelLists($this->data['altLabel'],
 			                                              $data['altLabel']);
-
 		if (count($removed) || count($added)) {
 			if (!$this->sparql->updateLabels($this->auth->getProfile(), $data['uri'], 'altLabel', $removed, $added)) {
 				return 'update_altlabel_failed';

@@ -47,13 +47,6 @@ angular.module('app.services.concepts', ['app.services.backend', 'app.services.c
       that.count = results.count;
       if (that.count != that.concepts.length) {
         that.concepts = [];
-        // for (var i = 0; i < that.count; i++) {
-        //   that.concepts.push({'label': '(not loaded yet)', 'idx': i});
-        // }
-        // console.log(that.concepts.length + ', ' + that.count);
-
-        // console.log(that.concepts);
-
       }
       that.cursor = results.cursor;
 

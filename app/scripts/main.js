@@ -66,7 +66,6 @@ angular.module('app', ['ngSanitize',
         }],
         concept: ['$stateParams', 'Concepts', function ($stateParams, Concepts) {
           var id = $stateParams.id;
-          // console.log('!!! FETCH concept: ' + id);
 
           var uri;
           Object.keys(urimap).forEach(function(k) {

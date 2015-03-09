@@ -5,8 +5,6 @@ angular.module('app.services.auth', ['ngCookies', 'app.services.backend'])
 .service('Auth', ['$rootScope', '$cookieStore', function($rootScope, $cookieStore) {
   'use strict';
 
-  console.log('User-cookie: ');
-  console.log($cookieStore.get('user'));
   var currentUser = $cookieStore.get('user') || { username: '', permission: [] };
 
   this.user = currentUser;

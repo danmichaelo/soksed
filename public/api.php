@@ -13,7 +13,7 @@ $sparql = new SparqlClient;
 $auth = new Auth;
 if ($mock)
 {
-	$auth->mock('me@soapland.com');
+	$auth->mock('danmichaelo@gmail.com');
 }
 
 $input = json_decode(file_get_contents('php://input'), true);

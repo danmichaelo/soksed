@@ -75,8 +75,7 @@ h3 {
 
 .concepts a {
   display: block;
-  padding: .3em 1em;
-  transition: background .4s; }
+  padding: .3em 1em; }
 
 .concepts .selected {
   font-weight: bold;

@@ -66,7 +66,6 @@ angular.module('app', ['ngSanitize',
         }],
         concept: ['$stateParams', 'Concepts', function ($stateParams, Concepts) {
           var id = $stateParams.id;
-          // console.log('!!! FETCH concept: ' + id);
 
           var uri;
           Object.keys(urimap).forEach(function(k) {
@@ -75,7 +74,6 @@ angular.module('app', ['ngSanitize',
           });
           var concept = Concepts.getByUri(uri);
           if (!concept) {
-            console.log('[main] Add concept <' + uri + '>');
             concept = Concepts.add(id, uri);
           }
           // console.log(concept);
@@ -157,6 +155,7 @@ angular.module('app', ['ngSanitize',
 }])
 
 .run(['$rootScope', '$location', '$state', 'Auth', function ($rootScope, $location, $state, Auth) {
+  'use strict';
 
     $rootScope.$on('$stateChangeStart', function (event, toState, toParams, fromState, fromParams) {
       console.log('$stateChangeStart: has "' + toState.needsPermission + '" permission ? ' + (Auth.hasPermission(toState.needsPermission) ? 'yes' : 'no'));
@@ -237,17 +236,16 @@ angular.module('app.controllers.concept', ['app.services.backend',
   StateService.setView(view);
   $scope.currentConcept = concept;
 
-  // angular.element($window).bind('mousewheel', function(evt) {
-  //   console.log(evt);
-  //   evt.preventDefault();
-  // });
+  //-
+  // Focus first edit field once available
+  //-
 
- function setFocus () {
+  function setFocus () {
     $timeout(function() {
-      // console.log(angular.element('.main input[type="text"]:enabled')[0]);
-      angular.element('.main input[type="text"]:enabled')[0].focus();
+      var field = angular.element('.main input[type="text"]:enabled');
+      if (field.length) field[0].focus();
     }, 0);
- }
+  }
 
   if (concept.isLoaded()) {
     setFocus();
@@ -256,39 +254,19 @@ angular.module('app.controllers.concept', ['app.services.backend',
     setFocus();
   });
 
+  //-
+  // Test dirtyness on data change
+  //-
+
   $scope.$watch('currentConcept.data', function(c, p) {
     if (!p || !c) return;
     if (p.uri != c.uri) return;
     $scope.currentConcept.testDirty();
-
-    Backend.config.languages.forEach(function(lng) {
-        // There should be at least one text field, so we add
-        // one if there are none.
-        if (c.altLabel[lng][c.altLabel[lng].length-1].value !== '') {
-          c.altLabel[lng].push({ value: '' });
-        }
-
-        //console.log(c.altLabel[lng]);
-        // if (c.altLabel[lng].length > 2 && c.altLabel[lng][c.altLabel[lng].length-1].value === '' && c.altLabel[lng][c.altLabel[lng].length-2].value === '') {
-        //   c.altLabel[lng].slice(0, c.altLabel[lng].length-2);
-        // }
-      });
-
   }, true);
 
-  $scope.$on('termChanged', function(evt, term) {
-    $log.debug('[main] Term changed: ' + term.value);
-    $scope.currentTerm = term;
-  });
-
-  $scope.nb2nn = function(value) {
-    return value + 'a';
-  };
-
-  $scope.selectHint = function(hint) {
-    $log.debug(hint);
-    $scope.currentConcept.data.prefLabel.nn[0].value = hint;
-  };
+  //-
+  // Store
+  //-
 
   $scope.store = function() {
     if ($scope.currentConcept.dirty) {
@@ -306,9 +284,10 @@ angular.module('app.controllers.concept', ['app.services.backend',
     $scope.currentConcept.load(true);
   };
 
-  $scope.markReviewed = function(uri) {
-    $scope.currentConcept.markReviewed(uri);
-  };
+
+  //-
+  // Keyboard shortcuts
+  //-
 
   // when you bind it to the controller's scope, it will automatically unbind
   // the hotkey when the scope is destroyed (due to ng-if or something that changes the DOM)
@@ -439,7 +418,9 @@ angular.module('app.controllers.users', ['app.services.backend',
 angular.module('app.directives.altlabels', ['app.services.state'])
 
 .directive('altlabels', ['StateService', function (StateService) {
-  return { 
+  'use strict';
+
+  return {
 
     restrict : 'E',  // element names only
     templateUrl: '/partials/altlabels.html',
@@ -481,7 +462,7 @@ angular.module('app.directives.altlabels', ['app.services.state'])
 
       scope.markReviewed = function(uri) {
         console.log('Mark reviewed: ' + uri);
-        alert('not implemented');
+        window.alert('not implemented');
       };
 
       function bind(lang, items) {
@@ -504,7 +485,9 @@ angular.module('app.directives.altlabels', ['app.services.state'])
 angular.module('app.directives.conceptnav', ['app.services.concepts', 'app.services.state'])
 
 .directive('conceptnav', ['StateService', 'Concepts', function (StateService, Concepts) {
-  return { 
+  'use strict';
+
+  return {
 
     restrict : 'E',  // element names only
     templateUrl: '/partials/conceptnav.html',
@@ -519,6 +502,7 @@ angular.module('app.directives.conceptnav', ['app.services.concepts', 'app.servi
       scope.concepts = [];
       scope.busy = true;
       scope.filterNn = '';
+      scope.filterNotes = false;
       scope.totalCount = Concepts.count;
 
       scope.fetchMoreConcepts = function() {
@@ -531,6 +515,9 @@ angular.module('app.directives.conceptnav', ['app.services.concepts', 'app.servi
         scope.concepts = concepts;
         scope.totalCount = Concepts.count;
         scope.busy = false;
+        setTimeout(function() {
+          scope.checkScrollPos(scope.currentConcept);
+        });
       });
 
       scope.selectConcept = function() {
@@ -540,8 +527,28 @@ angular.module('app.directives.conceptnav', ['app.services.concepts', 'app.servi
 
       scope.currentConcept = StateService.getConcept();
 
+      scope.checkScrollPos = function(concept) {
+        // All elements have the same height since we are using angular-vs-repeat
+        var y = $('.scrollerwrapper').children().first().height(),
+            idx = scope.concepts.indexOf(concept),
+            ctop = idx * y,
+            cbottom = ctop + y,
+            wtop = $('.scrollerwrapper').scrollTop(),
+            wbottom = wtop + $('.scrollerwrapper').height();
+
+        if (idx === -1) return; 
+        if (!concept) return; 
+
+        if (cbottom >= wbottom) {
+          $('.scrollerwrapper').scrollTop( cbottom - $('.scrollerwrapper').height() );
+        } else if (ctop <= wtop) {
+          $('.scrollerwrapper').scrollTop( ctop );
+        }
+      };
+
       scope.$on('conceptChanged', function(evt, concept) {
         scope.currentConcept = concept;
+        scope.checkScrollPos(concept);
       });
 
       // scope.$watch('filter', function filterChanged(value) {
@@ -557,6 +564,9 @@ angular.module('app.directives.conceptnav', ['app.services.concepts', 'app.servi
         if (scope.filterNn) {          
           q.push(scope.filterNn);
         }
+        if (scope.filterNotes) {          
+          q.push('has:editorialNote');
+        }
 
         q = q.join(',');
         console.log(q);
@@ -570,10 +580,12 @@ angular.module('app.directives.conceptnav', ['app.services.concepts', 'app.servi
   };
 }]);
 // Declare app level module which depends on filters, and services
-angular.module('app.directives.term', ['app.services.state'])
+angular.module('app.directives.term', ['app.services.state', 'app.services.backend'])
 
-.directive('term', ['StateService', function (StateService) {
-  return { 
+.directive('term', ['StateService', 'Backend', function (StateService, Backend) {
+  'use strict';
+
+  return {
 
     restrict : 'E',  // element names only
     transclude: true,
@@ -586,8 +598,10 @@ angular.module('app.directives.term', ['app.services.state'])
       // console.log(attrs);
 
       scope.markReviewed = function() {        
-        // "not normally recommended" (http://stackoverflow.com/a/17900556/489916)
-        scope.$parent.markReviewed(scope.originalData.uri);
+        Backend.markReviewed(scope.originalData.uri).then(function(response) {
+          // TODO: Something more elegant than scope.$parent ?
+          scope.$parent.reload();  // Reload to get term URIs etc..
+        });
       };
 
       scope.keydown = function(evt) {
@@ -628,8 +642,6 @@ angular.module('app.services.auth', ['ngCookies', 'app.services.backend'])
 .service('Auth', ['$rootScope', '$cookieStore', function($rootScope, $cookieStore) {
   'use strict';
 
-  console.log('User-cookie: ');
-  console.log($cookieStore.get('user'));
   var currentUser = $cookieStore.get('user') || { username: '', permission: [] };
 
   this.user = currentUser;
@@ -740,6 +752,13 @@ angular.module('app.services.concept', ['app.services.backend', 'app.directives.
     },
 
     setData: function(data) {
+      // If no (editable) editorialNote field, create one
+      if (!data.editorialNote) {
+        data.editorialNote = [{ value: '' }];
+      } else if (data.editorialNote[0].readonly) {
+        data.editorialNote.push({ value: '' });        
+      }
+
       if (!data.altLabel || !Object.keys(data.altLabel).length) data.altLabel = {};
       Backend.config.languages.forEach(function(lng) {
         // There should be at least one text field, so we add
@@ -747,14 +766,8 @@ angular.module('app.services.concept', ['app.services.backend', 'app.directives.
         if (!data.prefLabel[lng]) data.prefLabel[lng] = [{ value: '' }];
         if (!data.altLabel[lng]) data.altLabel[lng] = [{ value: '' }];
       });
-
-      // DUMMY:
-      data.prefLabel.nn[0].hints = [];
-      data.prefLabel.nn[0].hints.push(data.prefLabel.nb[0].value);
-      var m = data.prefLabel.nb[0].value.match('^(.*)er$');
-      if (m) {
-        data.prefLabel.nn[0].hints.push(m[1] + 'ar');
-      }
+      this.ensureBlankFields(data);
+      this.generateHints(data);
 
       var oldLabel = this.label;
       this.label = data.prefLabel.nb[0].value;
@@ -773,13 +786,48 @@ angular.module('app.services.concept', ['app.services.backend', 'app.directives.
     testDirty: function() {
       this.dirty = ! angular.equals(this.data, this.originalData);
       // if (this.dirty) this.saved = false;
+      this.ensureBlankFields(this.data);
     },
 
-    markReviewed: function(uri) {
+    generateHints: function(data) {
+      var m;
+
+      data.prefLabel.nn[0].hints = [];
+      data.prefLabel.nn[0].hints.push(data.prefLabel.nb[0].value);
+      m = data.prefLabel.nb[0].value.match('^(.*)er$');
+      if (m) {
+        data.prefLabel.nn[0].hints.push(m[1] + 'ar');
+      }
+      for (var i = 0; i < Math.min(data.altLabel.nn.length, data.altLabel.nb.length); i++) {
+        data.altLabel.nn[i].hints = [];
+        data.altLabel.nn[i].hints.push(data.altLabel.nb[i].value);
+        m = data.altLabel.nb[i].value.match('^(.*)er$');
+        if (m) {
+          data.altLabel.nn[i].hints.push(m[1] + 'ar');
+        }
+      };
+    },
+
+    /**
+     * Make sure there is always one blank field at the end of the term list to add new data to
+     * for each language
+     */
+    ensureBlankFields: function(data) {
       var that = this;
-      console.log('Mark as reviewed: ' + uri);
-      Backend.markReviewed(uri).then(function(response) {
-        that.load(true);  // Reload to get term URIs etc..
+      Backend.config.languages.forEach(function(lng) {
+
+        // There should be at least one text field, so we add
+        // one if there are none.
+        
+        if (data.altLabel[lng].length === 0 || data.altLabel[lng][data.altLabel[lng].length - 1].value !== '') {
+          data.altLabel[lng].push({ value: '' });
+          that.generateHints(data);
+        }
+
+        if (data.altLabel[lng].length >= 2 && data.altLabel[lng][data.altLabel[lng].length - 1].value === '' && data.altLabel[lng][data.altLabel[lng].length - 2].value === '') {
+          data.altLabel[lng] = data.altLabel[lng].slice(0, data.altLabel[lng].length - 1);
+        }
+
       });
     },
 
@@ -794,24 +842,29 @@ angular.module('app.services.concept', ['app.services.backend', 'app.directives.
         console.log(response);
         if (!response.data.status) {
           that.error = response.data;
-          alert('Save failed, see concept for more info.');
+          window.alert('Save failed, see concept for more info.');
           return;
         }
         if (response.data.status != 'success') {
           if (response.data.status == 'edit_conflict') {
             that.error = 'Redigeringskonflikt: Begrepet har blitt endret på serveren siden du begynte å redigere. Kopier ulagrede endringer og trykk så "Tilbakestill" (eller last siden på nytt) for å hente inn det oppdaterte begrepet.';
-            alert('Redigeringskonflikt, endringene dine har ikke blitt lagret.');
+            window.alert('Redigeringskonflikt, endringene dine har ikke blitt lagret.');
           } else if (response.data.status == 'no_permission') {
             that.error = 'Beklager, du har ikke redigeringstilgang. Hvis du nettopp har registrert deg må du vente på at kontoen blir godkjent.';
-            alert('Beklager, du har ikke redigeringstilgang. Hvis du nettopp har registrert deg må du vente på at kontoen blir godkjent.');
+            window.alert('Beklager, du har ikke redigeringstilgang. Hvis du nettopp har registrert deg må du vente på at kontoen blir godkjent.');
           } else {
             that.error = response.data.status;
-            alert('Save failed, see concept for more info.');
+            window.alert('Save failed, see concept for more info.');
           }
           return;
         }
         that.saved = true;
         that.load(true);  // Reload to get term URIs etc..
+      }).catch(function(err) {
+        that.saving = false;
+        console.log(err);
+        that.error = 'Invalid response received: ' + err.message;
+        window.alert('Save failed!');
       });
     },
 
@@ -916,13 +969,6 @@ angular.module('app.services.concepts', ['app.services.backend', 'app.services.c
       that.count = results.count;
       if (that.count != that.concepts.length) {
         that.concepts = [];
-        // for (var i = 0; i < that.count; i++) {
-        //   that.concepts.push({'label': '(not loaded yet)', 'idx': i});
-        // }
-        // console.log(that.concepts.length + ', ' + that.count);
-
-        // console.log(that.concepts);
-
       }
       that.cursor = results.cursor;
 
@@ -930,7 +976,13 @@ angular.module('app.services.concepts', ['app.services.backend', 'app.services.c
         var n = that.cursor + idx;
         //that.concepts[n] = new Concept(concept.id, concept.uri, concept.label);
         if (!that.getByUri(concept.uri)) {
-          that.concepts.push(new Concept(concept.id, concept.uri, concept.label));
+
+          if (currentConcept.uri == concept.uri) {
+            that.concepts.push(currentConcept);
+          } else {
+            that.concepts.push(new Concept(concept.id, concept.uri, concept.label));
+          }
+
         }
       });
 
@@ -968,6 +1020,7 @@ angular.module('app.services.concepts', ['app.services.backend', 'app.services.c
   };
 
   this.add = function(id, uri) {
+    console.log('[Concepts] Add <' + uri + '> to the current list of ' + that.concepts.length + ' concepts.');
     var concept = new Concept(id, uri, '(...)');
     that.concepts.push(concept);
     return concept;

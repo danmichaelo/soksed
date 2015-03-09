@@ -5,8 +5,10 @@
 # Set RUBYENV to the value returned from `rvm env --path` to make the script find
 # the RVM environment when run as a cronjob.
 #
-# Example:
-#  10 * * * * RUBYENV=/usr/local/rvm/environments/ruby-1.9.3-p551@global /path/to/update-fuseki.sh
+# Example crontab:
+#
+#  RUBYENV=/usr/local/rvm/environments/ruby-1.9.3-p551@global
+#  10 * * * * /path/to/update-fuseki.sh
 
 cd "$( dirname "${BASH_SOURCE[0]}" )"
 

@@ -88,6 +88,9 @@ angular.module('app.directives.conceptnav', ['app.services.concepts', 'app.servi
         if (scope.filterUnverified) {          
           q.push('has:unverified');
         }
+        if (scope.filterLocal) {          
+          q.push('graph:local');
+        }
 
         q = q.join(',');
         console.log(q);

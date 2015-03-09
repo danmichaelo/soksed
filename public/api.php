@@ -72,8 +72,7 @@ switch ($action) {
 
 		$concepts = $sparql->getConcepts(
 			intval(array_get($_GET, 'cursor', 0)),
-			array_get($_GET, 'filter'),
-			intval(array_get($_GET, 'transOnly', 0))
+			array_get($_GET, 'filter')
 		);
 
 		jsonOut($concepts);

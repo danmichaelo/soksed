@@ -102,20 +102,29 @@ class Sparql extends Base
 		return $response->isSuccessful();
 	}
 
-	public function getConcepts($cursor, $filters, $transOnly)
+	public function getConcepts($cursor, $filters)
 	{
 		$limit = 1500;
 
 		$filterQueries = [];
 		$parameters = [];
+		$graph = null;
 		if (!empty($filters)) {
-			if ($transOnly) {
+			$filters = explode(',', $filters);
+
+			for ($i=count($filters)-1; $i >= 0; $i--) { 
+				if (preg_match('/^graph:([a-z]+)/', $filters[$i], $m)) {
+					$graph = $m[1];
+					array_splice($filters, $i, 1);
+				}
+			}
+
+			if ($graph == 'local') {
 				$graph = '<%transGraphUri%>';
 				$parameters['transGraphUri'] = $this->transGraphUri;
 			} else {
 				$graph = null;
 			}
-			$filters = explode(',', $filters);
 
 			$n = 1;
 

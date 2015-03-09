@@ -60,7 +60,7 @@ class Sparql extends Base
 				die('Sparql::bind - Could not bind parameter "' . $matches[1] . '", no value supplied!');
 			}
 			// Sanitize URIRef - TODO: Use some standardized method
-			$value = trim($parameters[$matches[1]], '<>"');
+			$value = str_replace(['<', '>'], ['&lt;', '&gt;'], $parameters[$matches[1]]);
 			return '<' . $value . '>';
 
 		}, $query);
@@ -70,7 +70,7 @@ class Sparql extends Base
 				die('Sparql::bind - Could not bind parameter "' . $matches[1] . '", no value supplied!');
 			}
 			// Sanitize Literal - TODO: Use some standardized method
-			$value = trim($parameters[$matches[1]], '"');
+			$value = addslashes( $parameters[$matches[1]] );
 			return '"' . $value . '"';
 
 		}, $query);

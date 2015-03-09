@@ -20,6 +20,7 @@ angular.module('app.directives.conceptnav', ['app.services.concepts', 'app.servi
       scope.busy = true;
       scope.filterNn = '';
       scope.filterNotes = false;
+      scope.filterUnverified = false;
       scope.totalCount = Concepts.count;
 
       scope.fetchMoreConcepts = function() {
@@ -83,6 +84,9 @@ angular.module('app.directives.conceptnav', ['app.services.concepts', 'app.servi
         }
         if (scope.filterNotes) {          
           q.push('has:editorialNote');
+        }
+        if (scope.filterUnverified) {          
+          q.push('has:unverified');
         }
 
         q = q.join(',');

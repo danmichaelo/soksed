@@ -134,6 +134,15 @@ class Sparql extends Base
 					$filterQuery = 'GRAPH ' . ($graph ?: "?graph$n") . ' { ' . $filterQuery . '}';
 					$filterQueries[] = 'FILTER ' . $op . ' { ' . $filterQuery . '}';
 
+				} elseif (preg_match('/^has:unverified/', $filter, $m)) {
+					$filterQuery = "
+						?concept (xl:prefLabel|xl:altLabel) ?labelNode$n .
+						?labelNode$n dct:created ?created .
+						FILTER NOT EXISTS { ?labelNode$n uo:proofread ?proofread . }
+					";
+					$filterQuery = 'GRAPH ' . ($graph ?: "?graph$n") . ' { ' . $filterQuery . '}';
+					$filterQueries[] = 'FILTER EXISTS { ' . $filterQuery . '}';
+
 				} elseif (preg_match('/^has:editorialNote/', $filter, $m)) {
 					$filterQuery = "
 						?concept skos:editorialNote ?ednote . 

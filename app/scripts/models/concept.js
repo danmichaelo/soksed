@@ -1,8 +1,8 @@
 
 // Declare app level module which depends on filters, and services
-angular.module('app.services.concept', ['app.services.backend', 'app.directives.altlabels', 'app.directives.term'])
+angular.module('app.services.concept', ['app.config', 'app.services.backend', 'app.directives.altlabels', 'app.directives.term'])
 
-.factory('Concept', ['$q', '$rootScope', '$timeout', 'Backend', function($q, $rootScope, $timeout, Backend) {
+.factory('Concept', ['$q', '$rootScope', '$timeout', 'Backend', 'config', function($q, $rootScope, $timeout, Backend, config) {
   'use strict';
 
   function Concept(id, uri, label) {
@@ -36,7 +36,7 @@ angular.module('app.services.concept', ['app.services.backend', 'app.directives.
       }
 
       if (!data.altLabel || !Object.keys(data.altLabel).length) data.altLabel = {};
-      Backend.config.languages.forEach(function(lng) {
+      config.languages.forEach(function(lng) {
         // There should be at least one text field, so we add
         // one if there are none.
         if (!data.prefLabel[lng]) data.prefLabel[lng] = [{ value: '' }];
@@ -94,7 +94,7 @@ angular.module('app.services.concept', ['app.services.backend', 'app.directives.
      */
     ensureBlankFields: function(data) {
       var that = this;
-      Backend.config.languages.forEach(function(lng) {
+      config.languages.forEach(function(lng) {
 
         // There should be at least one text field, so we add
         // one if there are none.

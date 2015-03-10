@@ -4,7 +4,9 @@ angular.module('app', ['ngSanitize',
                        'vs-repeat',
                        'cfp.hotkeys',
                        'ui.router',
+                       '720kb.tooltips',
 
+                       'app.config',
                        'app.controllers.user',
                        'app.controllers.users',
                        'app.controllers.concept',
@@ -44,7 +46,7 @@ angular.module('app', ['ngSanitize',
       templateUrl: 'partials/home.html'
     })
     .state('concepts', {
-      url: '/concepts',
+      url: '/concepts?q',
       templateUrl: 'partials/concepts.html',
       needsPermission: 'edit',
       controller: 'ConceptsController'

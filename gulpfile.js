@@ -65,7 +65,8 @@ gulp.task('deps', function() {
         //'public/lib/ngInfiniteScroll/build/ng-infinite-scroll.js',
         'public/lib/angular-hotkeys/build/hotkeys.js',
         'public/lib/angular-ui-router/release/angular-ui-router.js',
-        'public/lib/angular-vs-repeat/src/angular-vs-repeat.js'
+        'public/lib/angular-vs-repeat/src/angular-vs-repeat.js',
+        'public/lib/angular-tooltips/dist/angular-tooltips.min.js'
       ])
     .pipe(concat('deps.js'))
     .pipe(gulp.dest('public/build'))

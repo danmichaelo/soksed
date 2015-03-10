@@ -44,6 +44,7 @@ setcookie('user', json_encode($auth->getProfile()), time()+60, '/');
 	<link href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" rel="stylesheet">
 
 	<link href="/lib/angular-hotkeys/build/hotkeys.min.css" rel="stylesheet">
+	<link href="/lib/angular-tooltips/src/css/angular-tooltips.css" rel="stylesheet" type="text/css" />
 
 <!--  <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.2.16/angular.min.js"></script>
 	<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.2.16/angular-route.min.js"></script>

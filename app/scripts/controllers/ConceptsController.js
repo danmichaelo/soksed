@@ -1,17 +1,34 @@
  
 // Declare app level module which depends on filters, and services
-angular.module('app.controllers.concepts', ['app.services.backend'])
+angular.module('app.controllers.concepts', ['app.config', 'app.services.backend'])
 
-.controller('ConceptsController', ['$scope', '$state', 'Backend', 'StateService',
-                                  function($scope, $state, Backend, StateService) {
+.controller('ConceptsController', ['$scope', '$state', '$stateParams', 'Backend', 'StateService', 'config',
+                                  function($scope, $state, $stateParams, Backend, StateService, config) {
   'use strict';
 
-  $scope.selectedLanguages = Backend.config.languages;
+  console.log('-- ConceptsController --');
+  // console.log($stateParams);
 
-  $scope.views = [
-    {id: 1, name: 'default', label: 'Standard'},
-    {id: 2, name: 'nn', label: 'Omsetjing til nynorsk'},
-  ];
+  $scope.filterobj = {};
+  if ($stateParams.q) {
+    $stateParams.q.split(',').forEach(function(p) {
+      var filterKeys = config.filters.map(function(x) { return x.value; });
+      var f = config.filters[filterKeys.indexOf(p)];
+      if (f !== undefined) {
+        $scope.filterobj.select = f;
+      } else if (p.match('(graph:local)')) {
+        $scope.filterobj.local = true;
+      } else {
+        $scope.filterobj.query = p;
+      }
+    });
+  }
+  if (!$scope.filterobj.select) {
+    $scope.filterobj.select = config.filters[0];
+  }
+
+  $scope.selectedLanguages = config.languages;
+  $scope.views = config.views;
 
   function setView(view) {
     if (!view) return;
@@ -36,12 +53,9 @@ angular.module('app.controllers.concepts', ['app.services.backend'])
 
     $state.go('concepts.concept', { view: c.name });
 
-    // if (c.id == 2) {
-    //   $scope.selectedLanguages = ['nn', 'nb'];
-    // } else {
-    //   $scope.selectedLanguages = Backend.config.languages;
-    // }
   });
+
+  $scope.currentConcept = StateService.getConcept();
 
   $scope.$on('conceptChanged', function(evt, concept) {
     console.log('[ConceptsController] Concept changed: ' + concept.uri);

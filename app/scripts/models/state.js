@@ -12,6 +12,7 @@ angular.module('app.services.state', ['app.services.concepts'])
   };
 
   this.setView = function(view) {
+    if (view == state.view) return;
     state.view = view;
     console.log('[state] > New view');
     console.log(view);
@@ -23,6 +24,7 @@ angular.module('app.services.state', ['app.services.concepts'])
   };
 
   this.setConcept = function(concept) {
+    if (state.concept == concept) return;
     state.concept = concept;
     $rootScope.$broadcast('conceptChanged', state.concept);
   };
@@ -32,6 +34,7 @@ angular.module('app.services.state', ['app.services.concepts'])
   };
 
   this.setTerm = function(term) {
+    if (state.term == term) return;
     state.term = term;
     $rootScope.$broadcast('termChanged', state.term);
   };

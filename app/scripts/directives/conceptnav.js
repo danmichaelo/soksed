@@ -1,7 +1,7 @@
 // Declare app level module which depends on filters, and services
-angular.module('app.directives.conceptnav', ['app.services.concepts', 'app.services.state'])
+angular.module('app.directives.conceptnav', ['app.config', 'app.services.concepts', 'app.services.state'])
 
-.directive('conceptnav', ['StateService', 'Concepts', function (StateService, Concepts) {
+.directive('conceptnav', ['$state', '$location', 'StateService', 'Concepts', 'config', function ($state, $location, StateService, Concepts, config) {
   'use strict';
 
   return {
@@ -9,18 +9,17 @@ angular.module('app.directives.conceptnav', ['app.services.concepts', 'app.servi
     restrict : 'E',  // element names only
     templateUrl: '/partials/conceptnav.html',
     replace: false,
-    scope: { },
+    scope: {
+      'filterobj': '='  // Two-way data binding
+    },
 
     link: function(scope, element, attrs) {
       // console.log(element);
       // console.log(attrs);
       console.log('>>> Linking conceptnav');
-
+      scope.filters = config.filters;
       scope.concepts = [];
       scope.busy = true;
-      scope.filterNn = '';
-      scope.filterNotes = false;
-      scope.filterUnverified = false;
       scope.totalCount = Concepts.count;
 
       scope.fetchMoreConcepts = function() {
@@ -37,6 +36,10 @@ angular.module('app.directives.conceptnav', ['app.services.concepts', 'app.servi
           scope.checkScrollPos(scope.currentConcept);
         });
       });
+
+      function conceptListUpdated() {
+        console.log('conceptListUpdated');
+      }
 
       scope.selectConcept = function() {
         // console.log(this.concept);
@@ -69,37 +72,35 @@ angular.module('app.directives.conceptnav', ['app.services.concepts', 'app.servi
         scope.checkScrollPos(concept);
       });
 
-      // scope.$watch('filter', function filterChanged(value) {
-      //   console.log('Selected filter: ' + value);
-      //   Concepts.fetch(value);
-      // });
-
-      scope.filter = function() {
-        var q = [];
-        if (scope.filterQuery) {
-          q.push(scope.filterQuery);
-        }
-        if (scope.filterNn) {          
-          q.push(scope.filterNn);
-        }
-        if (scope.filterNotes) {          
-          q.push('has:editorialNote');
-        }
-        if (scope.filterUnverified) {          
-          q.push('has:unverified');
-        }
-        if (scope.filterLocal) {          
-          q.push('graph:local');
-        }
-
-        q = q.join(',');
-        console.log(q);
-        scope.busy = true;
-        Concepts.fetch(q);
+      scope.graphOptionEnabled = function() {
+        return scope.filterobj.select && scope.filterobj.select.graphOption;
       };
 
-      Concepts.fetch();
+      scope.submit = function() {
+        var filterString = [];
+        if (scope.filterobj.query) filterString.push(scope.filterobj.query);
+        if (scope.filterobj.select) filterString.push(scope.filterobj.select.value);
+        if (scope.graphOptionEnabled() && scope.filterobj.local) filterString.push('graph:local');
+        console.log(filterString);
 
+        $state.go('concepts.concept', {q: filterString.join(',')});
+      };
+
+      var q = [];
+      if (scope.filterobj.query) {
+        q.push(scope.filterobj.query);
+      }
+      if (scope.filterobj.select) {
+        q.push(scope.filterobj.select.value);
+      }
+      if (scope.filterobj.local) {
+        q.push('graph:local');
+      }
+
+      q = q.join(',');
+      console.log(q);
+      scope.busy = true;
+      Concepts.fetch(q);
     }
   };
 }]);

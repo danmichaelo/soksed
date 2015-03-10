@@ -6,10 +6,6 @@ angular.module('app.services.backend', [])
   'use strict';
   // console.log('Backend init');
 
-  this.config = {
-    languages: ['nb', 'nn', 'en', 'la']
-  };
-
   function getRequest(method, params) {
     if (!params) params = {};
     params.action = method;

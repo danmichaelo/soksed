@@ -1,44 +1,30 @@
 
 	<div class="padded" style="background: #eee;">
-		<form ng-submit="filter()">
-			<input type="text" placeholder="Søk" ng-model="filterQuery" style="width:100%;">
+		<form ng-submit="submit()">
+			<input type="text" placeholder="Søk" ng-model="filterobj.query" style="width:100%;">
 
-		<div style="font-size: 90%;">
-			<label class="radio-inline">
-			  <input type="radio" ng-model="filterNn" value=""> Vis alt		
-			</label>
+			<div>
 
-			<label class="radio-inline">
-			  <input type="radio" ng-model="filterNn" value="-exists:prefLabel@nn"> Mangler nn
-			</label>
+				<select ng-model="filterobj.select"
+					    ng-options="f.label for f in filters track by f.value"></select>
 
-			<label class="radio-inline">
-			  <input type="radio" ng-model="filterNn" value="exists:prefLabel@nn"> Har nn
-			</label>	
-		</div>
-		<div style="font-size: 90%;">
-			<label>
-				<input type="checkbox" ng-model="filterUnverified">
-				Ikke korrekturlest
-			</label>
-			<label>
-				<input type="checkbox" ng-model="filterNotes">
-				Har noter
-			</label>
-			<label>
-				<input type="checkbox" ng-model="filterLocal">
-				Bare lokalt
-			</label>
-		</div>
-		
-		<div style="float:right;">
-			<i class="fa fa-cog fa-spin" ng-show="busy"></i>
-			<span ng-show="!busy">
-			Viser {{ concepts.length }} av {{ totalCount }} begreper
-			</span>
-		</div>
+				<label ng-show="graphOptionEnabled()"
+					   tooltips tooltip-side="bottom"
+					   tooltip-title="Avgrens til lokale (ikke-importerte) data.">
+					<input type="checkbox" ng-model="filterobj.local">
+					Bare lokalt
+				</label>
 
-		<button type="submit" ng-disabled="busy">Søk</button>
+			</div>
+
+			<div style="float:right;">
+				<i class="fa fa-cog fa-spin" ng-show="busy"></i>
+				<span ng-show="!busy">
+				Viser {{ concepts.length }} av {{ totalCount }} begreper
+				</span>
+			</div>
+
+			<button type="submit" ng-disabled="busy">Søk</button>
 		</form>
 
 	</div>

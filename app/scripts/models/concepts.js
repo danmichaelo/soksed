@@ -55,7 +55,7 @@ angular.module('app.services.concepts', ['app.services.backend', 'app.services.c
         //that.concepts[n] = new Concept(concept.id, concept.uri, concept.label);
         if (!that.getByUri(concept.uri)) {
 
-          if (currentConcept.uri == concept.uri) {
+          if (currentConcept && currentConcept.uri == concept.uri) {
             that.concepts.push(currentConcept);
           } else {
             that.concepts.push(new Concept(concept.id, concept.uri, concept.label));

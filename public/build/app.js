@@ -1,10 +1,31 @@
+
+/**
+ * Config
+ */
+angular.module('app.config', [])
+  .constant('config', {
+    views: [
+      {id: 1, name: 'default', label: 'Standard'},
+      {id: 2, name: 'nn', label: 'Omsetjing til nynorsk'},
+    ],
+    filters: [
+      { value:'', label:'(intet filter)' },
+      { value: 'has:unverified', label: 'Ikke korrekturlest' }, 
+      { value: 'exists:prefLabel@nn', label: 'Har språk:nynorsk', graphOption: true },
+      { value: '-exists:prefLabel@nn', label: 'Mangler språk:nynorsk' },
+      { value: 'has:editorialNote', label: 'Har noter', graphOption: true }
+     ],
+    languages: ['nb', 'nn', 'en', 'la']
+  });
  
 // Declare app level module which depends on filters, and services
 angular.module('app', ['ngSanitize',
                        'vs-repeat',
                        'cfp.hotkeys',
                        'ui.router',
+                       '720kb.tooltips',
 
+                       'app.config',
                        'app.controllers.user',
                        'app.controllers.users',
                        'app.controllers.concept',
@@ -44,7 +65,7 @@ angular.module('app', ['ngSanitize',
       templateUrl: 'partials/home.html'
     })
     .state('concepts', {
-      url: '/concepts',
+      url: '/concepts?q',
       templateUrl: 'partials/concepts.html',
       needsPermission: 'edit',
       controller: 'ConceptsController'
@@ -172,12 +193,19 @@ angular.module('app', ['ngSanitize',
 
 }])
 
-.controller('LoginCtrl', ['$scope', '$location', '$log', '$timeout', 'Auth', 'Concepts', 'StateService', function($scope, $location, $log, $timeout, Auth, Concepts, StateService){
+.controller('HeaderCtrl', ['$scope', '$location', '$log', '$timeout', 'Auth', 'Concepts', 'StateService', function($scope, $location, $log, $timeout, Auth, Concepts, StateService){
   'use strict';
 
   // console.log('LoginCtrl init');
 
   $scope.user = Auth.user;
+
+  // TODO: Use Stateservice to determine?
+  $scope.menuAvailable = true;
+
+  $scope.toggleMenu = function() {
+    angular.element('body').toggleClass('menuVisible');
+  };
 
   $scope.$on('userChanged', function(e, user) {
     $scope.user = user;
@@ -333,23 +361,49 @@ angular.module('app.controllers.concept', ['app.services.backend',
         Concepts.prev();
       },
       allowIn: ['INPUT']
+    })
+    .add({
+      combo: keyboardModifier + '+k',
+      description: 'Vis katalogposter',
+      callback: function(event, hotkey) {
+        event.preventDefault();
+        window.open($scope.currentConcept.katapiUrl, 'katapi');
+      },
+      allowIn: ['INPUT']
     });
 
 }]);
  
 // Declare app level module which depends on filters, and services
-angular.module('app.controllers.concepts', ['app.services.backend'])
+angular.module('app.controllers.concepts', ['app.config', 'app.services.backend'])
 
-.controller('ConceptsController', ['$scope', '$state', 'Backend', 'StateService',
-                                  function($scope, $state, Backend, StateService) {
+.controller('ConceptsController', ['$scope', '$state', '$stateParams', 'Backend', 'StateService', 'config',
+                                  function($scope, $state, $stateParams, Backend, StateService, config) {
   'use strict';
 
-  $scope.selectedLanguages = Backend.config.languages;
+  console.log('-- ConceptsController --');
+  // console.log($stateParams);
 
-  $scope.views = [
-    {id: 1, name: 'default', label: 'Standard'},
-    {id: 2, name: 'nn', label: 'Omsetjing til nynorsk'},
-  ];
+  $scope.filterobj = {};
+  if ($stateParams.q) {
+    $stateParams.q.split(',').forEach(function(p) {
+      var filterKeys = config.filters.map(function(x) { return x.value; });
+      var f = config.filters[filterKeys.indexOf(p)];
+      if (f !== undefined) {
+        $scope.filterobj.select = f;
+      } else if (p.match('(graph:local)')) {
+        $scope.filterobj.local = true;
+      } else {
+        $scope.filterobj.query = p;
+      }
+    });
+  }
+  if (!$scope.filterobj.select) {
+    $scope.filterobj.select = config.filters[0];
+  }
+
+  $scope.selectedLanguages = config.languages;
+  $scope.views = config.views;
 
   function setView(view) {
     if (!view) return;
@@ -374,12 +428,9 @@ angular.module('app.controllers.concepts', ['app.services.backend'])
 
     $state.go('concepts.concept', { view: c.name });
 
-    // if (c.id == 2) {
-    //   $scope.selectedLanguages = ['nn', 'nb'];
-    // } else {
-    //   $scope.selectedLanguages = Backend.config.languages;
-    // }
   });
+
+  $scope.currentConcept = StateService.getConcept();
 
   $scope.$on('conceptChanged', function(evt, concept) {
     console.log('[ConceptsController] Concept changed: ' + concept.uri);
@@ -482,9 +533,9 @@ angular.module('app.directives.altlabels', ['app.services.state'])
   };
 }]);
 // Declare app level module which depends on filters, and services
-angular.module('app.directives.conceptnav', ['app.services.concepts', 'app.services.state'])
+angular.module('app.directives.conceptnav', ['app.config', 'app.services.concepts', 'app.services.state'])
 
-.directive('conceptnav', ['StateService', 'Concepts', function (StateService, Concepts) {
+.directive('conceptnav', ['$state', '$location', 'hotkeys', 'StateService', 'Concepts', 'config', function ($state, $location, hotkeys, StateService, Concepts, config) {
   'use strict';
 
   return {
@@ -492,18 +543,28 @@ angular.module('app.directives.conceptnav', ['app.services.concepts', 'app.servi
     restrict : 'E',  // element names only
     templateUrl: '/partials/conceptnav.html',
     replace: false,
-    scope: { },
+    scope: {
+      'filterobj': '='  // Two-way data binding
+    },
 
     link: function(scope, element, attrs) {
       // console.log(element);
       // console.log(attrs);
       console.log('>>> Linking conceptnav');
-
+      scope.filters = config.filters;
       scope.concepts = [];
       scope.busy = true;
-      scope.filterNn = '';
-      scope.filterNotes = false;
       scope.totalCount = Concepts.count;
+
+      hotkeys.bindTo(scope)
+      .add({
+        combo: '/',
+        description: 'Søk',
+        callback: function(event, hotkey) {
+          event.preventDefault();
+          $('.conceptnav input:text').focus();
+        }
+      });
 
       scope.fetchMoreConcepts = function() {
         // called by infinite scroll
@@ -519,6 +580,10 @@ angular.module('app.directives.conceptnav', ['app.services.concepts', 'app.servi
           scope.checkScrollPos(scope.currentConcept);
         });
       });
+
+      function conceptListUpdated() {
+        console.log('conceptListUpdated');
+      }
 
       scope.selectConcept = function() {
         // console.log(this.concept);
@@ -551,31 +616,35 @@ angular.module('app.directives.conceptnav', ['app.services.concepts', 'app.servi
         scope.checkScrollPos(concept);
       });
 
-      // scope.$watch('filter', function filterChanged(value) {
-      //   console.log('Selected filter: ' + value);
-      //   Concepts.fetch(value);
-      // });
-
-      scope.filter = function() {
-        var q = [];
-        if (scope.filterQuery) {
-          q.push(scope.filterQuery);
-        }
-        if (scope.filterNn) {          
-          q.push(scope.filterNn);
-        }
-        if (scope.filterNotes) {          
-          q.push('has:editorialNote');
-        }
-
-        q = q.join(',');
-        console.log(q);
-        scope.busy = true;
-        Concepts.fetch(q);
+      scope.graphOptionEnabled = function() {
+        return scope.filterobj.select && scope.filterobj.select.graphOption;
       };
 
-      Concepts.fetch();
+      scope.submit = function() {
+        var filterString = [];
+        if (scope.filterobj.query) filterString.push(scope.filterobj.query);
+        if (scope.filterobj.select) filterString.push(scope.filterobj.select.value);
+        if (scope.graphOptionEnabled() && scope.filterobj.local) filterString.push('graph:local');
+        console.log(filterString);
 
+        $state.go('concepts.concept', {q: filterString.join(',')});
+      };
+
+      var q = [];
+      if (scope.filterobj.query) {
+        q.push(scope.filterobj.query);
+      }
+      if (scope.filterobj.select) {
+        q.push(scope.filterobj.select);
+      }
+      if (scope.filterobj.local) {
+        q.push('graph:local');
+      }
+
+      q = q.join(',');
+      console.log(q);
+      scope.busy = true;
+      Concepts.fetch(q);
     }
   };
 }]);
@@ -597,7 +666,13 @@ angular.module('app.directives.term', ['app.services.state', 'app.services.backe
       // console.log(element);
       // console.log(attrs);
 
-      scope.markReviewed = function() {        
+      scope.markReviewed = function() {
+        var cont = true;
+        // TODO: Something more elegant than scope.$parent ?
+        if (scope.$parent.currentConcept.dirty) {
+          cont = window.confirm('Endringer du har gjort på dette begrepet vil gå tapt. Vil du fortsette?');
+        }
+        if (!cont) return;
         Backend.markReviewed(scope.originalData.uri).then(function(response) {
           // TODO: Something more elegant than scope.$parent ?
           scope.$parent.reload();  // Reload to get term URIs etc..
@@ -670,10 +745,6 @@ angular.module('app.services.backend', [])
   'use strict';
   // console.log('Backend init');
 
-  this.config = {
-    languages: ['nb', 'nn', 'en', 'la']
-  };
-
   function getRequest(method, params) {
     if (!params) params = {};
     params.action = method;
@@ -724,9 +795,9 @@ angular.module('app.services.backend', [])
 
 
 // Declare app level module which depends on filters, and services
-angular.module('app.services.concept', ['app.services.backend', 'app.directives.altlabels', 'app.directives.term'])
+angular.module('app.services.concept', ['app.config', 'app.services.backend', 'app.directives.altlabels', 'app.directives.term'])
 
-.factory('Concept', ['$q', '$rootScope', '$timeout', 'Backend', function($q, $rootScope, $timeout, Backend) {
+.factory('Concept', ['$q', '$rootScope', '$timeout', 'Backend', 'config', function($q, $rootScope, $timeout, Backend, config) {
   'use strict';
 
   function Concept(id, uri, label) {
@@ -760,7 +831,7 @@ angular.module('app.services.concept', ['app.services.backend', 'app.directives.
       }
 
       if (!data.altLabel || !Object.keys(data.altLabel).length) data.altLabel = {};
-      Backend.config.languages.forEach(function(lng) {
+      config.languages.forEach(function(lng) {
         // There should be at least one text field, so we add
         // one if there are none.
         if (!data.prefLabel[lng]) data.prefLabel[lng] = [{ value: '' }];
@@ -793,19 +864,23 @@ angular.module('app.services.concept', ['app.services.backend', 'app.directives.
       var m;
 
       data.prefLabel.nn[0].hints = [];
-      data.prefLabel.nn[0].hints.push(data.prefLabel.nb[0].value);
+      if (data.prefLabel.nb[0].value) {
+        data.prefLabel.nn[0].hints.push(data.prefLabel.nb[0].value);
+      }
       m = data.prefLabel.nb[0].value.match('^(.*)er$');
       if (m) {
         data.prefLabel.nn[0].hints.push(m[1] + 'ar');
       }
       for (var i = 0; i < Math.min(data.altLabel.nn.length, data.altLabel.nb.length); i++) {
         data.altLabel.nn[i].hints = [];
-        data.altLabel.nn[i].hints.push(data.altLabel.nb[i].value);
+        if (data.altLabel.nb[i].value) {
+          data.altLabel.nn[i].hints.push(data.altLabel.nb[i].value);
+        }
         m = data.altLabel.nb[i].value.match('^(.*)er$');
         if (m) {
           data.altLabel.nn[i].hints.push(m[1] + 'ar');
         }
-      };
+      }
     },
 
     /**
@@ -814,7 +889,7 @@ angular.module('app.services.concept', ['app.services.backend', 'app.directives.
      */
     ensureBlankFields: function(data) {
       var that = this;
-      Backend.config.languages.forEach(function(lng) {
+      config.languages.forEach(function(lng) {
 
         // There should be at least one text field, so we add
         // one if there are none.
@@ -977,7 +1052,7 @@ angular.module('app.services.concepts', ['app.services.backend', 'app.services.c
         //that.concepts[n] = new Concept(concept.id, concept.uri, concept.label);
         if (!that.getByUri(concept.uri)) {
 
-          if (currentConcept.uri == concept.uri) {
+          if (currentConcept && currentConcept.uri == concept.uri) {
             that.concepts.push(currentConcept);
           } else {
             that.concepts.push(new Concept(concept.id, concept.uri, concept.label));
@@ -1061,6 +1136,7 @@ angular.module('app.services.state', ['app.services.concepts'])
   };
 
   this.setView = function(view) {
+    if (view == state.view) return;
     state.view = view;
     console.log('[state] > New view');
     console.log(view);
@@ -1072,6 +1148,7 @@ angular.module('app.services.state', ['app.services.concepts'])
   };
 
   this.setConcept = function(concept) {
+    if (state.concept == concept) return;
     state.concept = concept;
     $rootScope.$broadcast('conceptChanged', state.concept);
   };
@@ -1081,6 +1158,7 @@ angular.module('app.services.state', ['app.services.concepts'])
   };
 
   this.setTerm = function(term) {
+    if (state.term == term) return;
     state.term = term;
     $rootScope.$broadcast('termChanged', state.term);
   };

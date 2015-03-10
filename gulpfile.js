@@ -5,6 +5,7 @@ var gulp        = require('gulp'),
     prefix      = require('gulp-autoprefixer'),
     livereload  = require('gulp-livereload'),
     uglify      = require('gulp-uglify'),
+    sourcemaps  = require('gulp-sourcemaps'),
     concat      = require('gulp-concat'),
     rename      = require('gulp-rename'),
     jshint      = require('gulp-jshint'),
@@ -47,10 +48,13 @@ gulp.task('sass', function() {
 
 gulp.task('scripts', ['lint'], function() {
   return gulp.src(['app/scripts/*.js', 'app/scripts/*/*.js'])
+    .pipe(sourcemaps.init())
     .pipe(concat('app.js'))
     .pipe(gulp.dest('public/build'))
-    .pipe(rename('app.min.js'))
+    // .pipe(ngAnnotate())
     .pipe(uglify())
+    .pipe(rename({ suffix: '.min' }))
+    .pipe(sourcemaps.write('.'))  // Write external source map file
     .pipe(gulp.dest('public/build'))
     .pipe(livereload());
 });
@@ -68,10 +72,12 @@ gulp.task('deps', function() {
         'public/lib/angular-vs-repeat/src/angular-vs-repeat.js',
         'public/lib/angular-tooltips/dist/angular-tooltips.min.js'
       ])
+    .pipe(sourcemaps.init({ loadMaps: true }))
     .pipe(concat('deps.js'))
     .pipe(gulp.dest('public/build'))
     .pipe(rename('deps.min.js'))
     .pipe(uglify())
+    .pipe(sourcemaps.write('.'))
     .pipe(gulp.dest('public/build'))
 });
 

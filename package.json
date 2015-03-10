@@ -3,9 +3,9 @@
   "version": "0.0.1",
   "description": "Translation tool for skos-xl vocabularies",
   "main": "gulpfile.js",
-  "repository" :{ 
-    "type" : "git",
-    "url" : "https://github.com/danmichaelo/soksed.git"
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/danmichaelo/soksed.git"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -22,6 +22,7 @@
     "gulp-autoprefixer": "^2.1.0",
     "gulp-jshint": "^1.9.2",
     "gulp-ng-annotate": "^0.5.2",
-    "jshint-stylish": "^1.0.1"
+    "jshint-stylish": "^1.0.1",
+    "gulp-sourcemaps": "^1.5.0"
   }
 }

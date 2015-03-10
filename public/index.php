@@ -54,7 +54,7 @@ setcookie('user', json_encode($auth->getProfile()), time()+60, '/');
 
 	<link href="/build/site.css" rel="stylesheet">
 	<script src="/build/deps.min.js"></script>
-	<script src="/build/app.js"></script>
+	<script src="/build/app.min.js"></script>
 </head>
 <body class="menuVisible">
 

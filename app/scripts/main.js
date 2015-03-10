@@ -174,12 +174,19 @@ angular.module('app', ['ngSanitize',
 
 }])
 
-.controller('LoginCtrl', ['$scope', '$location', '$log', '$timeout', 'Auth', 'Concepts', 'StateService', function($scope, $location, $log, $timeout, Auth, Concepts, StateService){
+.controller('HeaderCtrl', ['$scope', '$location', '$log', '$timeout', 'Auth', 'Concepts', 'StateService', function($scope, $location, $log, $timeout, Auth, Concepts, StateService){
   'use strict';
 
   // console.log('LoginCtrl init');
 
   $scope.user = Auth.user;
+
+  // TODO: Use Stateservice to determine?
+  $scope.menuAvailable = true;
+
+  $scope.toggleMenu = function() {
+    angular.element('body').toggleClass('menuVisible');
+  };
 
   $scope.$on('userChanged', function(e, user) {
     $scope.user = user;

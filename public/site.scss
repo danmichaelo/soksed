@@ -23,7 +23,6 @@ html, body {
 }
 .main {
 	position: fixed;
-	left: $leftcolwidth;
 	right: 0;
 	top: $headerheight;
 	bottom: 0;
@@ -32,23 +31,40 @@ html, body {
 }
 .conceptnav {
 	position: fixed;
-	left: 0;
+	left: -$leftcolwidth;
 	width: $leftcolwidth;
 	top: $headerheight;
 	bottom: 0;
     background: aliceblue;
+	flex-flow:column nowrap;
+}
+.menuVisible .conceptnav {
+	left: 0;
 }
 
 @media all and (max-width: 600px) {
   .conceptnav {
   	display:none;
   }
+  .main {
+	left: 0;
+  }
+  .menuVisible .conceptnav {
+	display: flex;
+    box-shadow: 1px 5px 5px #aaa;
+  }
+
 }
 @media all and (min-width: 600px) {
-.conceptnav {
+  .conceptnav {
 	display:flex;
-	flex-flow:column nowrap;
-}
+  }
+  .main {
+	left: 0;
+  }
+  .menuVisible .main {
+	left: $leftcolwidth;
+  }
 }
 
 .fa-spin {

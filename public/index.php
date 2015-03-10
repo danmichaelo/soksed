@@ -56,22 +56,25 @@ setcookie('user', json_encode($auth->getProfile()), time()+60, '/');
 	<script src="/build/deps.min.js"></script>
 	<script src="/build/app.js"></script>
 </head>
-<body>
+<body class="menuVisible">
 
-	<header class="header">
-		<div style="padding: 10px; float:right;" ng-controller="LoginCtrl" ng-show="user">
+	<header class="header" ng-controller="HeaderCtrl">
+		<div style="padding: 10px; float:right;" ng-show="user">
 			<div ng-show="user.username">
-				Innlogget som <a ui-sref="user({ id: user.username[0] })">{{ user.username[0] }}</a> 
+				<a ui-sref="user({ id: user.username[0] })">{{ user.username[0] }}</a> 
 				<!-- target="_self" to override the AngularJS router --> 
-				<a href="/callback.php?logout" target="_self">Logg ut</a>
+				<a href="/callback.php?logout" target="_self" title="Logg ut"><i class="fa fa-sign-out"></i></a>
 			</div>
 			<div ng-show="!user.username">
 				<!-- target="_self" to override the AngularJS router --> 
-				<a href="/callback.php?login" target="_self">Logg inn</a>
+				<a href="/callback.php?login" target="_self"><i class="fa fa-sign-in"></i> Logg inn</a>
 			</div>
 		</div>
 
-		<h1><a href="/">soksed</a></h1>
+		<h1>
+			<a href="#" ng-click="toggleMenu()" ng-show="menuAvailable" title="Veksle meny"><i class="fa fa-bars"></i></a> 
+			<a href="/">soksed</a>
+		</h1>
 	</header>
 
 	<div class="content" ui-view></div>  

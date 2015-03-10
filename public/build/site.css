@@ -19,7 +19,6 @@ html, body {
 
 .main {
   position: fixed;
-  left: 350px;
   right: 0;
   top: 40px;
   bottom: 0;
@@ -28,19 +27,35 @@ html, body {
 
 .conceptnav {
   position: fixed;
-  left: 0;
+  left: -350px;
   width: 350px;
   top: 40px;
   bottom: 0;
-  background: aliceblue; }
+  background: aliceblue;
+  flex-flow: column nowrap; }
+
+.menuVisible .conceptnav {
+  left: 0; }
 
 @media all and (max-width: 600px) {
   .conceptnav {
-    display: none; } }
+    display: none; }
+
+  .main {
+    left: 0; }
+
+  .menuVisible .conceptnav {
+    display: flex;
+    box-shadow: 1px 5px 5px #aaa; } }
 @media all and (min-width: 600px) {
   .conceptnav {
-    display: flex;
-    flex-flow: column nowrap; } }
+    display: flex; }
+
+  .main {
+    left: 0; }
+
+  .menuVisible .main {
+    left: 350px; } }
 .fa-spin {
   transition: all 1s; }
 
@@ -62,7 +77,8 @@ h1 {
   margin: 0; }
 
 label {
-  display: block; }
+  font-weight: normal;
+  cursor: pointer; }
 
 h3 {
   font-size: 16px;

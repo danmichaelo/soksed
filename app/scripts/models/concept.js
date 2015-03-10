@@ -69,19 +69,23 @@ angular.module('app.services.concept', ['app.services.backend', 'app.directives.
       var m;
 
       data.prefLabel.nn[0].hints = [];
-      data.prefLabel.nn[0].hints.push(data.prefLabel.nb[0].value);
+      if (data.prefLabel.nb[0].value) {
+        data.prefLabel.nn[0].hints.push(data.prefLabel.nb[0].value);
+      }
       m = data.prefLabel.nb[0].value.match('^(.*)er$');
       if (m) {
         data.prefLabel.nn[0].hints.push(m[1] + 'ar');
       }
       for (var i = 0; i < Math.min(data.altLabel.nn.length, data.altLabel.nb.length); i++) {
         data.altLabel.nn[i].hints = [];
-        data.altLabel.nn[i].hints.push(data.altLabel.nb[i].value);
+        if (data.altLabel.nb[i].value) {
+          data.altLabel.nn[i].hints.push(data.altLabel.nb[i].value);
+        }
         m = data.altLabel.nb[i].value.match('^(.*)er$');
         if (m) {
           data.altLabel.nn[i].hints.push(m[1] + 'ar');
         }
-      };
+      }
     },
 
     /**

@@ -2,10 +2,11 @@
        ng-model="data.value"
        ng-disabled="readonly || data.readonly"
        ng-focus="focus($event)"
-       ng-keydown="keydown($event)">
+       ng-keydown="keydown($event)"
+       title="{{ data.created ? 'Opprettet ' + data.created + ' av ' + data.creator : '' }}">
 
 <span ng-show="originalData.value==data.value">
-	<a href="#" style="font-size:130%; background: #def; display:inline-block;padding:2px 10px;" 
+	<a href="#" class="reviewLink"
 	   ng-click="markReviewed()"
 	  ng-show="!originalData.readonly && originalData.value && !originalData.proofread"><i class="fa fa-check-circle "></i> Godkjenn
 	</a>
@@ -14,10 +15,5 @@
 	      ng-show="originalData.proofread"><i class="fa fa-check-circle "></i> Godkjent
 	</span>
 </span>
-
-<div ng-show="data.creator" style="font-size:11px; color: #888;">
-	Opprettet {{data.created}} av {{data.creator}}
-</div>
-
 
 <ng-transclude></ng-transclude>

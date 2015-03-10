@@ -1,7 +1,7 @@
 // Declare app level module which depends on filters, and services
 angular.module('app.directives.conceptnav', ['app.config', 'app.services.concepts', 'app.services.state'])
 
-.directive('conceptnav', ['$state', '$location', 'StateService', 'Concepts', 'config', function ($state, $location, StateService, Concepts, config) {
+.directive('conceptnav', ['$state', '$location', 'hotkeys', 'StateService', 'Concepts', 'config', function ($state, $location, hotkeys, StateService, Concepts, config) {
   'use strict';
 
   return {
@@ -21,6 +21,16 @@ angular.module('app.directives.conceptnav', ['app.config', 'app.services.concept
       scope.concepts = [];
       scope.busy = true;
       scope.totalCount = Concepts.count;
+
+      hotkeys.bindTo(scope)
+      .add({
+        combo: '/',
+        description: 'Søk',
+        callback: function(event, hotkey) {
+          event.preventDefault();
+          $('.conceptnav input:text').focus();
+        }
+      });
 
       scope.fetchMoreConcepts = function() {
         // called by infinite scroll

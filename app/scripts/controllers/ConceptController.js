@@ -113,6 +113,15 @@ angular.module('app.controllers.concept', ['app.services.backend',
         Concepts.prev();
       },
       allowIn: ['INPUT']
+    })
+    .add({
+      combo: keyboardModifier + '+k',
+      description: 'Vis katalogposter',
+      callback: function(event, hotkey) {
+        event.preventDefault();
+        window.open($scope.currentConcept.katapiUrl, 'katapi');
+      },
+      allowIn: ['INPUT']
     });
 
 }]);

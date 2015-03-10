@@ -40,14 +40,16 @@ angular.module('app', ['ngSanitize',
     '^REAL([0-9]+)$': 'http://data.ub.uio.no/realfagstermer/c'
   };
 
+  var tplVersion = '?ver=2';  // Increase to purge cache
+
   $stateProvider
     .state('home', {
       url: '/',
-      templateUrl: 'partials/home.html'
+      templateUrl: 'partials/home.html' + tplVersion
     })
     .state('concepts', {
       url: '/concepts?q',
-      templateUrl: 'partials/concepts.html',
+      templateUrl: 'partials/concepts.html' + tplVersion,
       needsPermission: 'edit',
       controller: 'ConceptsController'
     })
@@ -55,7 +57,7 @@ angular.module('app', ['ngSanitize',
       needsPermission: 'edit',
       url: '/:id?view',
       templateUrl: function ($stateParams) {
-        return '/partials/concept.' + ($stateParams.view ? $stateParams.view : defaultView) + '.html';
+        return '/partials/concept.' + ($stateParams.view ? $stateParams.view : defaultView) + '.html' + tplVersion;
       },
       controller: 'ConceptController',
       resolve: {
@@ -87,7 +89,7 @@ angular.module('app', ['ngSanitize',
     })
     .state('users', {
       url: '/users',
-      templateUrl: 'partials/users.html',
+      templateUrl: 'partials/users.html' + tplVersion,
       controller: 'UsersController',
       needsPermission: 'edit',
       resolve: {
@@ -98,7 +100,7 @@ angular.module('app', ['ngSanitize',
     })
     .state('user', {
       url: '/users/:id',
-      templateUrl: 'partials/user.html',
+      templateUrl: 'partials/user.html' + tplVersion,
       controller: 'UserController',
       needsPermission: 'view',
       resolve: {
@@ -109,7 +111,7 @@ angular.module('app', ['ngSanitize',
     })
     .state('auth', {
       url: '/auth?returnTo',
-      templateUrl: 'partials/auth.html',
+      templateUrl: 'partials/auth.html' + tplVersion,
       controller: 'AuthController',
       resolve: {
         returnTo: ['$stateParams', function($stateParams) {

@@ -34,8 +34,9 @@ class Sparql extends Base
 	/* URI for the graph holding user data. */
 	protected $userGraphUri;
 
-	/* URI for the graph holding translations. (Any other graph will be treated as read only) */
-	protected $transGraphUri;
+	/* URI for the graph holding locally editable data.
+	   (Data from any other graph will be treated as read only) */
+	protected $localGraphUri;
 
 	protected $queryEndpoint = 'http://localhost:3030/ds/sparql';
 
@@ -47,7 +48,7 @@ class Sparql extends Base
 		$this->client = new SparqlClient($this->queryEndpoint);
 		$this->updateClient = new SparqlClient($this->updateEndpoint);
 
-		$this->transGraphUri = $this->uriBase . '/graph/trans';
+		$this->localGraphUri = $this->uriBase . '/graph/trans';
 		$this->userGraphUri = $this->uriBase . '/graph/users';
 		RdfNamespace::set('uo', $this->uriBase . '/onto/user#');
 		RdfNamespace::set('user', $this->uriBase .'/data/users/');
@@ -120,8 +121,8 @@ class Sparql extends Base
 			}
 
 			if ($graph == 'local') {
-				$graph = '<%transGraphUri%>';
-				$parameters['transGraphUri'] = $this->transGraphUri;
+				$graph = '<%localGraphUri%>';
+				$parameters['localGraphUri'] = $this->localGraphUri;
 			} else {
 				$graph = null;
 			}
@@ -265,7 +266,7 @@ class Sparql extends Base
 							'value' => $row->value->getValue(),
 							'lang' => $row->value->getLang(),
 							'graph' => $row->graph->getUri(),
-							'readonly' => ($row->graph->getUri() != $this->transGraphUri),
+							'readonly' => ($row->graph->getUri() != $this->localGraphUri),
 						];
 					}
 				} elseif ($row->value instanceof Resource) {
@@ -301,7 +302,7 @@ class Sparql extends Base
 						$lab['language'] = $val->getLang() ?: '';
 					} elseif ($key == 'graph') {
 						$lab['graph'] = $val->getUri();
-						$lab['readonly'] = ($lab['graph'] != $this->transGraphUri);
+						$lab['readonly'] = ($lab['graph'] != $this->localGraphUri);
 					} elseif ($val instanceof Literal) {
 						$lab[$key] = $val->getValue();
 						if (in_array($key, $this->dateFields)) {
@@ -357,7 +358,7 @@ class Sparql extends Base
 			if ($prop == 'literalForm') {
 				$xld['language'] = $row->value->getLang();
 				$xld['graph'] = $row->graph->getUri();
-				$xld['readonly'] = ($xld['graph'] != $this->transGraphUri);
+				$xld['readonly'] = ($xld['graph'] != $this->localGraphUri);
 			}
 		}
 
@@ -397,7 +398,7 @@ class Sparql extends Base
 			}
 
 			$query = 'DELETE WHERE {';
-			$query .= "GRAPH <$this->transGraphUri> {";
+			$query .= "GRAPH <$this->localGraphUri> {";
 			$query .= $deleteTriples;
 			$query .= "}";
 			$query .= '}';
@@ -434,7 +435,7 @@ class Sparql extends Base
 				//TODO: Legg til andre ting som måtte være der...
 
 			}
-			$response = $this->updateClient->insert($triples, $this->transGraphUri);
+			$response = $this->updateClient->insert($triples, $this->localGraphUri);
 			if (!$response->isSuccessful()) {
 				return false;
 			}
@@ -449,17 +450,17 @@ class Sparql extends Base
 			PREFIX dcterms: <http://purl.org/dc/terms/>
 
 			DELETE WHERE
-			{ GRAPH <%transGraphUri%>
+			{ GRAPH <%localGraphUri%>
 			  { <%uri%> dcterms:modified ?mod } 
 			};
 
 			INSERT
-			{ GRAPH <%transGraphUri%>
+			{ GRAPH <%localGraphUri%>
 			  { <%uri%> dcterms:modified ?now }
 			}
 			WHERE
 			{ BIND(NOW() as ?now) }
-		', ['transGraphUri' => $this->transGraphUri, 'uri' => $uri]);
+		', ['localGraphUri' => $this->localGraphUri, 'uri' => $uri]);
 	}
 
 	public function findUser($username=null, $token=null)
@@ -599,39 +600,39 @@ class Sparql extends Base
 	{
 		return $this->update('
 			DELETE 
-			{ GRAPH <%transGraphUri%>
+			{ GRAPH <%localGraphUri%>
 			  { <%uri%> ?p ?x } 
 			}
 			WHERE
-			{ GRAPH <%transGraphUri%>
+			{ GRAPH <%localGraphUri%>
 			  { <%uri%> ?p ?x .
                 VALUES ?p { uo:proofread uo:proofreader }
 			  } 
 			};
 
 			INSERT
-			{ GRAPH <%transGraphUri%>
+			{ GRAPH <%localGraphUri%>
 			  { <%uri%> uo:proofread ?now ; uo:proofreader <%proofreader%> }
 			}
 			WHERE
 			{ BIND(NOW() as ?now) }
-		', ['transGraphUri' => $this->transGraphUri, 'uri' => $uri, 'proofreader' => $user['uri']]);
+		', ['localGraphUri' => $this->localGraphUri, 'uri' => $uri, 'proofreader' => $user['uri']]);
 	}
 
 	public function setProperty($uri, $property, $values)
 	{
 		$this->update('
 			DELETE WHERE
-			{ GRAPH <%transGraphUri%>
+			{ GRAPH <%localGraphUri%>
 			  { <%uri%> ' . $property . ' ?x } 
 			};
-		', ['transGraphUri' => $this->transGraphUri, 'uri' => $uri]);
+		', ['localGraphUri' => $this->localGraphUri, 'uri' => $uri]);
 
 		$triples = new Graph;
 		foreach ($values as $value) {
 			$triples->add($uri, $property, new Literal($value['value'], array_get($value, 'lang')));
 		}
-		$response = $this->updateClient->insert($triples, $this->transGraphUri);
+		$response = $this->updateClient->insert($triples, $this->localGraphUri);
 		return $response->isSuccessful();
 	}
 

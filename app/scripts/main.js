@@ -7,6 +7,7 @@ angular.module('app', ['ngSanitize',
                        '720kb.tooltips',
 
                        'app.config',
+                       'app.controllers.header',
                        'app.controllers.user',
                        'app.controllers.users',
                        'app.controllers.concept',
@@ -118,40 +119,7 @@ angular.module('app', ['ngSanitize',
           return $stateParams.returnTo;
         }]
       }
-    })
-    ;
-    // .state('state2', {
-    //   url: "/state2",
-    //   templateUrl: "partials/state2.html"
-    // })
-    // .state('state2.list', {
-    //   url: "/list",
-    //   templateUrl: "partials/state2.list.html",
-    //   controller: function($scope) {
-    //     $scope.things = ["A", "Set", "Of", "Things"];
-    //   }
-    // });
-
-  // $routeProvider
-  //   .when('/', {
-  //     templateUrl: 'views/concepts.html',
-  //     controller : 'ConceptsController',
-  //     reloadOnSearch: false,
-  //     access: 'verified'
-  //   })
-  //   .when('/users', {
-  //     templateUrl: 'views/users.html',
-  //     controller : 'UsersController',
-  //     access: 'verified'
-  //   })
-  //   .when('/auth', {
-  //     templateUrl: 'views/auth.html',
-  //     controller : 'AuthController',
-  //     access: 'public'
-  //   })
-  //   .otherwise({
-  //     redirectTo: '/'
-  //   });
+    }) ;
 
   // use the HTML5 History API
   $locationProvider.html5Mode(true);
@@ -173,48 +141,5 @@ angular.module('app', ['ngSanitize',
         }
       }
     });
-
-}])
-
-.controller('HeaderCtrl', ['$scope', '$location', '$log', '$timeout', 'Auth', 'Concepts', 'StateService', function($scope, $location, $log, $timeout, Auth, Concepts, StateService){
-  'use strict';
-
-  // console.log('LoginCtrl init');
-
-  $scope.user = Auth.user;
-
-  // TODO: Use Stateservice to determine?
-  $scope.menuAvailable = true;
-
-  $scope.toggleMenu = function() {
-    angular.element('body').toggleClass('menuVisible');
-  };
-
-  $scope.$on('userChanged', function(e, user) {
-    $scope.user = user;
-  });
-
-
-  // function stateChanged() {
-  //   // var id = $location.hash();
-  //   var id = $location.search().id;
-  //   if (!id) return;
-  //   $log.debug('[main] State changed: ' + id);
-
-  //   var uri;
-  //   Object.keys(urimap).forEach(function(k) {
-  //     var m = id.match(k);
-  //     if (m) uri = urimap[k] + m[1];
-  //   });
-  //   var concept = Concepts.getByUri(uri);
-  //   if (!concept) {
-  //     $log.debug('[main] Add concept <' + uri + '>');
-  //     concept = Concepts.add(id, uri);
-  //   }
-  //   StateService.setConcept(concept);
-  // }
-
-  // $scope.$on('$stateChangeSuccess', stateChanged);
-  // // $scope.$on('$routeUpdate', stateChanged);
 
 }]);

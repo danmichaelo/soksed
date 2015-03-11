@@ -26,6 +26,7 @@ angular.module('app', ['ngSanitize',
                        '720kb.tooltips',
 
                        'app.config',
+                       'app.controllers.header',
                        'app.controllers.user',
                        'app.controllers.users',
                        'app.controllers.concept',
@@ -137,40 +138,7 @@ angular.module('app', ['ngSanitize',
           return $stateParams.returnTo;
         }]
       }
-    })
-    ;
-    // .state('state2', {
-    //   url: "/state2",
-    //   templateUrl: "partials/state2.html"
-    // })
-    // .state('state2.list', {
-    //   url: "/list",
-    //   templateUrl: "partials/state2.list.html",
-    //   controller: function($scope) {
-    //     $scope.things = ["A", "Set", "Of", "Things"];
-    //   }
-    // });
-
-  // $routeProvider
-  //   .when('/', {
-  //     templateUrl: 'views/concepts.html',
-  //     controller : 'ConceptsController',
-  //     reloadOnSearch: false,
-  //     access: 'verified'
-  //   })
-  //   .when('/users', {
-  //     templateUrl: 'views/users.html',
-  //     controller : 'UsersController',
-  //     access: 'verified'
-  //   })
-  //   .when('/auth', {
-  //     templateUrl: 'views/auth.html',
-  //     controller : 'AuthController',
-  //     access: 'public'
-  //   })
-  //   .otherwise({
-  //     redirectTo: '/'
-  //   });
+    }) ;
 
   // use the HTML5 History API
   $locationProvider.html5Mode(true);
@@ -193,14 +161,218 @@ angular.module('app', ['ngSanitize',
       }
     });
 
-}])
+}]);
 
-.controller('HeaderCtrl', ['$scope', '$location', '$log', '$timeout', 'Auth', 'Concepts', 'StateService', function($scope, $location, $log, $timeout, Auth, Concepts, StateService){
+ 
+// Declare app level module which depends on filters, and services
+angular.module('app.controllers.auth', ['app.services.auth'])
+
+.controller('AuthController', ['$scope', 'Auth', 'returnTo', function($scope, Auth, returnTo) {
   'use strict';
 
-  // console.log('LoginCtrl init');
+  $scope.returnTo = window.encodeURIComponent(returnTo);
 
-  $scope.user = Auth.user;
+}]);
+ 
+// Declare app level module which depends on filters, and services
+angular.module('app.controllers.concept', ['app.services.backend',
+                                           'app.services.auth',
+                                           'app.services.state',
+                                           'app.services.concepts'])
+
+.controller('ConceptController', ['$scope', '$window', '$log', '$timeout', 'hotkeys', 'Backend',
+                                  'StateService', 'Concepts', 'concept', 'view',
+                                  function($scope, $window, $log, $timeout, hotkeys, Backend, 
+                                           StateService, Concepts, concept, view) {
+  'use strict';
+
+  console.log('[ConceptController] Init: view=' + view + ', id=' + concept.id);
+  StateService.setConcept(concept);
+  StateService.setView(view);
+  $scope.currentConcept = concept;
+
+  //-
+  // Focus first edit field once available
+  //-
+
+  function setFocus () {
+    $timeout(function() {
+      var field = angular.element('.main input[type="text"]:enabled');
+      if (field.length) field[0].focus();
+    }, 0);
+  }
+
+  if (concept.isLoaded()) {
+    setFocus();
+  }
+  $scope.$on('conceptLoaded', function(e, user) {
+    setFocus();
+  });
+
+  //-
+  // Test dirtyness on data change
+  //-
+
+  $scope.$watch('currentConcept.data', function(c, p) {
+    if (!p || !c) return;
+    if (p.uri != c.uri) return;
+    $scope.currentConcept.testDirty();
+  }, true);
+
+  //-
+  // Store
+  //-
+
+  $scope.store = function() {
+    if ($scope.currentConcept.dirty) {
+      $scope.currentConcept.store();
+    }
+  };
+
+  $scope.storeAndGo = function() {
+    $scope.store();
+    Concepts.next();
+  };
+
+  $scope.reload = function() {
+    $log.debug('[main] Reload concept');
+    $scope.currentConcept.load(true);
+  };
+
+
+  //-
+  // Keyboard shortcuts
+  //-
+
+  // when you bind it to the controller's scope, it will automatically unbind
+  // the hotkey when the scope is destroyed (due to ng-if or something that changes the DOM)
+  
+  var keyboardModifier = 'alt';
+  if (navigator.platform == 'MacIntel') {
+    keyboardModifier = 'ctrl';
+  }
+
+  hotkeys.bindTo($scope)
+    .add({
+      combo: keyboardModifier + '+s',
+      description: 'Lagre og hopp til neste',
+      callback: function(event, hotkey) {
+        event.preventDefault();
+        $scope.storeAndGo();
+      },
+      allowIn: ['INPUT']
+    })
+    .add({
+      combo: keyboardModifier + '+shift+s',
+      description: 'Lagre',
+      callback: function(event, hotkey) {
+        event.preventDefault();
+        $scope.store();
+      },
+      allowIn: ['INPUT']
+    })
+    .add({
+      combo: keyboardModifier + '+down',
+      description: 'Hopp til neste',
+      callback: function(event, hotkey) {
+        event.preventDefault();
+        Concepts.next();
+      },
+      allowIn: ['INPUT']
+    })
+    .add({
+      combo: keyboardModifier + '+up',
+      description: 'Hopp til forrige',
+      callback: function(event, hotkey) {
+        event.preventDefault();
+        Concepts.prev();
+      },
+      allowIn: ['INPUT']
+    })
+    .add({
+      combo: keyboardModifier + '+k',
+      description: 'Vis katalogposter',
+      callback: function(event, hotkey) {
+        event.preventDefault();
+        window.open($scope.currentConcept.katapiUrl, 'katapi');
+      },
+      allowIn: ['INPUT']
+    });
+
+}]);
+ 
+// Declare app level module which depends on filters, and services
+angular.module('app.controllers.concepts', ['app.config', 'app.services.backend'])
+
+.controller('ConceptsController', ['$scope', '$state', '$stateParams', 'Backend', 'StateService', 'config',
+                                  function($scope, $state, $stateParams, Backend, StateService, config) {
+  'use strict';
+
+  console.log('-- ConceptsController --');
+  // console.log($stateParams);
+
+  $scope.filterobj = {};
+  if ($stateParams.q) {
+    $stateParams.q.split(',').forEach(function(p) {
+      var filterKeys = config.filters.map(function(x) { return x.value; });
+      var f = config.filters[filterKeys.indexOf(p)];
+      if (f !== undefined) {
+        $scope.filterobj.select = f;
+      } else if (p.match('(graph:local)')) {
+        $scope.filterobj.local = true;
+      } else {
+        $scope.filterobj.query = p;
+      }
+    });
+  }
+  if (!$scope.filterobj.select) {
+    $scope.filterobj.select = config.filters[0];
+  }
+
+  $scope.selectedLanguages = config.languages;
+  $scope.views = config.views;
+
+  function setView(view) {
+    if (!view) return;
+    for (var i = $scope.views.length - 1; i >= 0; i--) {
+      if ($scope.views[i].name == view) {
+        $scope.selectedView = $scope.views[i];
+        break;
+      }
+    }
+  }
+
+  setView(StateService.getView());
+
+  $scope.$on('viewChanged', function(evt, view) {
+    setView(view);
+  });
+
+
+  $scope.$watch('selectedView', function(c, p) {
+    if (!p || !c) return;
+    if (p == c) return;
+
+    $state.go('concepts.concept', { view: c.name });
+
+  });
+
+  $scope.currentConcept = StateService.getConcept();
+
+  $scope.$on('conceptChanged', function(evt, concept) {
+    console.log('[ConceptsController] Concept changed: ' + concept.uri);
+    // $log.debug(concept);
+    $scope.currentConcept = concept;
+  });
+
+}]);
+/**
+ * HeaderController
+ */
+angular.module('app.controllers.header', ['app.services.auth'])
+
+.controller('HeaderController', ['$scope', 'Auth', function($scope, Auth){
+  'use strict';
 
   // TODO: Use Stateservice to determine?
   $scope.menuAvailable = true;
@@ -209,35 +381,39 @@ angular.module('app', ['ngSanitize',
     angular.element('body').toggleClass('menuVisible');
   };
 
+  $scope.user = Auth.user;
   $scope.$on('userChanged', function(e, user) {
     $scope.user = user;
   });
 
-
-  // function stateChanged() {
-  //   // var id = $location.hash();
-  //   var id = $location.search().id;
-  //   if (!id) return;
-  //   $log.debug('[main] State changed: ' + id);
-
-  //   var uri;
-  //   Object.keys(urimap).forEach(function(k) {
-  //     var m = id.match(k);
-  //     if (m) uri = urimap[k] + m[1];
-  //   });
-  //   var concept = Concepts.getByUri(uri);
-  //   if (!concept) {
-  //     $log.debug('[main] Add concept <' + uri + '>');
-  //     concept = Concepts.add(id, uri);
-  //   }
-  //   StateService.setConcept(concept);
-  // }
-
-  // $scope.$on('$stateChangeSuccess', stateChanged);
-  // // $scope.$on('$routeUpdate', stateChanged);
-
 }]);
 
+ 
+// Declare app level module which depends on filters, and services
+angular.module('app.controllers.user', ['app.services.auth'])
+
+.controller('UserController', ['$scope', 'user', function($scope, user) {
+  'use strict';
+
+  console.log(user);
+  $scope.user = user.data.user;
+
+}]);
+ 
+// Declare app level module which depends on filters, and services
+angular.module('app.controllers.users', ['app.services.backend',
+                                        'app.services.auth',
+                                        'app.services.state',
+                                        'app.services.concepts'])
+
+.controller('UsersController', ['$scope', 'users', function($scope, users) {
+  'use strict';
+
+  console.log(users);
+
+  $scope.users = users.data.users;
+
+}]);
 // Declare app level module which depends on filters, and services
 angular.module('app.directives.altlabels', ['app.services.state'])
 
@@ -482,235 +658,6 @@ angular.module('app.directives.term', ['app.services.state', 'app.services.backe
 
     }
   };
-}]);
- 
-// Declare app level module which depends on filters, and services
-angular.module('app.controllers.auth', ['app.services.auth'])
-
-.controller('AuthController', ['$scope', 'Auth', 'returnTo', function($scope, Auth, returnTo) {
-  'use strict';
-
-  $scope.returnTo = window.encodeURIComponent(returnTo);
-
-}]);
- 
-// Declare app level module which depends on filters, and services
-angular.module('app.controllers.concept', ['app.services.backend',
-                                           'app.services.auth',
-                                           'app.services.state',
-                                           'app.services.concepts'])
-
-.controller('ConceptController', ['$scope', '$window', '$log', '$timeout', 'hotkeys', 'Backend',
-                                  'StateService', 'Concepts', 'concept', 'view',
-                                  function($scope, $window, $log, $timeout, hotkeys, Backend, 
-                                           StateService, Concepts, concept, view) {
-  'use strict';
-
-  console.log('[ConceptController] Init: view=' + view + ', id=' + concept.id);
-  StateService.setConcept(concept);
-  StateService.setView(view);
-  $scope.currentConcept = concept;
-
-  //-
-  // Focus first edit field once available
-  //-
-
-  function setFocus () {
-    $timeout(function() {
-      var field = angular.element('.main input[type="text"]:enabled');
-      if (field.length) field[0].focus();
-    }, 0);
-  }
-
-  if (concept.isLoaded()) {
-    setFocus();
-  }
-  $scope.$on('conceptLoaded', function(e, user) {
-    setFocus();
-  });
-
-  //-
-  // Test dirtyness on data change
-  //-
-
-  $scope.$watch('currentConcept.data', function(c, p) {
-    if (!p || !c) return;
-    if (p.uri != c.uri) return;
-    $scope.currentConcept.testDirty();
-  }, true);
-
-  //-
-  // Store
-  //-
-
-  $scope.store = function() {
-    if ($scope.currentConcept.dirty) {
-      $scope.currentConcept.store();
-    }
-  };
-
-  $scope.storeAndGo = function() {
-    $scope.store();
-    Concepts.next();
-  };
-
-  $scope.reload = function() {
-    $log.debug('[main] Reload concept');
-    $scope.currentConcept.load(true);
-  };
-
-
-  //-
-  // Keyboard shortcuts
-  //-
-
-  // when you bind it to the controller's scope, it will automatically unbind
-  // the hotkey when the scope is destroyed (due to ng-if or something that changes the DOM)
-  
-  var keyboardModifier = 'alt';
-  if (navigator.platform == 'MacIntel') {
-    keyboardModifier = 'ctrl';
-  }
-
-  hotkeys.bindTo($scope)
-    .add({
-      combo: keyboardModifier + '+s',
-      description: 'Lagre og hopp til neste',
-      callback: function(event, hotkey) {
-        event.preventDefault();
-        $scope.storeAndGo();
-      },
-      allowIn: ['INPUT']
-    })
-    .add({
-      combo: keyboardModifier + '+shift+s',
-      description: 'Lagre',
-      callback: function(event, hotkey) {
-        event.preventDefault();
-        $scope.store();
-      },
-      allowIn: ['INPUT']
-    })
-    .add({
-      combo: keyboardModifier + '+down',
-      description: 'Hopp til neste',
-      callback: function(event, hotkey) {
-        event.preventDefault();
-        Concepts.next();
-      },
-      allowIn: ['INPUT']
-    })
-    .add({
-      combo: keyboardModifier + '+up',
-      description: 'Hopp til forrige',
-      callback: function(event, hotkey) {
-        event.preventDefault();
-        Concepts.prev();
-      },
-      allowIn: ['INPUT']
-    })
-    .add({
-      combo: keyboardModifier + '+k',
-      description: 'Vis katalogposter',
-      callback: function(event, hotkey) {
-        event.preventDefault();
-        window.open($scope.currentConcept.katapiUrl, 'katapi');
-      },
-      allowIn: ['INPUT']
-    });
-
-}]);
- 
-// Declare app level module which depends on filters, and services
-angular.module('app.controllers.concepts', ['app.config', 'app.services.backend'])
-
-.controller('ConceptsController', ['$scope', '$state', '$stateParams', 'Backend', 'StateService', 'config',
-                                  function($scope, $state, $stateParams, Backend, StateService, config) {
-  'use strict';
-
-  console.log('-- ConceptsController --');
-  // console.log($stateParams);
-
-  $scope.filterobj = {};
-  if ($stateParams.q) {
-    $stateParams.q.split(',').forEach(function(p) {
-      var filterKeys = config.filters.map(function(x) { return x.value; });
-      var f = config.filters[filterKeys.indexOf(p)];
-      if (f !== undefined) {
-        $scope.filterobj.select = f;
-      } else if (p.match('(graph:local)')) {
-        $scope.filterobj.local = true;
-      } else {
-        $scope.filterobj.query = p;
-      }
-    });
-  }
-  if (!$scope.filterobj.select) {
-    $scope.filterobj.select = config.filters[0];
-  }
-
-  $scope.selectedLanguages = config.languages;
-  $scope.views = config.views;
-
-  function setView(view) {
-    if (!view) return;
-    for (var i = $scope.views.length - 1; i >= 0; i--) {
-      if ($scope.views[i].name == view) {
-        $scope.selectedView = $scope.views[i];
-        break;
-      }
-    }
-  }
-
-  setView(StateService.getView());
-
-  $scope.$on('viewChanged', function(evt, view) {
-    setView(view);
-  });
-
-
-  $scope.$watch('selectedView', function(c, p) {
-    if (!p || !c) return;
-    if (p == c) return;
-
-    $state.go('concepts.concept', { view: c.name });
-
-  });
-
-  $scope.currentConcept = StateService.getConcept();
-
-  $scope.$on('conceptChanged', function(evt, concept) {
-    console.log('[ConceptsController] Concept changed: ' + concept.uri);
-    // $log.debug(concept);
-    $scope.currentConcept = concept;
-  });
-
-}]);
- 
-// Declare app level module which depends on filters, and services
-angular.module('app.controllers.user', ['app.services.auth'])
-
-.controller('UserController', ['$scope', 'user', function($scope, user) {
-  'use strict';
-
-  console.log(user);
-  $scope.user = user.data.user;
-
-}]);
- 
-// Declare app level module which depends on filters, and services
-angular.module('app.controllers.users', ['app.services.backend',
-                                        'app.services.auth',
-                                        'app.services.state',
-                                        'app.services.concepts'])
-
-.controller('UsersController', ['$scope', 'users', function($scope, users) {
-  'use strict';
-
-  console.log(users);
-
-  $scope.users = users.data.users;
-
 }]);
 
 // Declare app level module which depends on filters, and services

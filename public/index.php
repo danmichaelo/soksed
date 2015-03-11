@@ -38,7 +38,7 @@ setcookie('user', json_encode($auth->getProfile()), time()+60, '/');
  
 	<!-- Latest compiled and minified CSS -->
 	<link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css">
-<!-- <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap-theme.min.css">-->
+	<!-- <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap-theme.min.css">-->
 
 	<!-- Font Awesome -->
 	<link href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" rel="stylesheet">
@@ -46,19 +46,13 @@ setcookie('user', json_encode($auth->getProfile()), time()+60, '/');
 	<link href="/lib/angular-hotkeys/build/hotkeys.min.css" rel="stylesheet">
 	<link href="/lib/angular-tooltips/src/css/angular-tooltips.css" rel="stylesheet" type="text/css" />
 
-<!--  <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.2.16/angular.min.js"></script>
-	<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.2.16/angular-route.min.js"></script>
-	<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.2.16/angular-sanitize.min.js"></script>
-	<script src="/lib/angular-hotkeys/build/hotkeys.min.js"></script>
-	<script src="/lib/ngInfiniteScroll/build/ng-infinite-scroll.min.js"></script>-->
-
 	<link href="/build/site.css" rel="stylesheet">
 	<script src="/build/deps.min.js"></script>
 	<script src="/build/app.min.js"></script>
 </head>
 <body class="menuVisible">
 
-	<header class="header" ng-controller="HeaderCtrl">
+	<header class="header" ng-controller="HeaderController">
 		<div style="padding: 10px; float:right;" ng-show="user">
 			<div ng-show="user.username">
 				<a ui-sref="user({ id: user.username[0] })">{{ user.username[0] }}</a> 

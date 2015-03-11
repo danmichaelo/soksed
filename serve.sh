@@ -11,15 +11,15 @@ sleep 3
 # Import data
 ./import/update-fuseki.sh
 
+echo -----------------------------------
+echo Fuseki listening on localhost:3030
+echo PHP listening on localhost:8002
+echo -----------------------------------
+
 # Start PHP
 cd public
-php -S localhost:8002 &
-
-echo
-echo Listening on localhost:8002
-echo
+php -S localhost:8002
 
 # Start Gulp
-cd ..
-gulp
+# gulp
 

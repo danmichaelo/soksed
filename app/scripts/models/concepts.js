@@ -110,6 +110,10 @@ angular.module('app.services.concepts', ['app.services.backend', 'app.services.c
 
   this.next = function() {
     var currentConceptIdx = that.concepts.indexOf(currentConcept);
+    if (currentConceptIdx == -1) {
+      console.log('Current concept is not part of the current concept list');
+      return;
+    }
     var n = currentConceptIdx + 1;
     if (n > that.concepts.length - 1) n = 0;
     that.show(that.concepts[n]);
@@ -117,6 +121,10 @@ angular.module('app.services.concepts', ['app.services.backend', 'app.services.c
 
   this.prev = function() {
     var currentConceptIdx = that.concepts.indexOf(currentConcept);
+    if (currentConceptIdx == -1) {
+      console.log('Current concept is not part of the current concept list');
+      return;
+    }
     var n = currentConceptIdx - 1;
     if (n < 0) n = that.concepts.length - 1;
     that.show(that.concepts[n]);

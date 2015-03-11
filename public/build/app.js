@@ -167,251 +167,6 @@ angular.module('app', ['ngSanitize',
 
 }]);
 
-// Declare app level module which depends on filters, and services
-angular.module('app.directives.altlabels', ['app.services.state'])
-
-.directive('altlabels', ['StateService', function (StateService) {
-  'use strict';
-
-  return {
-
-    restrict : 'E',  // element names only
-    templateUrl: '/partials/altlabels.html',
-    replace: false,
-    scope: { items: '=', originalItems: '=', lang: '@', disabled: '@' },
-
-    link: function(scope, element, attrs) {
-      // console.log(element);
-      // console.log(attrs);
-
-      scope.keydown = function(evt) {
-        // console.log(this);
-        // console.log(evt);
-        if (evt.keyCode === 13) { // Enter
-          scope.items.push({value:''});
-        }
-        if (evt.keyCode === 40) {
-          // Down
-          var $li = $(evt.target).parent();
-          var $lis = $li.parent().children('li');
-          if ($lis.length <= 1) return;
-          var $next = $li.next('li');
-          //console.log($next);
-          if ($next.length === 0) $next = $($lis[0]);
-          $next.find('input').focus();
-          //console.log($next.find('input').val());
-        }
-        if (evt.keyCode === 38) {
-          // Up
-        }
-      };
-
-      scope.setCurrentTerm = function(evt) {
-        var $li = $(evt.target).parent();
-        var idx = $li.parent().children('li').index($li);
-        var term = scope.items[idx];
-        StateService.setTerm(term);
-      };
-
-      scope.markReviewed = function(uri) {
-        console.log('Mark reviewed: ' + uri);
-        window.alert('not implemented');
-      };
-
-      function bind(lang, items) {
-        // ?
-      }
-      /*if (attrs.disabled) {
-        scope.disabled = true;
-      }*/
-
-      if (attrs.items) {
-        bind(attrs.lang, attrs.items);
-      } else {
-        element.html('<em>No items provided</em>');
-      }
-
-    }
-  };
-}]);
-// Declare app level module which depends on filters, and services
-angular.module('app.directives.conceptnav', ['app.config', 'app.services.concepts', 'app.services.state'])
-
-.directive('conceptnav', ['$state', '$location', 'hotkeys', 'StateService', 'Concepts', 'config', function ($state, $location, hotkeys, StateService, Concepts, config) {
-  'use strict';
-
-  return {
-
-    restrict : 'E',  // element names only
-    templateUrl: '/partials/conceptnav.html',
-    replace: false,
-    scope: {
-      'filterobj': '='  // Two-way data binding
-    },
-
-    link: function(scope, element, attrs) {
-      // console.log(element);
-      // console.log(attrs);
-      console.log('>>> Linking conceptnav');
-      scope.filters = config.filters;
-      scope.concepts = [];
-      scope.busy = true;
-      scope.totalCount = Concepts.count;
-
-      hotkeys.bindTo(scope)
-      .add({
-        combo: '/',
-        description: 'Søk',
-        callback: function(event, hotkey) {
-          event.preventDefault();
-          $('.conceptnav input:text').focus();
-        }
-      });
-
-      scope.fetchMoreConcepts = function() {
-        // called by infinite scroll
-        console.log('FETCH MORE');
-        Concepts.fetch();
-      };
-
-      scope.$on('loadedConcepts', function(evt, concepts) {
-        scope.concepts = concepts;
-        scope.totalCount = Concepts.count;
-        scope.busy = false;
-        setTimeout(function() {
-          scope.checkScrollPos(scope.currentConcept);
-        });
-      });
-
-      function conceptListUpdated() {
-        console.log('conceptListUpdated');
-      }
-
-      scope.selectConcept = function() {
-        // console.log(this.concept);
-        Concepts.show(this.concept);
-      };
-
-      scope.currentConcept = StateService.getConcept();
-
-      scope.checkScrollPos = function(concept) {
-        // All elements have the same height since we are using angular-vs-repeat
-        var y = $('.scrollerwrapper').children().first().height(),
-            idx = scope.concepts.indexOf(concept),
-            ctop = idx * y,
-            cbottom = ctop + y,
-            wtop = $('.scrollerwrapper').scrollTop(),
-            wbottom = wtop + $('.scrollerwrapper').height();
-
-        if (idx === -1) return; 
-        if (!concept) return; 
-
-        if (cbottom >= wbottom) {
-          $('.scrollerwrapper').scrollTop( cbottom - $('.scrollerwrapper').height() );
-        } else if (ctop <= wtop) {
-          $('.scrollerwrapper').scrollTop( ctop );
-        }
-      };
-
-      scope.$on('conceptChanged', function(evt, concept) {
-        scope.currentConcept = concept;
-        scope.checkScrollPos(concept);
-      });
-
-      scope.graphOptionEnabled = function() {
-        return scope.filterobj.select && scope.filterobj.select.graphOption;
-      };
-
-      scope.submit = function() {
-        var filterString = [];
-        if (scope.filterobj.query) filterString.push(scope.filterobj.query);
-        if (scope.filterobj.select) filterString.push(scope.filterobj.select.value);
-        if (scope.graphOptionEnabled() && scope.filterobj.local) filterString.push('graph:local');
-        console.log(filterString);
-
-        $state.go('concepts.concept', {q: filterString.join(',')});
-      };
-
-      var q = [];
-      if (scope.filterobj.query) {
-        q.push(scope.filterobj.query);
-      }
-      if (scope.filterobj.select) {
-        q.push(scope.filterobj.select.value);
-      }
-      if (scope.filterobj.local) {
-        q.push('graph:local');
-      }
-
-      q = q.join(',');
-      console.log(q);
-      scope.busy = true;
-      Concepts.fetch(q);
-    }
-  };
-}]);
-// Declare app level module which depends on filters, and services
-angular.module('app.directives.term', ['app.services.state', 'app.services.backend'])
-
-.directive('term', ['StateService', 'Backend', function (StateService, Backend) {
-  'use strict';
-
-  return {
-
-    restrict : 'E',  // element names only
-    transclude: true,
-    templateUrl: '/partials/term.html',
-    replace: false,
-    scope: { data: '=', originalData: '=', readonly: '=' },
-
-    link: function(scope, element, attrs) {
-      // console.log(element);
-      // console.log(attrs);
-
-      scope.markReviewed = function() {
-        var cont = true;
-        // TODO: Something more elegant than scope.$parent ?
-        if (scope.$parent.currentConcept.dirty) {
-          cont = window.confirm('Endringer du har gjort på dette begrepet vil gå tapt. Vil du fortsette?');
-        }
-        if (!cont) return;
-        Backend.markReviewed(scope.originalData.uri).then(function(response) {
-          // TODO: Something more elegant than scope.$parent ?
-          scope.$parent.reload();  // Reload to get term URIs etc..
-        });
-      };
-
-      scope.keydown = function(evt) {
-        // console.log(this);
-        if (evt.keyCode === 13) { // Enter
-          //scope.$parent.items.push({value:''});
-        }
-        if (evt.keyCode === 40 || evt.keyCode === 38) {
-          var $term = $(evt.target).parent();
-          var $terms = $term.parent().children('term');
-          var $next;
-
-          if ($terms.length <= 1) return;
-          // Down
-          if (evt.keyCode == 40) {
-             $next = $term.next('term');
-            if ($next.length === 0) $next = $($terms[0]);
-          } else {
-            $next = $term.prev('term');
-            if ($next.length === 0) $next = $($terms[$terms.length-1]);
-          }
-          $next.find('input').focus();
-        }
-      };
-
-      scope.focus = function(evt) {
-        StateService.setTerm(scope.data);
-        $(evt.target).select();
-      };
-
-    }
-  };
-}]);
  
 // Declare app level module which depends on filters, and services
 angular.module('app.controllers.auth', ['app.services.auth'])
@@ -664,6 +419,251 @@ angular.module('app.controllers.users', ['app.services.backend',
 
   $scope.users = users.data.users;
 
+}]);
+// Declare app level module which depends on filters, and services
+angular.module('app.directives.altlabels', ['app.services.state'])
+
+.directive('altlabels', ['StateService', function (StateService) {
+  'use strict';
+
+  return {
+
+    restrict : 'E',  // element names only
+    templateUrl: '/partials/altlabels.html',
+    replace: false,
+    scope: { items: '=', originalItems: '=', lang: '@', disabled: '@' },
+
+    link: function(scope, element, attrs) {
+      // console.log(element);
+      // console.log(attrs);
+
+      scope.keydown = function(evt) {
+        // console.log(this);
+        // console.log(evt);
+        if (evt.keyCode === 13) { // Enter
+          scope.items.push({value:''});
+        }
+        if (evt.keyCode === 40) {
+          // Down
+          var $li = $(evt.target).parent();
+          var $lis = $li.parent().children('li');
+          if ($lis.length <= 1) return;
+          var $next = $li.next('li');
+          //console.log($next);
+          if ($next.length === 0) $next = $($lis[0]);
+          $next.find('input').focus();
+          //console.log($next.find('input').val());
+        }
+        if (evt.keyCode === 38) {
+          // Up
+        }
+      };
+
+      scope.setCurrentTerm = function(evt) {
+        var $li = $(evt.target).parent();
+        var idx = $li.parent().children('li').index($li);
+        var term = scope.items[idx];
+        StateService.setTerm(term);
+      };
+
+      scope.markReviewed = function(uri) {
+        console.log('Mark reviewed: ' + uri);
+        window.alert('not implemented');
+      };
+
+      function bind(lang, items) {
+        // ?
+      }
+      /*if (attrs.disabled) {
+        scope.disabled = true;
+      }*/
+
+      if (attrs.items) {
+        bind(attrs.lang, attrs.items);
+      } else {
+        element.html('<em>No items provided</em>');
+      }
+
+    }
+  };
+}]);
+// Declare app level module which depends on filters, and services
+angular.module('app.directives.conceptnav', ['app.config', 'app.services.concepts', 'app.services.state'])
+
+.directive('conceptnav', ['$state', '$location', 'hotkeys', 'StateService', 'Concepts', 'config', function ($state, $location, hotkeys, StateService, Concepts, config) {
+  'use strict';
+
+  return {
+
+    restrict : 'E',  // element names only
+    templateUrl: '/partials/conceptnav.html',
+    replace: false,
+    scope: {
+      'filterobj': '='  // Two-way data binding
+    },
+
+    link: function(scope, element, attrs) {
+      // console.log(element);
+      // console.log(attrs);
+      console.log('>>> Linking conceptnav');
+      scope.filters = config.filters;
+      scope.concepts = [];
+      scope.busy = true;
+      scope.totalCount = Concepts.count;
+
+      hotkeys.bindTo(scope)
+      .add({
+        combo: '/',
+        description: 'Søk',
+        callback: function(event, hotkey) {
+          event.preventDefault();
+          $('.conceptnav input:text').focus();
+        }
+      });
+
+      scope.fetchMoreConcepts = function() {
+        // called by infinite scroll
+        console.log('FETCH MORE');
+        Concepts.fetch();
+      };
+
+      scope.$on('loadedConcepts', function(evt, concepts) {
+        scope.concepts = concepts;
+        scope.totalCount = Concepts.count;
+        scope.busy = false;
+        setTimeout(function() {
+          scope.checkScrollPos(scope.currentConcept);
+        });
+      });
+
+      function conceptListUpdated() {
+        console.log('conceptListUpdated');
+      }
+
+      scope.selectConcept = function() {
+        // console.log(this.concept);
+        Concepts.show(this.concept);
+      };
+
+      scope.currentConcept = StateService.getConcept();
+
+      scope.checkScrollPos = function(concept) {
+        // All elements have the same height since we are using angular-vs-repeat
+        var y = $('.scrollerwrapper').children().first().height(),
+            idx = scope.concepts.indexOf(concept),
+            ctop = idx * y,
+            cbottom = ctop + y,
+            wtop = $('.scrollerwrapper').scrollTop(),
+            wbottom = wtop + $('.scrollerwrapper').height();
+
+        if (idx === -1) return; 
+        if (!concept) return; 
+
+        if (cbottom >= wbottom) {
+          $('.scrollerwrapper').scrollTop( cbottom - $('.scrollerwrapper').height() );
+        } else if (ctop <= wtop) {
+          $('.scrollerwrapper').scrollTop( ctop );
+        }
+      };
+
+      scope.$on('conceptChanged', function(evt, concept) {
+        scope.currentConcept = concept;
+        scope.checkScrollPos(concept);
+      });
+
+      scope.graphOptionEnabled = function() {
+        return scope.filterobj.select && scope.filterobj.select.graphOption;
+      };
+
+      scope.submit = function() {
+        var filterString = [];
+        if (scope.filterobj.query) filterString.push(scope.filterobj.query);
+        if (scope.filterobj.select) filterString.push(scope.filterobj.select.value);
+        if (scope.graphOptionEnabled() && scope.filterobj.local) filterString.push('graph:local');
+        console.log(filterString);
+
+        $state.go('concepts.concept', {q: filterString.join(',')});
+      };
+
+      var q = [];
+      if (scope.filterobj.query) {
+        q.push(scope.filterobj.query);
+      }
+      if (scope.filterobj.select) {
+        q.push(scope.filterobj.select.value);
+      }
+      if (scope.filterobj.local) {
+        q.push('graph:local');
+      }
+
+      q = q.join(',');
+      console.log(q);
+      scope.busy = true;
+      Concepts.fetch(q);
+    }
+  };
+}]);
+// Declare app level module which depends on filters, and services
+angular.module('app.directives.term', ['app.services.state', 'app.services.backend'])
+
+.directive('term', ['StateService', 'Backend', function (StateService, Backend) {
+  'use strict';
+
+  return {
+
+    restrict : 'E',  // element names only
+    transclude: true,
+    templateUrl: '/partials/term.html',
+    replace: false,
+    scope: { data: '=', originalData: '=', readonly: '=' },
+
+    link: function(scope, element, attrs) {
+      // console.log(element);
+      // console.log(attrs);
+
+      scope.markReviewed = function() {
+        var cont = true;
+        // TODO: Something more elegant than scope.$parent ?
+        if (scope.$parent.currentConcept.dirty) {
+          cont = window.confirm('Endringer du har gjort på dette begrepet vil gå tapt. Vil du fortsette?');
+        }
+        if (!cont) return;
+        Backend.markReviewed(scope.originalData.uri).then(function(response) {
+          // TODO: Something more elegant than scope.$parent ?
+          scope.$parent.reload();  // Reload to get term URIs etc..
+        });
+      };
+
+      scope.keydown = function(evt) {
+        // console.log(this);
+        if (evt.keyCode === 13) { // Enter
+          //scope.$parent.items.push({value:''});
+        }
+        if (evt.keyCode === 40 || evt.keyCode === 38) {
+          var $term = $(evt.target).parent();
+          var $terms = $term.parent().children('term');
+          var $next;
+
+          if ($terms.length <= 1) return;
+          // Down
+          if (evt.keyCode == 40) {
+             $next = $term.next('term');
+            if ($next.length === 0) $next = $($terms[0]);
+          } else {
+            $next = $term.prev('term');
+            if ($next.length === 0) $next = $($terms[$terms.length-1]);
+          }
+          $next.find('input').focus();
+        }
+      };
+
+      scope.focus = function(evt) {
+        StateService.setTerm(scope.data);
+        $(evt.target).select();
+      };
+
+    }
+  };
 }]);
 
 // Declare app level module which depends on filters, and services
@@ -1062,6 +1062,10 @@ angular.module('app.services.concepts', ['app.services.backend', 'app.services.c
 
   this.next = function() {
     var currentConceptIdx = that.concepts.indexOf(currentConcept);
+    if (currentConceptIdx == -1) {
+      console.log('Current concept is not part of the current concept list');
+      return;
+    }
     var n = currentConceptIdx + 1;
     if (n > that.concepts.length - 1) n = 0;
     that.show(that.concepts[n]);
@@ -1069,6 +1073,10 @@ angular.module('app.services.concepts', ['app.services.backend', 'app.services.c
 
   this.prev = function() {
     var currentConceptIdx = that.concepts.indexOf(currentConcept);
+    if (currentConceptIdx == -1) {
+      console.log('Current concept is not part of the current concept list');
+      return;
+    }
     var n = currentConceptIdx - 1;
     if (n < 0) n = that.concepts.length - 1;
     that.show(that.concepts[n]);

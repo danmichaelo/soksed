@@ -120,9 +120,10 @@ class Sparql extends Base
 				}
 			}
 
+			$parameters['localGraphUri'] = $this->localGraphUri;
+
 			if ($graph == 'local') {
 				$graph = '<%localGraphUri%>';
-				$parameters['localGraphUri'] = $this->localGraphUri;
 			} else {
 				$graph = null;
 			}
@@ -150,7 +151,7 @@ class Sparql extends Base
 						?labelNode$n dct:created ?created .
 						FILTER NOT EXISTS { ?labelNode$n uo:proofread ?proofread . }
 					";
-					$filterQuery = 'GRAPH ' . ($graph ?: "?graph$n") . ' { ' . $filterQuery . '}';
+					$filterQuery = 'GRAPH <%localGraphUri%> { ' . $filterQuery . '}';
 					$filterQueries[] = 'FILTER EXISTS { ' . $filterQuery . '}';
 
 				} elseif (preg_match('/^has:editorialNote/', $filter, $m)) {

@@ -46,7 +46,6 @@ angular.module('app.controllers.concepts', ['app.config', 'app.services.backend'
     setView(view);
   });
 
-
   $scope.$watch('selectedView', function(c, p) {
     if (!p || !c) return;
     if (p == c) return;
@@ -58,8 +57,8 @@ angular.module('app.controllers.concepts', ['app.config', 'app.services.backend'
   $scope.currentConcept = StateService.getConcept();
 
   $scope.$on('conceptChanged', function(evt, concept) {
-    console.log('[ConceptsController] Concept changed: ' + concept.uri);
-    // $log.debug(concept);
+    console.log('[ConceptsController] Concept changed: ');
+    console.log(concept);
     $scope.currentConcept = concept;
   });
 

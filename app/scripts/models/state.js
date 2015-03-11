@@ -14,8 +14,7 @@ angular.module('app.services.state', ['app.services.concepts'])
   this.setView = function(view) {
     if (view == state.view) return;
     state.view = view;
-    console.log('[state] > New view');
-    console.log(view);
+    console.log('[StateService] Set view: ' + view);
     $rootScope.$broadcast('viewChanged', state.view);
   };
 

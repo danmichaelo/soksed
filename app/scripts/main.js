@@ -65,23 +65,27 @@ angular.module('app', ['ngSanitize',
         // An optional map of dependencies which should be injected into the controller. 
         // If any of these dependencies are promises, the router will wait for them all
         // to be resolved or one to be rejected before the controller is instantiated.
-        view: ['$stateParams', function ($stateParams) {
-          var view = $stateParams.view ? $stateParams.view : defaultView ;
-          return view;
-        }],
-        concept: ['$stateParams', 'Concepts', function ($stateParams, Concepts) {
+        concept: ['$stateParams', 'Concepts', 'StateService', function ($stateParams, Concepts, StateService) {
           var id = $stateParams.id;
+
+          StateService.setView($stateParams.view ? $stateParams.view : defaultView);
 
           var uri;
           Object.keys(urimap).forEach(function(k) {
             var m = id.match(k);
             if (m) uri = urimap[k] + m[1];
           });
+          if (!uri) {
+            StateService.setConcept(null);
+            return;
+          }
+
           var concept = Concepts.getByUri(uri);
           if (!concept) {
             concept = Concepts.add(id, uri);
           }
           // console.log(concept);
+          StateService.setConcept(concept);
           return concept;
           // return Concepts.get([{id: $stateParams.id}]); // Returns promise
           // return Concepts.getByUri(uri); // returns promise

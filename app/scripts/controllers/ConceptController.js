@@ -6,14 +6,17 @@ angular.module('app.controllers.concept', ['app.services.backend',
                                            'app.services.concepts'])
 
 .controller('ConceptController', ['$scope', '$window', '$log', '$timeout', 'hotkeys', 'Backend',
-                                  'StateService', 'Concepts', 'concept', 'view',
+                                  'Concepts', 'concept',
                                   function($scope, $window, $log, $timeout, hotkeys, Backend, 
-                                           StateService, Concepts, concept, view) {
+                                           Concepts, concept) {
   'use strict';
 
-  console.log('[ConceptController] Init: view=' + view + ', id=' + concept.id);
-  StateService.setConcept(concept);
-  StateService.setView(view);
+  if (concept) {
+    console.log('[ConceptController] Init: id=' + concept.id);
+  } else {
+    console.log('[ConceptController] Init: no concept');
+    return;
+  }
   $scope.currentConcept = concept;
 
   //-

@@ -2,8 +2,12 @@
 <!-- Current concept -->
 <div class="main">
 	<div class="padded" style="background: burlywood;">
-		<strong>{{ currentConcept.id }} : &lt;{{ currentConcept.uri }}&gt;</strong>
-
+		<span ng-show="currentConcept">
+			<strong>{{ currentConcept.id }} : &lt;{{ currentConcept.uri }}&gt;</strong>
+		</span>
+		<span ng-show="!currentConcept">
+			&nbsp;
+		</span>	
 		<select ng-options="view.label for view in views" ng-model="selectedView" style="float:right;"></select>
 	</div>
 	<div class="padded" ui-view></div>

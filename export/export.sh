@@ -122,4 +122,4 @@ for file in data-skosxl.ttl data-unverified.ttl data-verified.ttl status.json so
 done
 
 git commit -m "Update data"
-# git push
+git push

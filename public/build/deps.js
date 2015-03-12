@@ -42439,16 +42439,273 @@ angular.module('ui.router.state')
 		'</style>'
 	].join(''));
 })(window, window.angular);
-/*!
- * Angular Tooltips v0.1.7
- *
- * Released under the MIT license
- * www.opensource.org/licenses/MIT
- *
- * Brought to you by 720kb.net
- *
- * 2015-03-06
- */
+/*global angular*/
+
+(function withAngular(angular) {
+  'use strict';
+
+  angular.module('720kb.tooltips', [])
+  .directive('tooltips', ['$window', '$compile', function manageDirective($window, $compile) {
+
+    var TOOLTIP_SMALL_MARGIN = 8 //px
+      , TOOLTIP_MEDIUM_MARGIN = 9 //px
+      , TOOLTIP_LARGE_MARGIN = 10 //px
+      , CSS_PREFIX = '_720kb-tooltip-';
+    return {
+      'restrict': 'A',
+      'scope': {},
+      'link': function linkingFunction($scope, element, attr) {
+
+        var initialized = false
+          , thisElement = angular.element(element[0])
+          , body = angular.element($window.document.getElementsByTagName('body')[0])
+          , theTooltip
+          , theTooltipHeight
+          , theTooltipWidth
+          , theTooltipMargin //used both for margin top left right bottom
+          , height
+          , width
+          , offsetTop
+          , offsetLeft
+          , title = attr.tooltipTitle || attr.title || ''
+          , content = attr.tooltipContent || ''
+          , showTriggers = attr.tooltipShowTrigger || 'mouseover'
+          , hideTriggers = attr.tooltipHideTrigger || 'mouseleave'
+          , originSide = attr.tooltipSide || 'top'
+          , side = originSide
+          , size = attr.tooltipSize || 'medium'
+          , tryPosition = $scope.$eval(attr.tooltipTry) || true
+          , className = attr.tooltipClass || ''
+          , speed = (attr.tooltipSpeed || 'medium').toLowerCase()
+          , lazyMode = $scope.$eval(attr.tooltipLazy) || true
+          , htmlTemplate =
+              '<div class="_720kb-tooltip ' + CSS_PREFIX + size + '">' +
+              '<div class="' + CSS_PREFIX + 'title"> ' + title + '</div>' +
+              content + ' <span class="' + CSS_PREFIX + 'caret"></span>' +
+              '</div>';
+
+        //parse the animation speed of tooltips
+        $scope.parseSpeed = function parseSpeed () {
+
+          switch (speed) {
+            case 'fast':
+              speed = 100;
+              break;
+            case 'medium':
+              speed = 450;
+              break;
+            case 'slow':
+              speed = 800;
+              break;
+            default:
+              speed = Number(speed);
+          }
+        };
+        //create the tooltip
+        theTooltip = $compile(htmlTemplate)($scope);
+
+        theTooltip.addClass(className);
+
+        body.append(theTooltip);
+
+        $scope.isTooltipEmpty = function checkEmptyTooltip () {
+
+          if (!title && !content) {
+
+            return true;
+          }
+        };
+
+        $scope.initTooltip = function initTooltip (tooltipSide) {
+
+          if (!$scope.isTooltipEmpty()) {
+
+            height = thisElement[0].offsetHeight;
+            width = thisElement[0].offsetWidth;
+            offsetTop = $scope.getRootOffsetTop(thisElement[0], 0);
+            offsetLeft = $scope.getRootOffsetLeft(thisElement[0], 0);
+            //get tooltip dimension
+            theTooltipHeight = theTooltip[0].offsetHeight;
+            theTooltipWidth = theTooltip[0].offsetWidth;
+
+            $scope.parseSpeed();
+            $scope.tooltipPositioning(tooltipSide);
+          }
+        };
+
+        $scope.getRootOffsetTop = function getRootOffsetTop (elem, val){
+
+          if (elem.offsetParent === null){
+
+            return val + elem.offsetTop;
+          }
+
+          return $scope.getRootOffsetTop(elem.offsetParent, val + elem.offsetTop);
+        };
+
+        $scope.getRootOffsetLeft = function getRootOffsetLeft (elem, val){
+
+          if (elem.offsetParent === null){
+
+            return val + elem.offsetLeft;
+          }
+
+          return $scope.getRootOffsetLeft(elem.offsetParent, val + elem.offsetLeft);
+        };
+
+        thisElement.bind(showTriggers, function onMouseEnterAndMouseOver() {
+
+          if (!lazyMode || !initialized) {
+
+            initialized = true;
+            $scope.initTooltip(side);
+          }
+          if (tryPosition) {
+
+            $scope.tooltipTryPosition();
+          }
+          $scope.showTooltip();
+        });
+
+        thisElement.bind(hideTriggers, function onMouseLeaveAndMouseOut() {
+
+          $scope.hideTooltip();
+        });
+
+        $scope.showTooltip = function showTooltip () {
+
+          theTooltip.addClass(CSS_PREFIX + 'open');
+          theTooltip.css('transition', 'opacity ' + speed + 'ms linear');
+        };
+
+        $scope.hideTooltip = function hideTooltip () {
+
+          theTooltip.removeClass(CSS_PREFIX + 'open');
+          theTooltip.css('transition', '');
+        };
+
+        $scope.removePosition = function removeTooltipPosition () {
+
+          theTooltip
+          .removeClass(CSS_PREFIX + 'left')
+          .removeClass(CSS_PREFIX + 'right')
+          .removeClass(CSS_PREFIX + 'top')
+          .removeClass(CSS_PREFIX + 'bottom ');
+        };
+
+        $scope.tooltipPositioning = function tooltipPositioning (tooltipSide) {
+
+          $scope.removePosition();
+
+          var topValue
+            , leftValue;
+
+          if (size === 'small') {
+
+            theTooltipMargin = TOOLTIP_SMALL_MARGIN;
+
+          } else if (size === 'medium') {
+
+            theTooltipMargin = TOOLTIP_MEDIUM_MARGIN;
+
+          } else if (size === 'large') {
+
+            theTooltipMargin = TOOLTIP_LARGE_MARGIN;
+          }
+
+          if (tooltipSide === 'left') {
+
+            topValue = offsetTop + height / 2 - theTooltipHeight / 2;
+            leftValue = offsetLeft - (theTooltipWidth + theTooltipMargin);
+
+            theTooltip.css('top', topValue + 'px');
+            theTooltip.css('left', leftValue + 'px');
+            theTooltip.addClass(CSS_PREFIX + 'left');
+          }
+
+          if (tooltipSide === 'right') {
+
+            topValue = offsetTop + height / 2 - theTooltipHeight / 2;
+            leftValue = offsetLeft + width + theTooltipMargin;
+
+            theTooltip.css('top', topValue + 'px');
+            theTooltip.css('left', leftValue + 'px');
+            theTooltip.addClass(CSS_PREFIX + 'right');
+          }
+
+          if (tooltipSide === 'top') {
+
+            topValue = offsetTop - theTooltipMargin - theTooltipHeight;
+            leftValue = offsetLeft + width / 2 - theTooltipWidth / 2;
+
+            theTooltip.css('top', topValue + 'px');
+            theTooltip.css('left', leftValue + 'px');
+            theTooltip.addClass(CSS_PREFIX + 'top');
+          }
+
+          if (tooltipSide === 'bottom') {
+
+            topValue = offsetTop + height + theTooltipMargin;
+            leftValue = offsetLeft + width / 2 - theTooltipWidth / 2;
+            theTooltip.css('top', topValue + 'px');
+            theTooltip.css('left', leftValue + 'px');
+            theTooltip.addClass(CSS_PREFIX + 'bottom');
+          }
+        };
+
+        $scope.tooltipTryPosition = function tooltipTryPosition () {
 
 
-!function(a){"use strict";a.module("720kb.tooltips",[]).directive("tooltips",["$window","$compile",function(b,c){var d=8,e=9,f=10;return{restrict:"A",scope:{},link:function(g,h,i){var j,k,l,m,n,o,p,q,r=!1,s=a.element(h[0]),t=a.element(b.document.getElementsByTagName("body")[0]),u=i.tooltipTitle||i.title||"",v=i.tooltipContent||"",w=i.tooltipShowTrigger||"mouseenter mouseover",x=i.tooltipHideTrigger||"mouseleave mouseout",y=i.tooltipSide||"top",z=i.tooltipSize||"medium",A=i.tooltipTry||1,B=i.tooltipClass||"",C=(i.tooltipSpeed||"medium").toLowerCase(),D=g.$eval(i.tooltipLazy||!0),E='<div class="_720kb-tooltip _720kb-tooltip-'+y+" _720kb-tooltip-"+z+'"><div class="_720kb-tooltip-title"> '+u+"</div>"+v+' <span class="_720kb-tooltip-caret"></span></div>';g.parseSpeed=function(){switch(C){case"fast":C=100;break;case"medium":C=450;break;case"slow":C=800;break;default:C=Number(C)}},j=c(E)(g),j.addClass(B),t.append(j),g.initTooltip=function(a){n=s[0].offsetHeight,o=s[0].offsetWidth,p=g.getRootOffsetTop(s[0],0),q=g.getRootOffsetLeft(s[0],0),k=j[0].offsetHeight,l=j[0].offsetWidth,g.parseSpeed(),g.tooltipPositioning(a)},g.getRootOffsetTop=function(a,b){return null===a.offsetParent?b+a.offsetTop:g.getRootOffsetTop(a.offsetParent,b+a.offsetTop)},g.getRootOffsetLeft=function(a,b){return null===a.offsetParent?b+a.offsetLeft:g.getRootOffsetLeft(a.offsetParent,b+a.offsetLeft)},s.bind(w,function(){D&&r||(r=!0,g.initTooltip(y)),g.showTooltip()}),s.bind(x,function(){g.hideTooltip()}),g.showTooltip=function(){j.addClass("_720kb-tooltip-open"),j.css("transition","opacity "+C+"ms linear")},g.hideTooltip=function(){j.removeClass("_720kb-tooltip-open"),j.css("transition","")},g.tooltipPositioning=function(a){var b,c,h;"small"===z?m=d:"medium"===z?m=e:"large"===z&&(m=f),"left"===a&&(b=p+n/2-k/2,c=q-(l+m),h=g.trySuitablePosition(b,c,a),b=h.topValue,c=h.leftValue,j.css("top",b+"px"),j.css("left",c+"px")),"right"===a&&(b=p+n/2-k/2,c=q+o+m,h=g.trySuitablePosition(b,c,a),b=h.topValue,c=h.leftValue,j.css("top",b+"px"),j.css("left",c+"px")),"top"===a&&(b=p-m-k,c=q+o/2-l/2,h=g.trySuitablePosition(b,c,a),b=h.topValue,c=h.leftValue,j.css("top",b+"px"),j.css("left",c+"px")),"bottom"===a&&(b=p+n+m,c=q+o/2-l/2,h=g.trySuitablePosition(b,c,a),b=h.topValue,c=h.leftValue,j.css("top",b+"px"),j.css("left",c+"px"))},g.trySuitablePosition=function(a,b,c){var d={};return d.topValue=a,d.leftValue=b,0===A||d.topValue>=0&&d.leftValue>=0?d:(d.topValue=p+n/2-k/2,d.leftValue=q-(l+m),d.topValue>=0&&d.leftValue>=0?(j.removeClass("_720kb-tooltip-"+c),j.addClass("_720kb-tooltip-left"),d):(d.topValue=p+n/2-k/2,d.leftValue=q+o+m,d.topValue>=0&&d.leftValue>=0?(j.removeClass("_720kb-tooltip-"+c),j.addClass("_720kb-tooltip-right"),d):(d.topValue=p-m-k,d.leftValue=q+o/2-l/2,d.topValue>=0&&d.leftValue>=0?(j.removeClass("_720kb-tooltip-"+c),j.addClass("_720kb-tooltip-top"),d):(d.topValue=p+n+m,d.leftValue=q+o/2-l/2,j.removeClass("_720kb-tooltip-"+c),j.addClass("_720kb-tooltip-bottom"),d))))},a.element(b).bind("resize",function(){g.initTooltip(y)})}}}])}(angular);
+            var theTooltipH = theTooltip[0].offsetHeight
+              , theTooltipW = theTooltip[0].offsetWidth
+              , topOffset = theTooltip[0].offsetTop
+              , leftOffset = theTooltip[0].offsetLeft
+              , winWidth = $window.outerWidth
+              , winHeight = $window.outerHeight
+              , rightOffset = winWidth - (theTooltipW + leftOffset)
+              , bottomOffset = winHeight - (theTooltipH + topOffset)
+              //element OFFSETS (not tooltip offsets)
+              , elmHeight = thisElement[0].offsetHeight
+              , elmWidth = thisElement[0].offsetWidth
+              , elmOffsetLeft = thisElement[0].offsetLeft
+              , elmOffsetTop = thisElement[0].offsetTop
+              , elmOffsetRight = winWidth - (elmOffsetLeft + elmWidth)
+              , elmOffsetBottom = winHeight - (elmHeight + elmOffsetTop)
+              , offsets = {
+                'left': leftOffset,
+                'top': topOffset,
+                'bottom': bottomOffset,
+                'right': rightOffset
+              }
+              , posix = {
+                'left': elmOffsetLeft,
+                'right': elmOffsetRight,
+                'top': elmOffsetTop,
+                'bottom': elmOffsetBottom
+              }
+              , bestPosition = Object.keys(posix).reduce(function (best, key) {
+
+                  return posix[best] > posix[key] ? best : key;
+              })
+              , worstOffset = Object.keys(offsets).reduce(function (worst, key) {
+
+                  return offsets[worst] < offsets[key] ? worst : key;
+              });
+
+              if (offsets[worstOffset] < 5) {
+
+                side = bestPosition;
+
+                $scope.initTooltip(bestPosition);
+              }
+        };
+
+        angular.element($window).bind('resize', function onResize() {
+
+          $scope.hideTooltip();
+          $scope.initTooltip(originSide);
+        });
+      }
+    };
+  }]);
+}(angular));

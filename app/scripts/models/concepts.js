@@ -5,11 +5,11 @@ angular.module('app.services.concepts', ['app.services.backend', 'app.services.c
 .service('Concepts', ['$rootScope', '$q', '$timeout', '$state', 'Backend', 'Concept', function($rootScope, $q, $timeout, $state, Backend, Concept) {
   'use strict';
 
-  var busy = false;
   var that = this;
   var currentConcept = null;
   var currentFilter = null;
 
+  this.busy = false;
   this.concepts = [];
   this.cursor = 0;
   this.count = 0;
@@ -26,8 +26,9 @@ angular.module('app.services.concepts', ['app.services.backend', 'app.services.c
 //    that.sort();
   });
 
-  function fetch(filter) {
-    if (busy) return;
+  this.fetch = function(filter) {
+    if (that.busy) return;
+    var deferred = $q.defer();
 
     if (filter != currentFilter) {
       that.concepts = [];
@@ -36,12 +37,14 @@ angular.module('app.services.concepts', ['app.services.backend', 'app.services.c
 
     console.log('[Concepts] fetchConcepts');
 
-    busy = true;
+    that.busy = true;
     Backend.getConcepts(that.cursor, filter).success(function(results) {
-      busy = false;
+      that.busy = false;
       if (!results.concepts) {
         console.log('[Concepts] Fetch failed!');
-        // TODO: Emit event?
+        that.count = 0;
+        that.concepts = [];
+        deferred.reject(results);
         return;
       }
       that.count = results.count;
@@ -67,15 +70,13 @@ angular.module('app.services.concepts', ['app.services.backend', 'app.services.c
       //that.sort();
       console.log('[Concepts] Fetched');
       $rootScope.$broadcast('loadedConcepts', that.concepts);
+      deferred.resolve(that.concepts);
     });
-  }
+    return deferred.promise;
+  };
 
   this.getConcepts = function() {
     return that.concepts;
-  };
-
-  this.fetch = function(filter) {
-    fetch(filter);
   };
 
   this.getById = function(id) {

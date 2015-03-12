@@ -31,7 +31,12 @@
 
 	<div ng-show="!busy && totalCount == 0">
 		<div style="padding: 1em; font-weight: 200; font-size: 130%; text-align:center;">
-			Ingen begreper matcher søkekriteriene.
+			<span ng-show="!error">
+				Ingen begreper matcher søkekriteriene.			
+			</span>
+			<span ng-show="error" style="color: red;">
+				{{ error }}			
+			</span>
 		</div>
 	</div>
 

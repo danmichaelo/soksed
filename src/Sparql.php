@@ -87,7 +87,7 @@ class Sparql extends Base
 			return $this->client->query($query);
 		} catch (\EasyRdf\Http\Exception $e) {
 			$this->logger->error("SPARQL QUERY failed: " . $e->getBody() . " --- Query: " . $query . " --- Trace: " . $e->getTraceAsString());
-			die('Sparql query error, see log');
+			die('The query could not be processed. Details has been logged.');
 		}
 	}
 
@@ -98,7 +98,7 @@ class Sparql extends Base
 			$response = $this->updateClient->update($query);
 		} catch (\EasyRdf\Http\Exception $e) {
 			$this->logger->error("SPARQL UPDATE failed: " . $e->getBody() . " --- Query: " . $query . " --- Trace: " . $e->getTraceAsString());
-			die('Sparql update error, see log');
+			die('Sparql update failed. Details has been logged.');
 		}
 		return $response->isSuccessful();
 	}
@@ -131,6 +131,7 @@ class Sparql extends Base
 			$n = 1;
 
 			foreach ($filters as $filter) {
+				if (empty($filter)) continue;
 				$n++;
 
 				if (preg_match('/^(-)?exists:prefLabel@([a-z]{2,3})/', $filter, $m)) {

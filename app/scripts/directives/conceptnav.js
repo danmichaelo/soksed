@@ -32,21 +32,6 @@ angular.module('app.directives.conceptnav', ['app.config', 'app.services.concept
         }
       });
 
-      scope.fetchMoreConcepts = function() {
-        // called by infinite scroll
-        console.log('FETCH MORE');
-        Concepts.fetch();
-      };
-
-      scope.$on('loadedConcepts', function(evt, concepts) {
-        scope.concepts = concepts;
-        scope.totalCount = Concepts.count;
-        scope.busy = false;
-        setTimeout(function() {
-          scope.checkScrollPos(scope.currentConcept);
-        });
-      });
-
       function conceptListUpdated() {
         console.log('conceptListUpdated');
       }
@@ -109,8 +94,22 @@ angular.module('app.directives.conceptnav', ['app.config', 'app.services.concept
 
       q = q.join(',');
       console.log(q);
-      scope.busy = true;
-      Concepts.fetch(q);
+      if (!Concepts.busy) {
+        scope.busy = true;
+        Concepts.fetch(q).then(function(concepts) {
+          scope.concepts = concepts;
+          scope.totalCount = Concepts.count;
+          scope.busy = false;
+          setTimeout(function() {
+            scope.checkScrollPos(scope.currentConcept);
+          });
+        }).catch(function(err) {
+          scope.concepts = [];
+          scope.totalCount = 0;
+          scope.error = err;
+          scope.busy = false;
+        });
+      }
     }
   };
 }]);

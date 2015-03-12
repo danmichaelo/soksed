@@ -162,15 +162,29 @@ class Sparql extends Base
 					$filterQueries[] = 'FILTER EXISTS { ' . $filterQuery . '}';
 
 				} elseif (preg_match('/^(.*)\*$/', $filter, $m)) {
+					// $filterQuery = "
+					// 	FILTER(strstarts(lcase(str(?label)), \"%startswith$n%\"))
+					// ";
 					$filterQuery = "
-						FILTER(strstarts(lcase(str(?label)), \"%startswith$n%\"))
+						FILTER EXISTS { GRAPH ?graph$n {
+							?concept xl:prefLabel ?labelNode$n .
+							?labelNode$n xl:literalForm ?label$n .
+						FILTER(strstarts(lcase(str(?label$n)), \"%startswith$n%\"))
+						}}
 					";
 					$parameters["startswith$n"] = strtolower($m[1]);
 					$filterQueries[] = $filterQuery;
 
 				} elseif (preg_match('/^(.*)$/', $filter, $m)) {
+					// $filterQuery = "
+					// 	FILTER(regex(str(?label), \"%regexp$n%\", \"i\"))
+					// ";
 					$filterQuery = "
-						FILTER(regex(str(?label), \"%regexp$n%\", \"i\"))
+						FILTER EXISTS { GRAPH ?graph$n {
+							?concept xl:prefLabel ?labelNode$n .
+							?labelNode$n xl:literalForm ?label$n .
+						FILTER(regex(str(?label$n), \"%regexp$n%\", \"i\"))
+						}}
 					";
 					$parameters["regexp$n"] = $m[1];
 					$filterQueries[] = $filterQuery;

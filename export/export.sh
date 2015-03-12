@@ -11,19 +11,28 @@
 #
 # Example crontab:
 #
+#  PATH=PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin:/opt/fuseki/bin
 #  RUBYENV=/usr/local/rvm/environments/ruby-1.9.3-p551@global
 #  10 * * * *  /path/to/update-fuseki.sh
 #
+die() {
+    echo >&2
+    echo >&2 -----------------------------------------------------------
+    echo >&2 ERROR:
+    echo >&2 $*
+    echo >&2 -----------------------------------------------------------
+    exit 1
+}
+
+try() { "$@" || die "$0: Cannot $*"; }
 
 SCRIPTDIR="$( cd $(dirname $0) ; pwd -P )"
-cd "$SCRIPTDIR"
+try cd "$SCRIPTDIR"
 
 test -z "$GRAPH" && GRAPH=http://trans.biblionaut.net/graph/trans
-test -z "$FUSEKIDIR" && FUSEKIDIR=/opt/fuseki
 test -n "$RUBYENV" && source "$RUBYENV"
 
 echo "SCRIPTDIR: $SCRIPTDIR"
-echo "FUSEKIDIR: $FUSEKIDIR"
 echo "GRAPH: $GRAPH"
 
 LOCAL_REPO=prosjekt-nynorsk
@@ -34,22 +43,11 @@ LOCAL_REPO=prosjekt-nynorsk
 
 cd ..
 
-function die
-{
-	echo
-    echo ----------------------------------------------------------------
-    echo ERROR:
-    echo $@
-    echo ----------------------------------------------------------------
-    exit 1	
-}
 function install_deps
 {
     echo Installing/updating dependencies
     pip install -U rdflib requests
-    xc=$?
-
-    if [ $xc != 0 ]; then
+    if [ $? != 0 ]; then
         die Could not install dependencies using pip
     fi
 }
@@ -62,9 +60,7 @@ if [ ! -f ENV/bin/activate ]; then
     echo ----------------------------------------------------------------
     echo
     virtualenv ENV
-    xc=$?
-
-    if [ $xc != 0 ]; then
+    if [ $? != 0 ]; then
         die Virtualenv exited with code $xc. You may need to install or configure it.
     fi
 
@@ -87,12 +83,7 @@ cd "$SCRIPTDIR"
 #==========================================================
 
 if [ ! -d "$LOCAL_REPO" ]; then
-
-    git clone "git@github.com:realfagstermer/prosjekt-nynorsk.git" "$LOCAL_REPO"
-    xc=$?
-    if [ $xc != 0 ]; then
-        die Could not clone git repo: prosjekt-nynorsk
-    fi
+    try git clone "git@github.com:realfagstermer/prosjekt-nynorsk.git" "$LOCAL_REPO"
 fi
 
 #==========================================================
@@ -100,9 +91,9 @@ fi
 #==========================================================
 
 echo "Get data from Fuseki"
-$FUSEKIDIR/s-get http://localhost:3030/ds/get $GRAPH > current.ttl
+s-get http://localhost:3030/ds/get $GRAPH > current.ttl
 if [ $? != 0 ]; then
-    die Could not fetch data from Fuseki. You may need to set FUSEKIDIR
+    die "Could not fetch data from Fuseki using 's-get'. Is it in your PATH?"
 fi
 
 if cmp -s "current.ttl" "prev.ttl"; then
@@ -111,7 +102,7 @@ if cmp -s "current.ttl" "prev.ttl"; then
 fi
 
 echo "Processing"
-python process_export.py
+try python process_export.py
 
 mv -f current.ttl prev.ttl
 
@@ -119,13 +110,11 @@ mv -f current.ttl prev.ttl
 # Commit changes to git repo
 #==========================================================
 
-cd "$LOCAL_REPO"
+try cd "$LOCAL_REPO"
 git config user.name "ubo-bot"
 git config user.email "danmichaelo+ubobot@gmail.com"
-git pull
-if [ $? != 0 ]; then
-    die Could not git pull. Conflict?
-fi
+
+try git reset --hard origin/master
 
 for file in data-skosxl.ttl data-unverified.ttl data-verified.ttl status.json sonja.txt; do
 	mv -f "../$file" "./"

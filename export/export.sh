@@ -11,9 +11,7 @@
 #
 # Example crontab:
 #
-#  PATH=PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin:/opt/fuseki/bin
-#  RUBYENV=/usr/local/rvm/environments/ruby-1.9.3-p551@global
-#  10 * * * *  /path/to/update-fuseki.sh
+#  cd /path/to/export && ./export.sh >> export.log 2>&1
 #
 die() {
     echo >&2
@@ -30,8 +28,9 @@ SCRIPTDIR="$( cd $(dirname $0) ; pwd -P )"
 try cd "$SCRIPTDIR"
 
 test -z "$GRAPH" && GRAPH=http://trans.biblionaut.net/graph/trans
-test -n "$RUBYENV" && source "$RUBYENV"
 
+echo
+date
 echo "SCRIPTDIR: $SCRIPTDIR"
 echo "GRAPH: $GRAPH"
 
@@ -91,7 +90,7 @@ fi
 #==========================================================
 
 echo "Get data from Fuseki"
-s-get http://localhost:3030/ds/get $GRAPH > current.ttl
+curl -X GET -o current.ttl -s -H "Content-Type: text/turtle" -G --data-urlencode "graph=$GRAPH" "http://localhost:3030/ds/get"
 if [ $? != 0 ]; then
     die "Could not fetch data from Fuseki using 's-get'. Is it in your PATH?"
 fi
@@ -122,4 +121,5 @@ for file in data-skosxl.ttl data-unverified.ttl data-verified.ttl status.json so
 done
 
 git commit -m "Update data"
-git push
+git push origin master
+

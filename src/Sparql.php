@@ -181,11 +181,19 @@ class Sparql extends Base
 					// 	FILTER(regex(str(?label), \"%regexp$n%\", \"i\"))
 					// ";
 					$filterQuery = "
-						FILTER EXISTS { GRAPH ?graph$n {
-							?concept xl:prefLabel ?labelNode$n .
-							?labelNode$n xl:literalForm ?label$n .
-						FILTER(regex(str(?label$n), \"%regexp$n%\", \"i\"))
-						}}
+						FILTER (
+							EXISTS { GRAPH ?graph$n {
+								?concept xl:prefLabel ?labelNode$n .
+								?labelNode$n xl:literalForm ?label$n .
+								FILTER(regex(str(?label$n), \"%regexp$n%\", \"i\"))
+							}}
+							||
+							EXISTS { GRAPH ?graph$n {
+								?concept xl:altLabel ?labelNode$n .
+								?labelNode$n xl:literalForm ?label$n .
+								FILTER(regex(str(?label$n), \"%regexp$n%\", \"i\"))
+							}}
+						)
 					";
 					$parameters["regexp$n"] = $m[1];
 					$filterQueries[] = $filterQuery;

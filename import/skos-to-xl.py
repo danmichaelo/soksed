@@ -16,7 +16,7 @@ console_handler.setFormatter(formatter)
 logger.addHandler(console_handler)
 
 q = re.compile(r'http://data.ub.uio.no/realfagstermer/([0-9]+)')
-with open('realfagstermer/realfagstermer.ttl', 'r') as infile:
+with open('realfagstermer/data/realfagstermer.ttl', 'r') as infile:
     with open('tmp.ttl', 'w') as outfile:
         outfile.write(q.sub('http://data.ub.uio.no/realfagstermer/c\\1', infile.read()))
 

@@ -71,7 +71,7 @@ angular.module('app.services.concept', ['app.config', 'app.services.backend', 'a
       }
 
       var subject = encodeURIComponent(this.label);
-      this.katapiUrl = 'https://katapi.biblionaut.net/documents?q=real:' + this.label;
+      this.katapiUrl = 'https://app.uio.no/ub/emnesok/realfagstermer/search?term=' + this.label;
       var body = encodeURIComponent('\n\n\n\n--\nURI: ' + this.uri + '\nBruk: ' + this.katapiUrl);
       this.githubUrl = 'https://github.com/realfagstermer/realfagstermer/issues/new?title=' + subject + '&body=' + body;
     },

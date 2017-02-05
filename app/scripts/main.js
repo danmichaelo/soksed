@@ -5,6 +5,7 @@ angular.module('app', ['ngSanitize',
                        'cfp.hotkeys',
                        'ui.router',
                        '720kb.tooltips',
+                       'angucomplete-alt',
 
                        'app.config',
                        'app.controllers.header',

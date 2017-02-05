@@ -52,6 +52,52 @@ function gzippedOutput($data)
 
 switch ($action) {
 
+	case 'get_wikidata':
+		$mw = new MediaWikiApi('wikidata.org');
+		$data = $mw->getFromUri($_GET['uri']);
+		jsonOut($data);
+
+	case 'get_wikipedia':
+
+		if (isset($_GET['lang']) && $_GET['lang'] == 'en') {
+			$mw = new MediaWikiApi('en.wikipedia.org');
+		} else {
+			$mw = new MediaWikiApi('no.wikipedia.org');
+		}
+
+		$data = $mw->getPageExtract($_GET['term']);
+		jsonOut($data);
+
+	case 'search_wikipedia':
+
+		$mw = new MediaWikiApi('en.wikipedia.org');
+		$concepts = $mw->opensearch($_GET['term']);
+
+		$mw = new MediaWikiApi('no.wikipedia.org');
+		foreach ($mw->opensearch($_GET['term']) as $c) {
+			$concepts[] = $c;
+		}
+
+		jsonOut(['results' => $concepts]);
+
+	case 'search_wikidata':
+
+		$mw = new MediaWikiApi('wikidata.org');
+		$concepts = $mw->wbsearch($_GET['term']);
+
+		jsonOut(['results' => $concepts]);
+
+	case 'get_wikipedia_fulltext':
+
+		if (isset($_GET['lang']) && $_GET['lang'] == 'en') {
+			$mw = new MediaWikiApi('en.wikipedia.org');
+		} else {
+			$mw = new MediaWikiApi('no.wikipedia.org');
+		}
+
+		$concept = $mw->getPageText($_GET['term']);
+		jsonOut($concept);
+
 	/** USER ACTIONS **/
 
 	case 'get_user':

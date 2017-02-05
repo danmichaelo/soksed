@@ -64,7 +64,8 @@ angular.module('app.directives.conceptnav', ['app.config', 'app.services.concept
 
       scope.$on('conceptChanged', function(evt, concept) {
         scope.currentConcept = concept;
-        scope.checkScrollPos(concept);
+        // TODO: FIX! This broke with the latest Angular.
+        // scope.checkScrollPos(concept);
       });
 
       scope.graphOptionEnabled = function() {

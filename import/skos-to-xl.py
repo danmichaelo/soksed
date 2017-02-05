@@ -15,18 +15,19 @@ console_handler.setLevel(logging.INFO)
 console_handler.setFormatter(formatter)
 logger.addHandler(console_handler)
 
-q = re.compile(r'http://data.ub.uio.no/realfagstermer/([0-9]+)')
-with open('realfagstermer/data/realfagstermer.ttl', 'r') as infile:
-    with open('tmp.ttl', 'w') as outfile:
-        outfile.write(q.sub('http://data.ub.uio.no/realfagstermer/c\\1', infile.read()))
+# q = re.compile(r'http://data.ub.uio.no/realfagstermer/([0-9]+)')
+# with open('realfagstermer/dist/realfagstermer.ttl', 'r') as infile:
+#     with open('tmp.ttl', 'w') as outfile:
+#         outfile.write(q.sub('http://data.ub.uio.no/realfagstermer/c\\1', infile.read()))
 
 uribase = 'http://trans.biblionaut.net/terms/t'
 XL = Namespace('http://www.w3.org/2008/05/skos-xl#')
 
 g = Graph()
 g.bind('xl', XL)
-logger.info('Load realfagstermer/realfagstermer.ttl')
-g.load('tmp.ttl', format='turtle')
+fname = 'realfagstermer/dist/realfagstermer.ttl'
+logger.info('Load %s', fname)
+g.load(fname, format='turtle')
 
 logger.info('Process graph')
 idm = re.compile('^http://data.ub.uio.no/realfagstermer/c([0-9]+)$')

@@ -38,7 +38,7 @@ angular.module('app.services.concepts', ['app.services.backend', 'app.services.c
     console.log('[Concepts] fetchConcepts');
 
     that.busy = true;
-    Backend.getConcepts(that.cursor, filter).success(function(results) {
+    Backend.getConcepts(that.cursor, filter).then(function(results) {
       that.busy = false;
       if (!results.concepts) {
         console.log('[Concepts] Fetch failed!');

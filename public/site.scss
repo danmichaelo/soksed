@@ -27,7 +27,7 @@ html, body {
 	top: $headerheight;
 	bottom: 0;
     background: #fcfcfc;
-    overflow-y: auto;
+    overflow-y: scroll;
 }
 .conceptnav {
 	position: fixed;
@@ -126,6 +126,39 @@ ul {
 ul li {
 }
 
+.candidate:hover {
+	background: #eee;
+}
+.candidate {
+	cursor: pointer;
+	padding: 6px 10px 3px 10px;
+	color: #999;
+}
+.candidate.selected {
+	color: #333;
+}
+.extract {
+	font-size: 85%;
+}
+.candidate:before {
+   font-family: FontAwesome;
+   content: "\f096";
+   color: #009900;
+}
+.candidate.selected:before {
+   font-family: FontAwesome;
+   content: "\f14a";
+}
+.category {
+	display:inline-block;
+	padding: 0 3px;
+}
+.category:hover {
+	background: #eee;
+}
+.category.recommended {
+	font-weight: bold;
+}
 
 /**************************************************************
  * Concept form
@@ -187,3 +220,80 @@ ul li {
 	display:inline-block;
 	padding:2px 10px;
 }
+
+/** ANGUCOMPLETE-ALT **/
+
+.angucomplete-holder {
+    position: relative;
+}
+
+.angucomplete-dropdown {
+    border-color: #ececec;
+    border-width: 1px;
+    border-style: solid;
+    border-radius: 2px;
+    width: 600px;
+    padding: 0;
+    cursor: pointer;
+    z-index: 9999;
+    position: absolute;
+    /*top: 32px;
+    left: 0px;
+    */
+    margin-top: -6px;
+    background-color: #ffffff;
+    font-size: 13px;
+}
+
+.angucomplete-searching {
+    color: #acacac;
+    padding: 8px;
+    font-size: 13px;
+}
+
+.angucomplete-title {
+	font-weight: bold;
+}
+
+.angucomplete-description {
+    font-size: 11px;
+    color: #555;
+}
+
+.angucomplete-row {
+    padding: 4px 8px;
+    color: #000000;
+    margin-bottom: 4px;
+    clear: both;
+}
+
+.angucomplete-selected-row, .angucomplete-selected-row .angucomplete-description {
+    background-color: #ffff88;
+}
+
+.angucomplete-image-holder {
+    padding-top: 2px;
+    float: left;
+    margin-right: 10px;
+    margin-left: 5px;
+}
+
+.angucomplete-image {
+    height: 34px;
+    width: 34px;
+    border-radius: 50%;
+    border-color: #ececec;
+    border-style: solid;
+    border-width: 1px;
+}
+
+.angucomplete-image-default {
+    /* Add your own default image here
+     background-image: url('/assets/default.png');
+    */
+    background-position: center;
+    background-size: contain;
+    height: 34px;
+    width: 34px;
+}
+

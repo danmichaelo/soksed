@@ -2,13 +2,27 @@
 // Declare app level module which depends on filters, and services
 angular.module('app.services.concept', ['app.config', 'app.services.backend', 'app.directives.altlabels', 'app.directives.term'])
 
-.factory('Concept', ['$q', '$rootScope', '$timeout', 'Backend', 'config', function($q, $rootScope, $timeout, Backend, config) {
+.factory('Concept', ['$q', '$rootScope', '$timeout', '$sce', 'Backend', 'config', function($q, $rootScope, $timeout, $sce, Backend, config) {
   'use strict';
+
+  var libCodeMapping = {
+    'ns': 'http://data.ub.uio.no/realfagstermer/cat_1',
+    'na': 'http://data.ub.uio.no/realfagstermer/cat_2',
+    'nf': 'http://data.ub.uio.no/realfagstermer/cat_3',
+    'nb': 'http://data.ub.uio.no/realfagstermer/cat_4',
+    'nc': 'http://data.ub.uio.no/realfagstermer/cat_5',
+    'ne': 'http://data.ub.uio.no/realfagstermer/cat_6',
+    'nk': 'http://data.ub.uio.no/realfagstermer/cat_7',
+    'ni': 'http://data.ub.uio.no/realfagstermer/cat_8',
+    'nm': 'http://data.ub.uio.no/realfagstermer/cat_9',
+    'ngh': 'http://data.ub.uio.no/realfagstermer/cat_5',  // ???
+  };
 
   function Concept(id, uri, label) {
     var that = this;
     that.dirty = false;
     that.loading = false;
+    that.wpWorking = false;
     that.saving = false;
     that.saved = false;
     that.error = null;
@@ -17,6 +31,9 @@ angular.module('app.services.concept', ['app.config', 'app.services.backend', 'a
     that.label = label;
     that.status = 'minimal';  // 'complete', 'saving', 'saved'
     that.data = null;
+    that.candidates = [];
+    that.selectedCandidate = -1;
+    that.recommended = [];
   }
 
   Concept.prototype = {
@@ -59,6 +76,23 @@ angular.module('app.services.concept', ['app.config', 'app.services.backend', 'a
       this.githubUrl = 'https://github.com/realfagstermer/realfagstermer/issues/new?title=' + subject + '&body=' + body;
     },
 
+    setSelectedCandidate: function(idx) {
+      this.selectedCandidate = (this.selectedCandidate == idx) ? -1 : idx ;
+      if (this.selectedCandidate == -1) {
+        this.data.wikidataItem = [];
+      } else {
+        this.data.wikidataItem = [this.candidates[this.selectedCandidate].uri];
+      }
+    },
+
+    toggleCategory: function(catUri) {
+      if (~this.data.member.indexOf(catUri)) {
+        this.data.member.splice(this.data.member.indexOf(catUri), 1);
+      } else {
+        this.data.member.push(catUri);
+      }
+    },
+
     testDirty: function() {
       this.dirty = ! angular.equals(this.data, this.originalData);
       // if (this.dirty) this.saved = false;
@@ -86,6 +120,48 @@ angular.module('app.services.concept', ['app.config', 'app.services.backend', 'a
           data.altLabel.nn[i].hints.push(m[1] + 'ar');
         }
       }
+    },
+
+    loadCandidateByUri: function(uri) {
+      var that = this;
+      that.wpWorking = true;
+
+      Backend.getWikidata(uri).then(function(data) {
+        if (data.title) {
+          data.text = $sce.trustAsHtml(data.text);
+          var ids = that.candidates.map(function(s){ return s.id; });
+          if (ids.indexOf(data.id) == -1) {
+            that.candidates.push(data);
+          }
+        }
+        that.wpWorking = false;
+        that.selectedCandidate = 0;
+      }, function() {
+        alert('FAIL!');
+        that.wpWorking = false;
+      });
+    },
+
+    loadCandidate: function(term, select, lang) {
+      var that = this;
+      that.wpWorking = true;
+
+      Backend.getWikipedia(term, lang).then(function(data) {
+        if (data.title) {
+          data.text = $sce.trustAsHtml(data.text);
+          var ids = that.candidates.map(function(s){ return s.id; });
+          if (ids.indexOf(data.id) == -1) {
+            that.candidates.push(data);
+            if (select) {
+              that.setSelectedCandidate(that.candidates.length - 1);
+            }
+          }
+        }
+        that.wpWorking = false;
+      }, function() {
+        alert('FAIL!');
+        that.wpWorking = false;
+      });
     },
 
     /**
@@ -158,7 +234,8 @@ angular.module('app.services.concept', ['app.config', 'app.services.backend', 'a
         }, 0);
       } else {
         this.loading = true;
-        Backend.getConcept(this.uri).success(function(data) {
+
+        Backend.getConcept(this.uri).then(function(data) {
           that.loading = false;
           if (!data.concept) {
             if (data.error) {
@@ -173,13 +250,27 @@ angular.module('app.services.concept', ['app.config', 'app.services.backend', 'a
           that.error = null;
           console.log('[Concept] Concept loaded: ' + data.concept.uri);
           console.log(that.data);
+
+          that.recommended = that.data.libCode.map(function(k) {
+            return libCodeMapping[k];
+          });
+
+          that.candidates = [];
+          if (that.data.wikidataItem && that.data.wikidataItem.length) {
+            that.loadCandidateByUri(that.data.wikidataItem[0]);
+          } else {
+            that.loadCandidate(that.data.prefLabel.nb[0].value);
+          }
+
+
           $rootScope.$broadcast('conceptLoaded', that);
           deferred.resolve();
-        }).error(function() {
+        }, function() {
           that.loading = false;
           that.error = 'Load failed. Server or network problems.';
           deferred.reject();
         });
+
       }
       return deferred.promise;
     },

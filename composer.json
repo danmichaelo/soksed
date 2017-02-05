@@ -8,14 +8,14 @@
         }
     ],
     "minimum-stability": "dev",
+    "prefer-stable": false,
     "require": {
-        "ext-mongo": "*",
         "ext-openssl": "*",
         "lusitanian/oauth": "~0.3",
         "rmccue/requests": ">=1.0",
         "easyrdf/easyrdf": "*",
         "illuminate/support": "5.0.*",
-        "monolog/monolog": "~1.12@dev",
+        "monolog/monolog": "^1.22",
         "rhumsaa/uuid": "~2.8",
         "nesbot/carbon": "~1.14",
         "firebase/php-jwt": "~1.0",

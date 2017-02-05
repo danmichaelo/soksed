@@ -18,7 +18,7 @@ class Concept
 		$this->uri = $uri;
 		$this->auth = $auth;
 		$this->sparql = is_null($sparql) ? new Sparql : $sparql;
-		$this->logger = is_null($logger) ? new Logger : $logger;
+		$this->logger = is_null($logger) ? new Logger($auth) : $logger;
 		$x = $this->sparql->getConcept($this->uri);
 		if (isset($x['data'])) {
 			$this->data = $x['data'];
@@ -132,6 +132,30 @@ class Concept
 			if (!$this->sparql->updateLabels($this->auth->getProfile(), $data['uri'], 'altLabel', $removed, $added)) {
 				return 'update_altlabel_failed';
 			}
+			$modified = true;
+		}
+
+		// Update wikidata mapping
+		if (json_encode(array_get($this->data, 'wikidataItem')) != json_encode(array_get($data, 'wikidataItem'))) {
+			$values = array_get($data, 'wikidataItem');
+			$this->sparql->setPropertyUri(
+				$data['uri'],
+				'ubo:wikidataItem',
+				$values
+			);
+			$this->logger->info('satte Wikidata-mapping for <' . $data['uri'] . '> til ' . array_get($data, 'wikidataItem.0'));
+			$modified = true;
+		}
+
+		// Update categories
+		if (json_encode(array_get($this->data, 'member')) != json_encode(array_get($data, 'member'))) {
+			$values = array_get($data, 'member');
+			$this->sparql->setPropertyUri(
+				$data['uri'],
+				'skos:member',
+				$values
+			);
+			$this->logger->info('satte kategorier for <' . $data['uri'] . '>');
 			$modified = true;
 		}
 

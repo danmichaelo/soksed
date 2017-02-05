@@ -7,16 +7,24 @@ angular.module('app.config', [])
     views: [
       {id: 1, name: 'default', label: 'Standard'},
       {id: 2, name: 'nn', label: 'Omsetjing til nynorsk'},
+      {id: 3, name: 'mapping', label: 'Engelsk + kategorisering + wikidata'},
+      {id: 4, name: 'se', label: 'Oversetting til nordsamisk'},
     ],
     filters: [
       { value:'', label:'(intet filter)' },
-      { value: 'has:unverified', label: 'Ikke korrekturlest' }, 
+      { value: 'has:unverified', label: 'Ikke korrekturlest' },
       { value: 'exists:prefLabel@nn', label: 'Har språk:nynorsk', graphOption: true },
       { value: '-exists:prefLabel@nn', label: 'Mangler språk:nynorsk' },
-      { value: 'has:editorialNote', label: 'Har noter', graphOption: true }
+      { value: 'exists:prefLabel@en', label: 'Har språk:engelsk', graphOption: true },
+      { value: '-exists:prefLabel@en', label: 'Mangler språk:engelsk' },
+      { value: 'exists:prefLabel@se', label: 'Har språk:nordsamisk', graphOption: true },
+      { value: '-exists:prefLabel@se', label: 'Mangler språk:nordsamisk' },
+      { value: 'has:editorialNote', label: 'Har noter', graphOption: true },
+      { value: 'has:wikidataItem', label: 'Har wikidata-mapping', graphOption: true }
      ],
-    languages: ['nb', 'nn', 'en', 'la']
+    languages: ['nb', 'nn', 'en', 'la', 'se']
   });
+
  
 // Declare app level module which depends on filters, and services
 angular.module('app', ['ngSanitize',
@@ -24,6 +32,7 @@ angular.module('app', ['ngSanitize',
                        'cfp.hotkeys',
                        'ui.router',
                        '720kb.tooltips',
+                       'angucomplete-alt',
 
                        'app.config',
                        'app.controllers.header',
@@ -300,7 +309,8 @@ angular.module('app.directives.conceptnav', ['app.config', 'app.services.concept
 
       scope.$on('conceptChanged', function(evt, concept) {
         scope.currentConcept = concept;
-        scope.checkScrollPos(concept);
+        // TODO: FIX! This broke with the latest Angular.
+        // scope.checkScrollPos(concept);
       });
 
       scope.graphOptionEnabled = function() {
@@ -349,6 +359,7 @@ angular.module('app.directives.conceptnav', ['app.config', 'app.services.concept
     }
   };
 }]);
+
 // Declare app level module which depends on filters, and services
 angular.module('app.directives.term', ['app.services.state', 'app.services.backend'])
 
@@ -442,6 +453,62 @@ angular.module('app.controllers.concept', ['app.services.backend',
   }
   $scope.currentConcept = concept;
 
+  $scope.categories = [
+    'http://data.ub.uio.no/realfagstermer/cat_1',
+    'http://data.ub.uio.no/realfagstermer/cat_2',
+    'http://data.ub.uio.no/realfagstermer/cat_3',
+    'http://data.ub.uio.no/realfagstermer/cat_4',
+    'http://data.ub.uio.no/realfagstermer/cat_5',
+    'http://data.ub.uio.no/realfagstermer/cat_6',
+    'http://data.ub.uio.no/realfagstermer/cat_7',
+    'http://data.ub.uio.no/realfagstermer/cat_8',
+    'http://data.ub.uio.no/realfagstermer/cat_9',
+  ];
+
+  $scope.categoryLabels = {
+    'http://data.ub.uio.no/realfagstermer/cat_1': 'Generelt',
+    'http://data.ub.uio.no/realfagstermer/cat_2': 'Astro',
+    'http://data.ub.uio.no/realfagstermer/cat_3': 'Fysikk',
+    'http://data.ub.uio.no/realfagstermer/cat_4': 'Biologi',
+    'http://data.ub.uio.no/realfagstermer/cat_5': 'Geo',
+    'http://data.ub.uio.no/realfagstermer/cat_6': 'Farmasi',
+    'http://data.ub.uio.no/realfagstermer/cat_7': 'Kjemi',
+    'http://data.ub.uio.no/realfagstermer/cat_8': 'Informatikk',
+    'http://data.ub.uio.no/realfagstermer/cat_9': 'Matematikk',
+  };
+
+  // 'fa': None,
+  // 'ns': None,  # Fellesbibl.
+  // 'nq': None,  # Tøyen
+
+  /*
+  baMap = {
+        'ns': 'Generelt',
+        'na': 'Astro',
+        'nf': 'Fysikk',
+        'nb': 'Biologi',
+        'nc': 'Geo',
+        'ne': 'Farmasi',
+        'nk': 'Kjemi',
+        'ni': 'Informatikk',
+        'nm': 'Matematikk',
+        'ngh': 'Geo',
+        'fa': None,
+        'ns': None,  # Fellesbibl.
+        'nq': None,  # Tøyen
+    }*/
+
+  $scope.selectWikipediaResult = function(q) {
+    if (q) {
+      console.log(q);
+      $scope.currentConcept.loadCandidate(q.title, true, q.originalObject.lang);
+    }
+  };
+
+  $scope.isRecommended = function(uri) {
+    return $scope.currentConcept && $scope.currentConcept.recommended && ~$scope.currentConcept.recommended.indexOf(uri);
+  };
+
   //-
   // Focus first edit field once available
   //-
@@ -500,7 +567,7 @@ angular.module('app.controllers.concept', ['app.services.backend',
   
   var keyboardModifier = 'alt';
   if (navigator.platform == 'MacIntel') {
-    keyboardModifier = 'ctrl';
+    keyboardModifier = 'shift+alt';
   }
 
   hotkeys.bindTo($scope)
@@ -513,15 +580,15 @@ angular.module('app.controllers.concept', ['app.services.backend',
       },
       allowIn: ['INPUT']
     })
-    .add({
-      combo: keyboardModifier + '+shift+s',
-      description: 'Lagre',
-      callback: function(event, hotkey) {
-        event.preventDefault();
-        $scope.store();
-      },
-      allowIn: ['INPUT']
-    })
+    // .add({
+    //   combo: keyboardModifier + '+s',
+    //   description: 'Lagre',
+    //   callback: function(event, hotkey) {
+    //     event.preventDefault();
+    //     $scope.store();
+    //   },
+    //   allowIn: ['INPUT']
+    // })
     .add({
       combo: keyboardModifier + '+down',
       description: 'Hopp til neste',
@@ -551,6 +618,7 @@ angular.module('app.controllers.concept', ['app.services.backend',
     });
 
 }]);
+
  
 // Declare app level module which depends on filters, and services
 angular.module('app.controllers.concepts', ['app.config', 'app.services.backend'])
@@ -706,6 +774,8 @@ angular.module('app.services.backend', [])
       method: 'GET',
       url: 'api.php',
       params: params
+    }).then(function(response) {
+      return response.data;
     });
   }
 
@@ -745,19 +815,53 @@ angular.module('app.services.backend', [])
     return postRequest('mark_reviewed', {uri: uri});
   };
 
+  this.searchWikipedia = function(term) {
+    var opts = {term: term};
+    return getRequest('search_wikipedia', opts);
+  };
+
+  this.searchWikidata = function(term) {
+    var opts = {term: term};
+    return getRequest('search_wikidata', opts);
+  };
+
+  this.getWikipedia = function(term, lang) {
+    var opts = {term: term, lang: lang};
+    return getRequest('get_wikipedia', opts);
+  };
+
+  this.getWikidata = function(uri) {
+    var opts = {uri: uri};
+    return getRequest('get_wikidata', opts);
+  };
+
 }]);
 
 
 // Declare app level module which depends on filters, and services
 angular.module('app.services.concept', ['app.config', 'app.services.backend', 'app.directives.altlabels', 'app.directives.term'])
 
-.factory('Concept', ['$q', '$rootScope', '$timeout', 'Backend', 'config', function($q, $rootScope, $timeout, Backend, config) {
+.factory('Concept', ['$q', '$rootScope', '$timeout', '$sce', 'Backend', 'config', function($q, $rootScope, $timeout, $sce, Backend, config) {
   'use strict';
+
+  var libCodeMapping = {
+    'ns': 'http://data.ub.uio.no/realfagstermer/cat_1',
+    'na': 'http://data.ub.uio.no/realfagstermer/cat_2',
+    'nf': 'http://data.ub.uio.no/realfagstermer/cat_3',
+    'nb': 'http://data.ub.uio.no/realfagstermer/cat_4',
+    'nc': 'http://data.ub.uio.no/realfagstermer/cat_5',
+    'ne': 'http://data.ub.uio.no/realfagstermer/cat_6',
+    'nk': 'http://data.ub.uio.no/realfagstermer/cat_7',
+    'ni': 'http://data.ub.uio.no/realfagstermer/cat_8',
+    'nm': 'http://data.ub.uio.no/realfagstermer/cat_9',
+    'ngh': 'http://data.ub.uio.no/realfagstermer/cat_5',  // ???
+  };
 
   function Concept(id, uri, label) {
     var that = this;
     that.dirty = false;
     that.loading = false;
+    that.wpWorking = false;
     that.saving = false;
     that.saved = false;
     that.error = null;
@@ -766,6 +870,9 @@ angular.module('app.services.concept', ['app.config', 'app.services.backend', 'a
     that.label = label;
     that.status = 'minimal';  // 'complete', 'saving', 'saved'
     that.data = null;
+    that.candidates = [];
+    that.selectedCandidate = -1;
+    that.recommended = [];
   }
 
   Concept.prototype = {
@@ -803,9 +910,26 @@ angular.module('app.services.concept', ['app.config', 'app.services.backend', 'a
       }
 
       var subject = encodeURIComponent(this.label);
-      this.katapiUrl = 'https://katapi.biblionaut.net/documents?q=real:' + this.label;
+      this.katapiUrl = 'https://app.uio.no/ub/emnesok/realfagstermer/search?term=' + this.label;
       var body = encodeURIComponent('\n\n\n\n--\nURI: ' + this.uri + '\nBruk: ' + this.katapiUrl);
       this.githubUrl = 'https://github.com/realfagstermer/realfagstermer/issues/new?title=' + subject + '&body=' + body;
+    },
+
+    setSelectedCandidate: function(idx) {
+      this.selectedCandidate = (this.selectedCandidate == idx) ? -1 : idx ;
+      if (this.selectedCandidate == -1) {
+        this.data.wikidataItem = [];
+      } else {
+        this.data.wikidataItem = [this.candidates[this.selectedCandidate].uri];
+      }
+    },
+
+    toggleCategory: function(catUri) {
+      if (~this.data.member.indexOf(catUri)) {
+        this.data.member.splice(this.data.member.indexOf(catUri), 1);
+      } else {
+        this.data.member.push(catUri);
+      }
     },
 
     testDirty: function() {
@@ -835,6 +959,48 @@ angular.module('app.services.concept', ['app.config', 'app.services.backend', 'a
           data.altLabel.nn[i].hints.push(m[1] + 'ar');
         }
       }
+    },
+
+    loadCandidateByUri: function(uri) {
+      var that = this;
+      that.wpWorking = true;
+
+      Backend.getWikidata(uri).then(function(data) {
+        if (data.title) {
+          data.text = $sce.trustAsHtml(data.text);
+          var ids = that.candidates.map(function(s){ return s.id; });
+          if (ids.indexOf(data.id) == -1) {
+            that.candidates.push(data);
+          }
+        }
+        that.wpWorking = false;
+        that.selectedCandidate = 0;
+      }, function() {
+        alert('FAIL!');
+        that.wpWorking = false;
+      });
+    },
+
+    loadCandidate: function(term, select, lang) {
+      var that = this;
+      that.wpWorking = true;
+
+      Backend.getWikipedia(term, lang).then(function(data) {
+        if (data.title) {
+          data.text = $sce.trustAsHtml(data.text);
+          var ids = that.candidates.map(function(s){ return s.id; });
+          if (ids.indexOf(data.id) == -1) {
+            that.candidates.push(data);
+            if (select) {
+              that.setSelectedCandidate(that.candidates.length - 1);
+            }
+          }
+        }
+        that.wpWorking = false;
+      }, function() {
+        alert('FAIL!');
+        that.wpWorking = false;
+      });
     },
 
     /**
@@ -907,7 +1073,8 @@ angular.module('app.services.concept', ['app.config', 'app.services.backend', 'a
         }, 0);
       } else {
         this.loading = true;
-        Backend.getConcept(this.uri).success(function(data) {
+
+        Backend.getConcept(this.uri).then(function(data) {
           that.loading = false;
           if (!data.concept) {
             if (data.error) {
@@ -922,13 +1089,27 @@ angular.module('app.services.concept', ['app.config', 'app.services.backend', 'a
           that.error = null;
           console.log('[Concept] Concept loaded: ' + data.concept.uri);
           console.log(that.data);
+
+          that.recommended = that.data.libCode.map(function(k) {
+            return libCodeMapping[k];
+          });
+
+          that.candidates = [];
+          if (that.data.wikidataItem && that.data.wikidataItem.length) {
+            that.loadCandidateByUri(that.data.wikidataItem[0]);
+          } else {
+            that.loadCandidate(that.data.prefLabel.nb[0].value);
+          }
+
+
           $rootScope.$broadcast('conceptLoaded', that);
           deferred.resolve();
-        }).error(function() {
+        }, function() {
           that.loading = false;
           that.error = 'Load failed. Server or network problems.';
           deferred.reject();
         });
+
       }
       return deferred.promise;
     },
@@ -989,7 +1170,7 @@ angular.module('app.services.concepts', ['app.services.backend', 'app.services.c
     console.log('[Concepts] fetchConcepts');
 
     that.busy = true;
-    Backend.getConcepts(that.cursor, filter).success(function(results) {
+    Backend.getConcepts(that.cursor, filter).then(function(results) {
       that.busy = false;
       if (!results.concepts) {
         console.log('[Concepts] Fetch failed!');
@@ -1068,6 +1249,16 @@ angular.module('app.services.concepts', ['app.services.backend', 'app.services.c
     }
     var n = currentConceptIdx + 1;
     if (n > that.concepts.length - 1) n = 0;
+
+    // Preload n + 2
+    if (that.concepts[n + 1]) {
+      if (!that.concepts[n + 1].data) {
+        console.log('>>> Preloading n + 2');
+        that.concepts[n + 1].load();
+      }
+    }
+
+    // Goto n + 1
     that.show(that.concepts[n]);
   };
 

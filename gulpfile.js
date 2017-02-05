@@ -61,16 +61,17 @@ gulp.task('scripts', ['lint'], function() {
 
 gulp.task('deps', function() {
   return gulp.src([
+        // 'public/lib/angular-route/angular-route.js',
+        //'public/lib/ngInfiniteScroll/build/ng-infinite-scroll.js',
         'public/lib/jquery/dist/jquery.js',
         'public/lib/angular/angular.js',
-        // 'public/lib/angular-route/angular-route.js',
         'public/lib/angular-sanitize/angular-sanitize.js',
         'public/lib/angular-cookies/angular-cookies.js',
-        //'public/lib/ngInfiniteScroll/build/ng-infinite-scroll.js',
         'public/lib/angular-hotkeys/build/hotkeys.js',
         'public/lib/angular-ui-router/release/angular-ui-router.js',
         'public/lib/angular-vs-repeat/src/angular-vs-repeat.js',
-        'public/lib/angular-tooltips/dist/angular-tooltips.min.js'
+        'public/lib/angular-tooltips/dist/angular-tooltips.js',
+        'public/lib/angucomplete-alt/dist/angucomplete-alt.min.js',
       ])
     .pipe(sourcemaps.init({ loadMaps: true }))
     .pipe(concat('deps.js'))

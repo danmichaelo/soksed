@@ -19,6 +19,62 @@ angular.module('app.controllers.concept', ['app.services.backend',
   }
   $scope.currentConcept = concept;
 
+  $scope.categories = [
+    'http://data.ub.uio.no/realfagstermer/cat_1',
+    'http://data.ub.uio.no/realfagstermer/cat_2',
+    'http://data.ub.uio.no/realfagstermer/cat_3',
+    'http://data.ub.uio.no/realfagstermer/cat_4',
+    'http://data.ub.uio.no/realfagstermer/cat_5',
+    'http://data.ub.uio.no/realfagstermer/cat_6',
+    'http://data.ub.uio.no/realfagstermer/cat_7',
+    'http://data.ub.uio.no/realfagstermer/cat_8',
+    'http://data.ub.uio.no/realfagstermer/cat_9',
+  ];
+
+  $scope.categoryLabels = {
+    'http://data.ub.uio.no/realfagstermer/cat_1': 'Generelt',
+    'http://data.ub.uio.no/realfagstermer/cat_2': 'Astro',
+    'http://data.ub.uio.no/realfagstermer/cat_3': 'Fysikk',
+    'http://data.ub.uio.no/realfagstermer/cat_4': 'Biologi',
+    'http://data.ub.uio.no/realfagstermer/cat_5': 'Geo',
+    'http://data.ub.uio.no/realfagstermer/cat_6': 'Farmasi',
+    'http://data.ub.uio.no/realfagstermer/cat_7': 'Kjemi',
+    'http://data.ub.uio.no/realfagstermer/cat_8': 'Informatikk',
+    'http://data.ub.uio.no/realfagstermer/cat_9': 'Matematikk',
+  };
+
+  // 'fa': None,
+  // 'ns': None,  # Fellesbibl.
+  // 'nq': None,  # Tøyen
+
+  /*
+  baMap = {
+        'ns': 'Generelt',
+        'na': 'Astro',
+        'nf': 'Fysikk',
+        'nb': 'Biologi',
+        'nc': 'Geo',
+        'ne': 'Farmasi',
+        'nk': 'Kjemi',
+        'ni': 'Informatikk',
+        'nm': 'Matematikk',
+        'ngh': 'Geo',
+        'fa': None,
+        'ns': None,  # Fellesbibl.
+        'nq': None,  # Tøyen
+    }*/
+
+  $scope.selectWikipediaResult = function(q) {
+    if (q) {
+      console.log(q);
+      $scope.currentConcept.loadCandidate(q.title, true, q.originalObject.lang);
+    }
+  };
+
+  $scope.isRecommended = function(uri) {
+    return $scope.currentConcept && $scope.currentConcept.recommended && ~$scope.currentConcept.recommended.indexOf(uri);
+  };
+
   //-
   // Focus first edit field once available
   //-
@@ -77,7 +133,7 @@ angular.module('app.controllers.concept', ['app.services.backend',
   
   var keyboardModifier = 'alt';
   if (navigator.platform == 'MacIntel') {
-    keyboardModifier = 'ctrl';
+    keyboardModifier = 'shift+alt';
   }
 
   hotkeys.bindTo($scope)
@@ -90,15 +146,15 @@ angular.module('app.controllers.concept', ['app.services.backend',
       },
       allowIn: ['INPUT']
     })
-    .add({
-      combo: keyboardModifier + '+shift+s',
-      description: 'Lagre',
-      callback: function(event, hotkey) {
-        event.preventDefault();
-        $scope.store();
-      },
-      allowIn: ['INPUT']
-    })
+    // .add({
+    //   combo: keyboardModifier + '+s',
+    //   description: 'Lagre',
+    //   callback: function(event, hotkey) {
+    //     event.preventDefault();
+    //     $scope.store();
+    //   },
+    //   allowIn: ['INPUT']
+    // })
     .add({
       combo: keyboardModifier + '+down',
       description: 'Hopp til neste',

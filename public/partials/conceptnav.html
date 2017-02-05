@@ -41,11 +41,7 @@
 	</div>
 
 	<div class="scrollerwrapper concepts" vs-repeat vs-autoresize>
-
-		<!--
-		<div id="scroller" class="concepts" >
-		 infinite-scroll="fetchMoreConcepts()" infinite-scroll-distance="3" style="overflow-y:scroll;" class="concepts">-->
-		  <div ng-repeat="concept in concepts">
+	  	<div ng-repeat="concept in concepts">
 			<a ui-sref='concepts.concept({ id: concept.id })'
 			   ng-class="{selected: concept.uri == currentConcept.uri }"
 			   >
@@ -57,7 +53,5 @@
 				</span>
 				{{ concept.label }}
 			</a>
-		  </div>
-<!--		</div>-->
-		
+	  	</div>
 	</div>

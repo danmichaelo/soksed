@@ -13,16 +13,20 @@ use Rhumsaa\Uuid\Uuid;
 error_reporting(E_ALL | E_STRICT);
 ini_set('display_errors', '1');
 
+RdfNamespace::set('owl', 'http://www.w3.org/2002/07/owl#');
+RdfNamespace::set('xsd', 'http://www.w3.org/2001/XMLSchema#');
 RdfNamespace::set('skos', 'http://www.w3.org/2004/02/skos/core#');
 RdfNamespace::set('xl', 'http://www.w3.org/2008/05/skos-xl#');
 RdfNamespace::set('mads', 'http://www.loc.gov/mads/rdf/v1#');
 RdfNamespace::set('dct', 'http://purl.org/dc/terms/');
+RdfNamespace::set('ubo', 'http://data.ub.uio.no/onto#');
 
 class Sparql extends Base
 {
 
 	// Fields to be transformed from DateTimes to strings
 	protected $dateFields = array('created', 'modified', 'proofread');
+	protected $simpleFields = array('libCode');
 
 	protected $logger;
 	protected $client;
@@ -52,6 +56,7 @@ class Sparql extends Base
 		$this->userGraphUri = $this->uriBase . '/graph/users';
 		RdfNamespace::set('uo', $this->uriBase . '/onto/user#');
 		RdfNamespace::set('user', $this->uriBase .'/data/users/');
+		RdfNamespace::set('log', $this->uriBase .'/data/log/');
 	}
 
 	protected function bind($query, $parameters = [])
@@ -157,7 +162,14 @@ class Sparql extends Base
 
 				} elseif (preg_match('/^has:editorialNote/', $filter, $m)) {
 					$filterQuery = "
-						?concept skos:editorialNote ?ednote . 
+						?concept skos:editorialNote ?ednote .
+					";
+					$filterQuery = 'GRAPH ' . ($graph ?: "?graph$n") . ' { ' . $filterQuery . '}';
+					$filterQueries[] = 'FILTER EXISTS { ' . $filterQuery . '}';
+
+				} elseif (preg_match('/^has:wikidataItem/', $filter, $m)) {
+					$filterQuery = "
+						?concept ubo:wikidataItem ?wd .
 					";
 					$filterQuery = 'GRAPH ' . ($graph ?: "?graph$n") . ' { ' . $filterQuery . '}';
 					$filterQueries[] = 'FILTER EXISTS { ' . $filterQuery . '}';
@@ -197,12 +209,12 @@ class Sparql extends Base
 					";
 					$parameters["regexp$n"] = $m[1];
 					$filterQueries[] = $filterQuery;
-
 				} else {
 					die("Unknown filter found");
 				}
 			}
 		}
+
 		$whereQuery = ' WHERE {
 				GRAPH ?graph {
 					?concept a mads:Topic ;
@@ -221,10 +233,10 @@ class Sparql extends Base
 			LIMIT ' . $limit . '
 		';
 
-		// print $selectQuery; die;
-
 		$result = $this->query($countQuery, $parameters);
 		$count = $result[0]->count->getValue();
+
+		$t0 = microtime(true);
 
 		$result = $this->query($selectQuery, $parameters);
 		$out = array();
@@ -242,6 +254,7 @@ class Sparql extends Base
 			'cursor' => $cursor,
 			'count' => $count,
 			'concepts' => $out,
+			'dt' => microtime(true) - $t0,
 		];
 	}
 
@@ -275,6 +288,9 @@ class Sparql extends Base
 			'uri' => $uri,
 			'prefLabel' => [],
 			'altLabel' => [],
+			'wikidataItem' => [],
+			'libCode' => [],
+			'member' => [],
 		];
 		$labels = ['prefLabel' => [], 'altLabel' => [], 'hiddenLabel' => []];
 		foreach ($result as $row) {
@@ -284,6 +300,8 @@ class Sparql extends Base
 			if (empty($row->labelValue)) {  // a skos:Concept triple
 				if ($row->value instanceof Literal) {
 					if (in_array($prop, $this->dateFields)) {
+						$xld[$prop][] = $row->value->getValue();
+					} else if (in_array($prop, $this->simpleFields)) {
 						$xld[$prop][] = $row->value->getValue();
 					} else {
 						$xld[$prop][] = [
@@ -297,7 +315,10 @@ class Sparql extends Base
 					$val = RdfNamespace::splitUri($row->value->getUri());
 					if (!empty($val[1])) {
 						$xld[$prop][] = $val[0] . ':' . $val[1];
+					} else {
+						$xld[$prop][] = $row->value->getUri();
 					}
+
 				}
 			} else {  // a xl:Label triple
 				if ($row->labelProp instanceof Resource) {
@@ -660,4 +681,20 @@ class Sparql extends Base
 		return $response->isSuccessful();
 	}
 
+	public function setPropertyUri($uri, $property, $targetUris)
+	{
+		$this->update('
+			DELETE WHERE
+			{ GRAPH <%localGraphUri%>
+			  { <%uri%> ' . $property . ' ?x }
+			};
+		', ['localGraphUri' => $this->localGraphUri, 'uri' => $uri]);
+
+		$triples = new Graph;
+		foreach ($targetUris as $targetUri) {
+			$triples->add($uri, $property, new Resource($targetUri));
+		}
+		$response = $this->updateClient->insert($triples, $this->localGraphUri);
+		return $response->isSuccessful();
+	}
 }

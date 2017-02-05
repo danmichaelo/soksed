@@ -13,6 +13,8 @@ angular.module('app.services.backend', [])
       method: 'GET',
       url: 'api.php',
       params: params
+    }).then(function(response) {
+      return response.data;
     });
   }
 
@@ -50,6 +52,26 @@ angular.module('app.services.backend', [])
 
   this.markReviewed = function(uri) {
     return postRequest('mark_reviewed', {uri: uri});
+  };
+
+  this.searchWikipedia = function(term) {
+    var opts = {term: term};
+    return getRequest('search_wikipedia', opts);
+  };
+
+  this.searchWikidata = function(term) {
+    var opts = {term: term};
+    return getRequest('search_wikidata', opts);
+  };
+
+  this.getWikipedia = function(term, lang) {
+    var opts = {term: term, lang: lang};
+    return getRequest('get_wikipedia', opts);
+  };
+
+  this.getWikidata = function(uri) {
+    var opts = {uri: uri};
+    return getRequest('get_wikidata', opts);
   };
 
 }]);

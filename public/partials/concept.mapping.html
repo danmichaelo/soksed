@@ -1,0 +1,120 @@
+
+	<div ng-show="!currentConcept">
+		<em>Choose a concept from the list to the left to get started.</em>
+	</div>
+
+	<div ng-show="currentConcept.error" class="alert alert-danger">{{ currentConcept.error }}.</div>
+
+	<div ng-show="currentConcept.data">
+
+		<p style="float:right; font-size:85%;">
+			<a ng-href="{{ currentConcept.githubUrl }}" target="_blank">Meld fra om problem</a> |
+			<a ng-href="{{ currentConcept.katapiUrl }}" target="katapi">Vis katalogposter</a>
+		</p>
+
+		<strong>Definisjon:</strong>
+		<span ng-repeat="def in currentConcept.data.definition">{{ def.value }}</span>
+		<em ng-show="!currentConcept.data.definition">(Mangler)</em>
+
+		<h3>Kategorisering</h3>
+
+		<label ng-repeat="catUri in categories" class="category" ng-class="{recommended: isRecommended(catUri)}">
+		  	<input type="checkbox"
+		  		ng-checked="currentConcept.data.member.indexOf(catUri) != -1"
+		  		ng-click="currentConcept.toggleCategory(catUri)">
+		  	{{ categoryLabels[catUri] }}
+		</label>
+
+		<h3>Termer</h3>
+
+		<div style="display:flex;" class="terms">
+			<div ng-repeat="lang in ['nb','en']">
+
+				<div>{{ lang }}</div>
+
+				<term ng-repeat="(index,label) in currentConcept.data.prefLabel[lang]"
+				      readonly="lang=='nb'"
+				      data="label"
+				      original-data="currentConcept.originalData.prefLabel[lang][index]"
+				      class="prefLabel">
+
+					<a ng-show="!currentConcept.originalData.prefLabel[lang][index].value"
+					   href="#"
+					   ng-click="currentConcept.data.prefLabel[lang][index].value = hint"
+					   ng-repeat="hint in currentConcept.data.prefLabel[lang][index].hints"
+					   style="padding-right:1em; font-size: 90%;">{{ hint }}</a>
+
+				</term>
+
+				<term ng-repeat="(index,label) in currentConcept.data.altLabel[lang]"
+					  readonly="lang=='nb'"
+				      data="label"
+				      original-data="currentConcept.originalData.altLabel[lang][index]"
+				      class="altLabel">
+
+					<a ng-show="!currentConcept.originalData.altLabel[lang][index].value"
+					   href="#"
+					   ng-click="currentConcept.data.altLabel[lang][index].value = hint"
+					   ng-repeat="hint in currentConcept.data.altLabel[lang][index].hints"
+					   style="padding-right:1em; font-size: 90%;">{{ hint }}</a>
+
+				</term>
+
+			</div>
+		</div>
+
+		<h3>Mapping</h3>
+
+		<div>
+			<angucomplete-alt id="wikipedia"
+              placeholder="Search Wikipedia"
+              pause="400"
+              selected-object="selectWikipediaResult"
+              remote-url="/api.php?action=search_wikidata&lang=nb&term="
+              remote-url-data-field="results"
+              title-field="matched_text"
+              focus-first="true"
+              description-field="description" />
+		</div>
+
+		<div class="candidates" ng-repeat="candidate in currentConcept.candidates">
+			<div ng-show="candidate" class="candidate" ng-class="{selected: currentConcept.selectedCandidate == $index}" ng-click="currentConcept.setSelectedCandidate($index)">
+				<a target="wikidata" ng-href="https://wikidata.org/wiki/{{ candidate.id }}">{{ candidate.id }}</a> : 
+				<span>{{ candidate.labels.en.value}}</span> (en) /
+				<span>{{ candidate.labels.nb.value}}</span> (nb)
+
+				<div ng-bind-html="candidate.extract" class="extract"></div>
+			</div>
+		</div>
+
+		<div ng-show="currentConcept.wpWorking" style="padding:10px;">Henter...</div>
+
+
+		<h3>Noter</h3>
+
+		<textarea cols="60" rows="3" placeholder="Noter" 
+			ng-repeat="(idx, note) in currentConcept.data.editorialNote"
+			ng-model="note.value" ng-disabled="note.readonly"></textarea>
+
+		<!-- // contenteditable="true" : åpner for html + ikke kompat med angular uten mye arbeid-->
+
+		<div style="padding-top:2em;">
+
+			<button ng-click="storeAndGo()" ng-disabled="!currentConcept.data || currentConcept.saving" class="btn btn-primary">
+				Lagre og gå til neste
+			</button>
+
+			<button ng-click="store()" ng-disabled="!currentConcept.data || currentConcept.saving" class="btn btn-default">
+				Lagre
+			</button>
+
+			<button ng-click="reload()" ng-disabled="!currentConcept.data || currentConcept.saving" class="btn btn-default">
+				Tilbakestill
+			</button>
+		</div>
+        <p style="padding-top:2em;">
+            Tips: Shift-? for oversyn over hurtigtastar.
+        </p>
+
+	</div>
+

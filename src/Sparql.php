@@ -209,6 +209,7 @@ class Sparql extends Base
 					";
 					$parameters["regexp$n"] = $m[1];
 					$filterQueries[] = $filterQuery;
+
 				} else {
 					die("Unknown filter found");
 				}
@@ -217,11 +218,12 @@ class Sparql extends Base
 
 		$whereQuery = ' WHERE {
 				GRAPH ?graph {
-					?concept a mads:Topic ;
+					?concept a ubo:Topic ;
 						dct:identifier ?id ;
 						xl:prefLabel ?labelNode .
 					?labelNode xl:literalForm ?label
 					FILTER(langMatches(lang(?label), "nb"))
+					FILTER NOT EXISTS { ?concept owl:deprecated true . }
 				}
 				' . implode("\n", $filterQueries) . '
 			}';

@@ -117,6 +117,16 @@ angular.module('app.services.concepts', ['app.services.backend', 'app.services.c
     }
     var n = currentConceptIdx + 1;
     if (n > that.concepts.length - 1) n = 0;
+
+    // Preload n + 2
+    if (that.concepts[n + 1]) {
+      if (!that.concepts[n + 1].data) {
+        console.log('>>> Preloading n + 2');
+        that.concepts[n + 1].load();
+      }
+    }
+
+    // Goto n + 1
     that.show(that.concepts[n]);
   };
 

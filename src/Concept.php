@@ -1,6 +1,6 @@
 <?php namespace Scriptotek\RtWp;
 
-use Rhumsaa\Uuid\Uuid;
+use Ramsey\Uuid\Uuid;
 
 /**
 * Concept

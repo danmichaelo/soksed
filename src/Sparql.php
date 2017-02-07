@@ -8,7 +8,7 @@ use EasyRdf\Literal;
 use EasyRdf\Literal\DateTime as DateTimeLiteral;
 use EasyRdf\Literal\Boolean as BooleanLiteral;
 use Carbon\Carbon;
-use Rhumsaa\Uuid\Uuid;
+use Ramsey\Uuid\Uuid;
 
 error_reporting(E_ALL | E_STRICT);
 ini_set('display_errors', '1');

@@ -1,6 +1,7 @@
 config.php
 vendor
 public/lib
+public/build
 node_modules
 .sass-cache
 composer.lock

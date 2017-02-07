@@ -85,6 +85,12 @@ angular.module('app.services.concept', ['app.config', 'app.services.backend', 'a
       }
     },
 
+    keyDown: function(idx, event) {
+      if (event.keyCode == 32) {
+        this.setSelectedCandidate(idx);
+      }
+    },
+
     toggleCategory: function(catUri) {
       if (~this.data.member.indexOf(catUri)) {
         this.data.member.splice(this.data.member.indexOf(catUri), 1);

@@ -66,6 +66,18 @@
 
 		<h3>Mapping til Wikidata</h3>
 
+		<div class="candidates" ng-repeat="candidate in currentConcept.candidates">
+			<div tabindex="0" ng-show="candidate" class="candidate" ng-class="{selected: currentConcept.selectedCandidate == $index}" ng-click="currentConcept.setSelectedCandidate($index)" ng-keydown="currentConcept.keyDown($index, $event)">
+				<a tabindex="-1" target="wikidata" ng-click="$event.stopPropagation()" ng-href="https://wikidata.org/wiki/{{ candidate.id }}">{{ candidate.id }}</a> : 
+				<span>{{ candidate.labels.en.value ? candidate.labels.en.value : '-'}}</span> (en) /
+				<span>{{ candidate.labels.nb.value ? candidate.labels.nb.value : '-' }}</span> (nb)
+
+				<div ng-bind-html="candidate.extract" class="extract"></div>
+			</div>
+		</div>
+
+		<div ng-show="currentConcept.wpWorking" style="padding:10px;">Henter...</div>
+
 		<div>
 			<angucomplete-alt id="wikipedia"
               placeholder="Search Wikipedia"
@@ -77,18 +89,6 @@
               focus-first="true"
               description-field="description" />
 		</div>
-
-		<div class="candidates" ng-repeat="candidate in currentConcept.candidates">
-			<div ng-show="candidate" class="candidate" ng-class="{selected: currentConcept.selectedCandidate == $index}" ng-click="currentConcept.setSelectedCandidate($index)">
-				<a target="wikidata" ng-click="$event.stopPropagation()" ng-href="https://wikidata.org/wiki/{{ candidate.id }}">{{ candidate.id }}</a> : 
-				<span>{{ candidate.labels.en.value ? candidate.labels.en.value : '-'}}</span> (en) /
-				<span>{{ candidate.labels.nb.value ? candidate.labels.nb.value : '-' }}</span> (nb)
-
-				<div ng-bind-html="candidate.extract" class="extract"></div>
-			</div>
-		</div>
-
-		<div ng-show="currentConcept.wpWorking" style="padding:10px;">Henter...</div>
 
 
 		<!--
@@ -114,7 +114,11 @@
 			</button>
 		</div>
         <p style="padding-top:2em;">
-            Tips: Shift-? for oversyn over hurtigtastar.
+            Tips:
+				<ul>
+					<li>- Shift-? for oversyn over hurtigtastar.</li>
+					<li>- Du kan tabbe til ein mappingkandidat og trykkje mellomrom for å velge den.</li>
+				</ul>
         </p>
 
 	</div>

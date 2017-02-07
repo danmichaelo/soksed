@@ -25,10 +25,11 @@ class MediaWikiApi extends Base
 
 	public function wbsearch($term)
 	{
-		$limit = 5;
+		$limit = 10;
 
 		$request = \Requests::get($this->getUrl(array(
 			'action' => 'wbsearchentities',
+			'type' => 'item'
 			'language' => 'nb',
 			'uselang' => 'nb',
 			'search' => $term,

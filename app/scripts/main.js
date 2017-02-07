@@ -11,6 +11,7 @@ angular.module('app', ['ngSanitize',
                        'app.controllers.header',
                        'app.controllers.user',
                        'app.controllers.users',
+                       'app.controllers.events',
                        'app.controllers.concept',
                        'app.controllers.concepts',
                        'app.controllers.auth',
@@ -90,6 +91,17 @@ angular.module('app', ['ngSanitize',
           return concept;
           // return Concepts.get([{id: $stateParams.id}]); // Returns promise
           // return Concepts.getByUri(uri); // returns promise
+        }]
+      }
+    })
+    .state('events', {
+      url: '/events',
+      templateUrl: 'partials/events.html' + tplVersion,
+      controller: 'EventsController',
+      needsPermission: 'edit',
+      resolve: {
+        events: ['$http', function($http) {
+          return $http({ method: 'GET', url: 'api.php', params: {action: 'get_events'} });
         }]
       }
     })

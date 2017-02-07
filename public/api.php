@@ -168,6 +168,12 @@ switch ($action) {
 			'status' => $status,
 		));
 
+	/** EVENT ACTIONS **/
+
+	case 'get_events':
+
+		jsonOut($sparql->getEvents());
+
 }
 
 jsonOut(array(

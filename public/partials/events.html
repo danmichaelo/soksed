@@ -1,0 +1,20 @@
+
+<div class="padded">
+	<ol class="breadcrumb">
+	  <li><a href="/">Hjem</a></li>
+	  <li class="active">Log</li>
+	</ol>
+
+	<h2>Events</h2>
+
+	<ul class="list-group">
+		<li ng-repeat="event in events" class="list-group-item">
+			<div style="color: #999; font-size: 85%">
+				{{ event.date }} -
+				{{ event.user.username }} -
+				<a ui-sref="concepts.concept({ id: event.concept.id })">{{ event.concept.term }}</a>
+			</div>
+			{{ event.data }}
+		</li>
+	</ul>
+</div>

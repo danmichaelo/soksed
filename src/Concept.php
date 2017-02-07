@@ -95,6 +95,25 @@ class Concept
 		return [$removed, $added];
 	}
 
+	public function printLabelDiff($rem, $add) {
+		$rem = array_map(function ($q) {
+			return '"' . $q['value'] . '"@' . $q['language'];
+		}, $rem);
+		$add = array_map(function ($q) {
+			return '"' . $q['value'] . '"@' . $q['language'];
+		}, $add);
+
+		$out = [];
+		if (count($rem)) {
+			$out[] = 'removed ' . implode(', ', $rem);
+		}
+		if (count($add)) {
+			$out[] = 'added ' . implode(', ', $add);
+		}
+
+		return implode('; ', $out);
+	}
+
 	public function putData($data)
 	{
 		if ($data['uri'] != $this->data['uri']) {
@@ -121,6 +140,8 @@ class Concept
 			if (!$this->sparql->updateLabels($this->auth->getProfile(), $data['uri'], 'prefLabel', $removed, $added)) {
 				return 'update_preflabel_failed';
 			}
+
+			$this->sparql->addEvent($data['uri'], $this->auth->getUserUri(), 'Updated prefLabel(s): ' . $this->printLabelDiff($removed, $added) . '.');
 			$modified = true;
 		}
 
@@ -132,6 +153,7 @@ class Concept
 			if (!$this->sparql->updateLabels($this->auth->getProfile(), $data['uri'], 'altLabel', $removed, $added)) {
 				return 'update_altlabel_failed';
 			}
+			$this->sparql->addEvent($data['uri'], $this->auth->getUserUri(), 'Updated altLabel(s): ' . $this->printLabelDiff($removed, $added) . '.');
 			$modified = true;
 		}
 
@@ -144,6 +166,7 @@ class Concept
 				$values
 			);
 			$this->logger->info('satte Wikidata-mapping for <' . $data['uri'] . '> til ' . array_get($data, 'wikidataItem.0'));
+			$this->sparql->addEvent($data['uri'], $this->auth->getUserUri(), 'Updated Wikidata mapping to <a href="' . array_get($data, 'wikidataItem.0') . '">' . array_get($data, 'wikidataItem.0') . '</a>');
 			$modified = true;
 		}
 
@@ -156,6 +179,7 @@ class Concept
 				$values
 			);
 			$this->logger->info('satte kategorier for <' . $data['uri'] . '>');
+			$this->sparql->addEvent($data['uri'], $this->auth->getUserUri(), 'Updated categories');
 			$modified = true;
 		}
 
@@ -171,7 +195,10 @@ class Concept
 				'skos:editorialNote',
 				$values
 			);
-			$modified = true;
+			if (count($values)) {
+				$this->sparql->addEvent($data['uri'], $this->auth->getUserUri(), 'Updated editorialNote');
+				$modified = true;
+			}
 		}
 
 		if ($modified) {

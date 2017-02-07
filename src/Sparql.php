@@ -14,12 +14,14 @@ error_reporting(E_ALL | E_STRICT);
 ini_set('display_errors', '1');
 
 RdfNamespace::set('owl', 'http://www.w3.org/2002/07/owl#');
+RdfNamespace::set('rdfs', 'http://www.w3.org/2000/01/rdf-schema#');
 RdfNamespace::set('xsd', 'http://www.w3.org/2001/XMLSchema#');
 RdfNamespace::set('skos', 'http://www.w3.org/2004/02/skos/core#');
 RdfNamespace::set('xl', 'http://www.w3.org/2008/05/skos-xl#');
 RdfNamespace::set('mads', 'http://www.loc.gov/mads/rdf/v1#');
 RdfNamespace::set('dct', 'http://purl.org/dc/terms/');
 RdfNamespace::set('ubo', 'http://data.ub.uio.no/onto#');
+
 
 class Sparql extends Base
 {
@@ -54,9 +56,12 @@ class Sparql extends Base
 
 		$this->localGraphUri = $this->uriBase . '/graph/trans';
 		$this->userGraphUri = $this->uriBase . '/graph/users';
+		$this->eventsGraphUri = $this->uriBase . '/graph/events';
 		RdfNamespace::set('uo', $this->uriBase . '/onto/user#');
 		RdfNamespace::set('user', $this->uriBase .'/data/users/');
 		RdfNamespace::set('log', $this->uriBase .'/data/log/');
+		RdfNamespace::set('uop', $this->uriBase . '/prop#');
+		RdfNamespace::set('uoc', $this->uriBase . '/class#');
 	}
 
 	protected function bind($query, $parameters = [])
@@ -698,5 +703,93 @@ class Sparql extends Base
 		}
 		$response = $this->updateClient->insert($triples, $this->localGraphUri);
 		return $response->isSuccessful();
+	}
+
+	/**
+	 * @param $concept  URI for the concept
+	 * @param $user  URI for the concept
+	 * @param $data  Free text log entry
+	 */
+	public function addEvent($concept, $user, $data)
+	{
+		$uuid1 = Uuid::uuid1();
+		$logEntry = new Resource(RdfNamespace::expand('log:' . $uuid1->toString()));
+		$eventClass = new Resource(RdfNamespace::expand('uoc:Event'));
+
+		$triples = new Graph;
+		//foreach ($targetUris as $targetUri) {
+		$triples->add($logEntry, 'rdf:type', $eventClass);
+		$triples->add($logEntry, 'dcterms:date', new DateTimeLiteral());
+		$triples->add($logEntry, 'uop:concept', new Resource($concept));
+		$triples->add($logEntry, 'uop:user', new Resource($user));
+		$triples->add($logEntry, 'uop:data', $data);
+		//}
+		$response = $this->updateClient->insert($triples, $this->eventsGraphUri);
+		return $response->isSuccessful();
+	}
+
+	/**
+	 * @param $concept  URI for the concept
+	 * @param $user  URI for the concept
+	 */
+	public function getEvents($concept = null, $user = null)
+	{
+		$query = '
+			SELECT ?concept ?user ?data ?date ?term ?username ?id
+			WHERE
+			{
+				GRAPH <%eventsGraphUri%> {
+					?entry a uoc:Event ;
+						uop:concept ?concept ;
+						uop:user ?user ;
+						uop:data ?data ;
+						dcterms:date ?date .
+				}
+
+				GRAPH ?graph {
+					?concept xl:prefLabel ?labelNode .
+					?labelNode xl:literalForm ?term .
+					?concept dcterms:identifier ?id .
+					FILTER(langMatches(lang(?term), "nb"))
+				}
+
+				GRAPH <%userGraphUri%> {
+					?user a uo:User ;
+						uo:username ?username .
+				}
+
+			}
+			ORDER BY DESC(?date)
+		';
+		if (!is_null($concept)) {
+			$query .= ' VALUES ?concept { <' . $concept . '> }';
+		}
+		if (!is_null($user)) {
+			$query .= ' VALUES ?user { <' . $user . '> }';
+		}
+		$triples = $this->query($query, [
+			'eventsGraphUri' => $this->eventsGraphUri,
+			'userGraphUri' => $this->userGraphUri,
+		]);
+
+		$events = [];
+		foreach ($triples as $tr) {
+			$uri = strval($tr->user->getUri());
+			$evt = [
+				'user' => [
+					'uri' => $tr->user->getUri(),
+					'username' => $this->valueToString(null, $tr->username),
+				],
+				'concept' => [
+					'uri' => $tr->concept->getUri(),
+					'id' => $this->valueToString(null, $tr->id),
+					'term' => $this->valueToString(null, $tr->term),
+				],
+				'date' => $this->valueToString('created', $tr->date),
+				'data' => $this->valueToString(null, $tr->data),
+			];
+			$events[] = $evt;
+		}
+		return ['events' => $events];
 	}
 }

@@ -90,6 +90,11 @@ class Auth extends Base
 		return $this->profile ?: null;
 	}
 
+	public function getUserUri()
+	{
+		return $this->profile ? $this->profile['uri'] : null;
+	}
+
 	public function setUserFromToken($token)
 	{
 		$this->profile = $this->sparql->findUser(null, $token) ?: null;		

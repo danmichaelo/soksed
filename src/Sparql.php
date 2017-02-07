@@ -64,6 +64,16 @@ class Sparql extends Base
 		RdfNamespace::set('uoc', $this->uriBase . '/class#');
 	}
 
+	public function setLocalGraphUri($uri)
+	{
+		$this->localGraphUri = $uri;
+	}
+
+	public function getUriBase()
+	{
+		return $this->uriBase;
+	}
+
 	protected function bind($query, $parameters = [])
 	{
 		$query = preg_replace_callback('/<%([A-Za-z0-9]+)%>/', function($matches) use ($parameters) {
@@ -690,12 +700,16 @@ class Sparql extends Base
 
 	public function setPropertyUri($uri, $property, $targetUris)
 	{
-		$this->update('
+		$q = $this->update('
 			DELETE WHERE
 			{ GRAPH <%localGraphUri%>
 			  { <%uri%> ' . $property . ' ?x }
 			};
 		', ['localGraphUri' => $this->localGraphUri, 'uri' => $uri]);
+
+		if (!count($targetUris)) {
+			return true;
+		}
 
 		$triples = new Graph;
 		foreach ($targetUris as $targetUri) {

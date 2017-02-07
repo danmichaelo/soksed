@@ -9,7 +9,7 @@ use Scriptotek\RtWp\MediaWikiApi;
 use Scriptotek\RtWp\Sparql as SparqlClient;
 
 $sparql = new SparqlClient;
-
+$sparql->setLocalGraphUri($sparql->getUriBase() . '/graph/trans2');
 $auth = new Auth;
 if ($mock)
 {
@@ -125,7 +125,7 @@ switch ($action) {
 
 	case 'get_concept':
 
-		$concept = new Concept($_GET['uri'], $auth);
+		$concept = new Concept($_GET['uri'], $auth, $sparql);
 		jsonOut($concept->toArray());
 
 	case 'put_concept':
@@ -136,7 +136,7 @@ switch ($action) {
 			));
 		}
 
-		$concept = new Concept($input['data']['uri'], $auth);
+		$concept = new Concept($input['data']['uri'], $auth, $sparql);
 		$status = $concept->putData($input['data']);
 
 		jsonOut(array(
@@ -148,7 +148,7 @@ switch ($action) {
 
 	case 'get_label':
 
-		$label = new Label($_GET['uri'], $auth);
+		$label = new Label($_GET['uri'], $auth, $sparql);
 		jsonOut($label->toArray());
 
 	case 'mark_reviewed':
@@ -159,7 +159,7 @@ switch ($action) {
 			));
 		}
 
-		$label = new Label($input['uri'], $auth);
+		$label = new Label($input['uri'], $auth, $sparql);
 		$status = $label->markReviewed();
 
 		// TODO: term not found

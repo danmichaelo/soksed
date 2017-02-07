@@ -1,8 +1,14 @@
 
+Install dependencies:
+
+	$ composer install
+	$ npm install
+	$ bower install
+
 Start development server:
 
-	./serve.sh &
-	gulp
+	$ ./serve.sh &
+	$ gulp
 
 Data is imported from [realfagstermer/realfagstermer](https://github.com/realfagstermer/realfagstermer)
 and exported to [realfagstermer/prosjekt-nynorsk](https://github.com/realfagstermer/prosjekt-nynorsk)
@@ -13,6 +19,10 @@ every night. Current crontab:
 	0 1 * * * /data/trans/export/export.sh 2>&1 
 	0 2 * * * /data/trans/import/update-fuseki.sh 2>&1 
 
+
+Production build:
+
+	$ gulp build
 
 ## Users
 

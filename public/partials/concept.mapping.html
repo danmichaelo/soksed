@@ -79,7 +79,7 @@
 
 				<span ng-if="candidate.sitelinks.nowiki">
 					/
-					"<a tabindex="-1" target="wikidata" ng-click="$event.stopPropagation()" ng-href="http://en.wikipedia.org/wiki/{{candidate.sitelinks.nowiki.title | space2underscore }}">{{candidate.sitelinks.nowiki.title}}</a>" @ nowiki
+					"<a tabindex="-1" target="wikidata" ng-click="$event.stopPropagation()" ng-href="http://no.wikipedia.org/wiki/{{candidate.sitelinks.nowiki.title | space2underscore }}">{{candidate.sitelinks.nowiki.title}}</a>" @ nowiki
 				</span>
 				<span ng-if="!candidate.sitelinks.nowiki">
 					{{ candidate.labels.nb.value ? candidate.labels.nb.value : '-'}} (nb)

@@ -169,7 +169,7 @@ angular.module('app.controllers.concept', ['app.services.backend',
     //   allowIn: ['INPUT']
     // })
     .add({
-      combo: keyboardModifier + '+down',
+      combo: 'alt+down',
       description: 'Hopp til neste',
       callback: function(event, hotkey) {
         event.preventDefault();
@@ -178,7 +178,7 @@ angular.module('app.controllers.concept', ['app.services.backend',
       allowIn: ['INPUT']
     })
     .add({
-      combo: keyboardModifier + '+up',
+      combo: 'alt+up',
       description: 'Hopp til forrige',
       callback: function(event, hotkey) {
         event.preventDefault();

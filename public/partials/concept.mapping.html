@@ -67,7 +67,7 @@
 		<h3>Mapping til Wikidata</h3>
 
 		<div class="candidates" ng-repeat="candidate in currentConcept.candidates">
-			<div tabindex="0" ng-show="candidate" class="candidate" ng-class="{selected: currentConcept.selectedCandidate == $index}" ng-click="currentConcept.setSelectedCandidate($index)" ng-keydown="currentConcept.keyDown($index, $event)">
+			<div tabindex="0" ng-show="candidate" class="candidate" ng-class="{selected: currentConcept.selectedCandidate == $index}" ng-click="currentConcept.toggleSelectedCandidate($index)" ng-keydown="currentConcept.keyDown($index, $event)">
 				<a tabindex="-1" target="wikidata" ng-click="$event.stopPropagation()" ng-href="https://wikidata.org/wiki/{{ candidate.id }}">{{ candidate.id }}</a> : 
 
 				<span ng-if="candidate.sitelinks.enwiki">

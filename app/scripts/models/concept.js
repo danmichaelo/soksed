@@ -76,18 +76,19 @@ angular.module('app.services.concept', ['app.config', 'app.services.backend', 'a
       this.githubUrl = 'https://github.com/realfagstermer/realfagstermer/issues/new?title=' + subject + '&body=' + body;
     },
 
-    setSelectedCandidate: function(idx) {
-      this.selectedCandidate = (this.selectedCandidate == idx) ? -1 : idx ;
-      if (this.selectedCandidate == -1) {
-        this.data.wikidataItem = [];
+    toggleSelectedCandidate: function(idx, toTrue) {
+      if (toTrue || this.selectedCandidate != idx) {
+        this.selectedCandidate = idx;
+        this.data.wikidataItem = [this.candidates[idx].uri];
       } else {
-        this.data.wikidataItem = [this.candidates[this.selectedCandidate].uri];
+        this.selectedCandidate = -1;
+        this.data.wikidataItem = [];
       }
     },
 
     keyDown: function(idx, event) {
       if (event.keyCode == 32) {
-        this.setSelectedCandidate(idx);
+        this.toggleSelectedCandidate(idx);
       }
     },
 
@@ -141,11 +142,11 @@ angular.module('app.services.concept', ['app.config', 'app.services.backend', 'a
             console.log('Adding candidate', data);
             that.candidates.push(data);
             if (select) {
-              that.setSelectedCandidate(that.candidates.length - 1);
+              that.toggleSelectedCandidate(that.candidates.length - 1, true);
             }
           } else {
             if (select) {
-              that.setSelectedCandidate(ids.indexOf(data.id));
+              that.toggleSelectedCandidate(ids.indexOf(data.id), true);
             }
           }
         }
@@ -287,7 +288,7 @@ angular.module('app.services.concept', ['app.config', 'app.services.backend', 'a
 
           that.candidates = [];
           if (that.data.wikidataItem && that.data.wikidataItem.length) {
-            that.loadCandidateByUri(that.data.wikidataItem[0]);
+            that.loadCandidateByUri(that.data.wikidataItem[0], true);
           } else {
             that.loadCandidate(that.data.prefLabel.nb[0].value);
           }

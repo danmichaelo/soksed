@@ -29,7 +29,7 @@ class MediaWikiApi extends Base
 
 		$request = \Requests::get($this->getUrl(array(
 			'action' => 'wbsearchentities',
-			'type' => 'item'
+			'type' => 'item',
 			'language' => 'nb',
 			'uselang' => 'nb',
 			'search' => $term,

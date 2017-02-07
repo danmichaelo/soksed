@@ -174,6 +174,12 @@ switch ($action) {
 
 		jsonOut($sparql->getEvents());
 
+	/** CATEGORY ACTIONS **/
+
+	case 'get_categories':
+
+		jsonOut($sparql->getCategories());
+
 }
 
 jsonOut(array(

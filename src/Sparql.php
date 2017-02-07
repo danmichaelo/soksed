@@ -792,4 +792,30 @@ class Sparql extends Base
 		}
 		return ['events' => $events];
 	}
+
+	public function getCategories()
+	{
+		$query = '
+			SELECT ?cat ?label
+			WHERE
+			{
+				GRAPH ?graph {
+					?cat a uoc:Category ;
+						rdfs:label ?label .
+				}
+			}
+		';
+
+		$triples = $this->query($query, []);
+
+		$categories = [];
+		foreach ($triples as $tr) {
+			$cat = [
+				'uri' => $tr->cat->getUri(),
+				'label' => $this->valueToString(null, $tr->label),
+			];
+			$categories[] = $cat;
+		}
+		return ['categories' => $categories];
+	}
 }

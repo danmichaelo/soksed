@@ -6,6 +6,7 @@ angular.module('app.controllers.user', ['app.services.auth'])
   'use strict';
 
   console.log(user);
-  $scope.user = user.data.user;
+
+  $scope.user = user;
 
 }]);

@@ -32,3 +32,21 @@ INSERT
 }
 EOF
 ```
+
+To remove permissions:
+
+```bash
+$ curl http://localhost:3030/ds/update --data-urlencode "update@-" << EOF
+PREFIX ou: <http://trans.biblionaut.net/onto/user#>
+
+DELETE
+{ GRAPH <http://trans.biblionaut.net/graph/users>
+  { ?user ou:permission "edit", "review" }
+} WHERE
+{ GRAPH <http://trans.biblionaut.net/graph/users>
+  {?user ou:username "danmichaelo@gmail.com" }
+}
+EOF
+```
+
+

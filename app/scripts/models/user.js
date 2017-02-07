@@ -27,8 +27,7 @@ angular.module('app.services.user', ['app.services.backend'])
   User.get = function(id) {
     var deferred = $q.defer();
     Backend.getUser(id).then(function(data) {
-      console.log(data);
-      deferred.resolve(data);
+      deferred.resolve(data.user);
     });
     return deferred.promise;
   };

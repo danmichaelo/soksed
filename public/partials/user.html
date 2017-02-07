@@ -9,6 +9,7 @@
 	</p>
 	<p>
 		Tilganger:
+		<em ng-if="!user.permission || !user.permission.length">(ingen tilganger enda)</em>
 		<span ng-repeat-start="permission in user.permission"></span>
 			<span class="label label-info">{{ permission }}</span> 
 		<span ng-repeat-end></span>

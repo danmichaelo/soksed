@@ -136,6 +136,10 @@ angular.module('app', ['ngSanitize',
           return $stateParams.returnTo;
         }]
       }
+    })
+    .state('forbidden', {
+      url: '/forbidden',
+      templateUrl: 'partials/forbidden.html' + tplVersion,
     }) ;
 
   // use the HTML5 History API
@@ -152,7 +156,7 @@ angular.module('app', ['ngSanitize',
         event.preventDefault();
         var url = $state.href(toState, toParams);
         if (Auth.isLoggedIn()) {
-          $state.go('user', { id: Auth.user.username[0] });
+          $state.go('forbidden');
         } else {
           $state.go('auth', { returnTo: url });
         }

@@ -69,8 +69,21 @@
 		<div class="candidates" ng-repeat="candidate in currentConcept.candidates">
 			<div tabindex="0" ng-show="candidate" class="candidate" ng-class="{selected: currentConcept.selectedCandidate == $index}" ng-click="currentConcept.setSelectedCandidate($index)" ng-keydown="currentConcept.keyDown($index, $event)">
 				<a tabindex="-1" target="wikidata" ng-click="$event.stopPropagation()" ng-href="https://wikidata.org/wiki/{{ candidate.id }}">{{ candidate.id }}</a> : 
-				<span>{{ candidate.labels.en.value ? candidate.labels.en.value : '-'}}</span> (en) /
-				<span>{{ candidate.labels.nb.value ? candidate.labels.nb.value : '-' }}</span> (nb)
+
+				<span ng-if="candidate.sitelinks.enwiki">
+					"<a tabindex="-1" ng-href="http://en.wikipedia.org/wiki/{{candidate.sitelinks.enwiki.title | space2underscore }}">{{candidate.sitelinks.enwiki.title}}</a>" @ enwiki
+				</span>
+				<span ng-if="!candidate.sitelinks.enwiki">
+					{{ candidate.labels.en.value ? candidate.labels.en.value : '-'}} (en)
+				</span>
+
+				<span ng-if="candidate.sitelinks.nowiki">
+					/
+					"<a tabindex="-1" ng-href="http://en.wikipedia.org/wiki/{{candidate.sitelinks.nowiki.title | space2underscore }}">{{candidate.sitelinks.nowiki.title}}</a>" @ nowiki
+				</span>
+				<span ng-if="!candidate.sitelinks.nowiki">
+					{{ candidate.labels.nb.value ? candidate.labels.nb.value : '-'}} (nb)
+				</span>
 
 				<div ng-bind-html="candidate.extract" class="extract"></div>
 			</div>

@@ -163,4 +163,10 @@ angular.module('app', ['ngSanitize',
       }
     });
 
-}]);
+}])
+
+.filter('space2underscore', function () {
+  return function (input) {
+      return input.replace(/ /g, '_');
+  };
+});

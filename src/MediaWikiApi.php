@@ -131,6 +131,8 @@ class MediaWikiApi extends Base
 			'titles' => $title,
 			'prop' => 'extracts|pageprops',
 			'exchars' => '255',
+			'exintro' => '1',
+			'explaintext' => '1',
 			'redirects' => '' // Follow redirects
 		), $site ?: $this->hostname));
 		$data =  json_decode($request->body, true);

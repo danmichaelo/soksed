@@ -8,18 +8,18 @@
         }
     ],
     "minimum-stability": "dev",
-    "prefer-stable": false,
+    "prefer-stable": true,
     "require": {
         "ext-openssl": "*",
         "lusitanian/oauth": "~0.3",
         "rmccue/requests": ">=1.0",
-        "easyrdf/easyrdf": "*",
+        "easyrdf/easyrdf": "dev-master",
         "illuminate/support": "5.0.*",
         "monolog/monolog": "^1.22",
-        "rhumsaa/uuid": "~2.8",
+        "ramsey/uuid": "~3.5",
         "nesbot/carbon": "~1.14",
         "firebase/php-jwt": "~1.0",
-        "filp/whoops": "1.2.*"
+        "filp/whoops": "2.1.*"
     },
     "autoload": {
         "psr-4": {

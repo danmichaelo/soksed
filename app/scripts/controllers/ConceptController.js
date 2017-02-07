@@ -44,6 +44,18 @@ angular.module('app.controllers.concept', ['app.services.backend',
     'http://data.ub.uio.no/entity/aa780674-ac5f-40b2-a5a6-7912901f6d5f': 'Matematikk',
   };
 
+  $scope.categoryShortcuts = {
+    'http://data.ub.uio.no/entity/4d8d8554-b5f9-43be-a21e-46d058a3ee1c': 'q',
+    'http://data.ub.uio.no/entity/d5a885cd-56a0-4501-9c99-418db3fbcbdb': 'a',
+    'http://data.ub.uio.no/entity/c331c5e9-726c-4c55-9341-72d3e7874d6b': 'f',
+    'http://data.ub.uio.no/entity/8dce39ea-409f-4072-b25b-377a69bca0a3': 'b',
+    'http://data.ub.uio.no/entity/e31b973e-b1b4-4768-9d47-4151aa54fefd': 'g',
+    'http://data.ub.uio.no/entity/37f033b8-c77e-4fef-bdef-273f9065265d': 'p',
+    'http://data.ub.uio.no/entity/4d8d7781-2753-4d38-9ef9-de6c8cea4107': 'k',
+    'http://data.ub.uio.no/entity/c0f08a3c-12ed-410a-b810-d8be5c48571b': 'i',
+    'http://data.ub.uio.no/entity/aa780674-ac5f-40b2-a5a6-7912901f6d5f': 'm',
+  };
+
   // 'fa': None,
   // 'ns': None,  # Fellesbibl.
   // 'nq': None,  # Tøyen
@@ -134,7 +146,7 @@ angular.module('app.controllers.concept', ['app.services.backend',
   
   var keyboardModifier = 'alt';
   if (navigator.platform == 'MacIntel') {
-    keyboardModifier = 'shift+alt';
+    keyboardModifier = 'ctrl';
   }
 
   hotkeys.bindTo($scope)
@@ -175,7 +187,7 @@ angular.module('app.controllers.concept', ['app.services.backend',
       allowIn: ['INPUT']
     })
     .add({
-      combo: keyboardModifier + '+k',
+      combo: keyboardModifier + '+c',
       description: 'Vis katalogposter',
       callback: function(event, hotkey) {
         event.preventDefault();
@@ -183,5 +195,18 @@ angular.module('app.controllers.concept', ['app.services.backend',
       },
       allowIn: ['INPUT']
     });
+
+  $scope.categories.forEach(function(uri) {
+    var sh = $scope.categoryShortcuts[uri];
+    hotkeys.add({
+      combo: keyboardModifier + '+' + sh,
+      description: 'Toggle category "' + $scope.categoryLabels[uri] + '"',
+      callback: function(event, hotkey) {
+        event.preventDefault();
+        $scope.currentConcept.toggleCategory(uri);
+      },
+      allowIn: ['INPUT']
+    });
+  });
 
 }]);

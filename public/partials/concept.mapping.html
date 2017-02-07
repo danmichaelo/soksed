@@ -19,10 +19,11 @@
 		<h3>Kategorisering</h3>
 
 		<label ng-repeat="catUri in categories" class="category" ng-class="{recommended: isRecommended(catUri)}">
-		  	<input type="checkbox"
-		  		ng-checked="currentConcept.data.member.indexOf(catUri) != -1"
-		  		ng-click="currentConcept.toggleCategory(catUri)">
-		  	{{ categoryLabels[catUri] }}
+			<input type="checkbox"
+				ng-checked="currentConcept.data.member.indexOf(catUri) != -1"
+				ng-click="currentConcept.toggleCategory(catUri)">
+			{{ categoryLabels[catUri] }}
+			[{{ categoryShortcuts[catUri] }}]
 		</label>
 
 		<h3>Termer</h3>

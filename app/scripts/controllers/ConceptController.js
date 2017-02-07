@@ -19,28 +19,29 @@ angular.module('app.controllers.concept', ['app.services.backend',
   }
   $scope.currentConcept = concept;
 
+  // TODO: Get from http://localhost:8002/api.php?action=get_categories
   $scope.categories = [
-    'http://data.ub.uio.no/realfagstermer/cat_1',
-    'http://data.ub.uio.no/realfagstermer/cat_2',
-    'http://data.ub.uio.no/realfagstermer/cat_3',
-    'http://data.ub.uio.no/realfagstermer/cat_4',
-    'http://data.ub.uio.no/realfagstermer/cat_5',
-    'http://data.ub.uio.no/realfagstermer/cat_6',
-    'http://data.ub.uio.no/realfagstermer/cat_7',
-    'http://data.ub.uio.no/realfagstermer/cat_8',
-    'http://data.ub.uio.no/realfagstermer/cat_9',
+    'http://data.ub.uio.no/entity/4d8d8554-b5f9-43be-a21e-46d058a3ee1c',
+    'http://data.ub.uio.no/entity/d5a885cd-56a0-4501-9c99-418db3fbcbdb',
+    'http://data.ub.uio.no/entity/c331c5e9-726c-4c55-9341-72d3e7874d6b',
+    'http://data.ub.uio.no/entity/8dce39ea-409f-4072-b25b-377a69bca0a3',
+    'http://data.ub.uio.no/entity/e31b973e-b1b4-4768-9d47-4151aa54fefd',
+    'http://data.ub.uio.no/entity/37f033b8-c77e-4fef-bdef-273f9065265d',
+    'http://data.ub.uio.no/entity/4d8d7781-2753-4d38-9ef9-de6c8cea4107',
+    'http://data.ub.uio.no/entity/c0f08a3c-12ed-410a-b810-d8be5c48571b',
+    'http://data.ub.uio.no/entity/aa780674-ac5f-40b2-a5a6-7912901f6d5f',
   ];
 
   $scope.categoryLabels = {
-    'http://data.ub.uio.no/realfagstermer/cat_1': 'Generelt',
-    'http://data.ub.uio.no/realfagstermer/cat_2': 'Astro',
-    'http://data.ub.uio.no/realfagstermer/cat_3': 'Fysikk',
-    'http://data.ub.uio.no/realfagstermer/cat_4': 'Biologi',
-    'http://data.ub.uio.no/realfagstermer/cat_5': 'Geo',
-    'http://data.ub.uio.no/realfagstermer/cat_6': 'Farmasi',
-    'http://data.ub.uio.no/realfagstermer/cat_7': 'Kjemi',
-    'http://data.ub.uio.no/realfagstermer/cat_8': 'Informatikk',
-    'http://data.ub.uio.no/realfagstermer/cat_9': 'Matematikk',
+    'http://data.ub.uio.no/entity/4d8d8554-b5f9-43be-a21e-46d058a3ee1c': 'Generelt',
+    'http://data.ub.uio.no/entity/d5a885cd-56a0-4501-9c99-418db3fbcbdb': 'Astro',
+    'http://data.ub.uio.no/entity/c331c5e9-726c-4c55-9341-72d3e7874d6b': 'Fysikk',
+    'http://data.ub.uio.no/entity/8dce39ea-409f-4072-b25b-377a69bca0a3': 'Biologi',
+    'http://data.ub.uio.no/entity/e31b973e-b1b4-4768-9d47-4151aa54fefd': 'Geo',
+    'http://data.ub.uio.no/entity/37f033b8-c77e-4fef-bdef-273f9065265d': 'Farmasi',
+    'http://data.ub.uio.no/entity/4d8d7781-2753-4d38-9ef9-de6c8cea4107': 'Kjemi',
+    'http://data.ub.uio.no/entity/c0f08a3c-12ed-410a-b810-d8be5c48571b': 'Informatikk',
+    'http://data.ub.uio.no/entity/aa780674-ac5f-40b2-a5a6-7912901f6d5f': 'Matematikk',
   };
 
   // 'fa': None,

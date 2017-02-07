@@ -6,16 +6,16 @@ angular.module('app.services.concept', ['app.config', 'app.services.backend', 'a
   'use strict';
 
   var libCodeMapping = {
-    'ns': 'http://data.ub.uio.no/realfagstermer/cat_1',
-    'na': 'http://data.ub.uio.no/realfagstermer/cat_2',
-    'nf': 'http://data.ub.uio.no/realfagstermer/cat_3',
-    'nb': 'http://data.ub.uio.no/realfagstermer/cat_4',
-    'nc': 'http://data.ub.uio.no/realfagstermer/cat_5',
-    'ne': 'http://data.ub.uio.no/realfagstermer/cat_6',
-    'nk': 'http://data.ub.uio.no/realfagstermer/cat_7',
-    'ni': 'http://data.ub.uio.no/realfagstermer/cat_8',
-    'nm': 'http://data.ub.uio.no/realfagstermer/cat_9',
-    'ngh': 'http://data.ub.uio.no/realfagstermer/cat_5',  // ???
+    'ns': 'http://data.ub.uio.no/entity/4d8d8554-b5f9-43be-a21e-46d058a3ee1c',
+    'na': 'http://data.ub.uio.no/entity/d5a885cd-56a0-4501-9c99-418db3fbcbdb',
+    'nf': 'http://data.ub.uio.no/entity/c331c5e9-726c-4c55-9341-72d3e7874d6b',
+    'nb': 'http://data.ub.uio.no/entity/8dce39ea-409f-4072-b25b-377a69bca0a3',
+    'nc': 'http://data.ub.uio.no/entity/e31b973e-b1b4-4768-9d47-4151aa54fefd',
+    'ne': 'http://data.ub.uio.no/entity/37f033b8-c77e-4fef-bdef-273f9065265d',
+    'nk': 'http://data.ub.uio.no/entity/4d8d7781-2753-4d38-9ef9-de6c8cea4107',
+    'ni': 'http://data.ub.uio.no/entity/c0f08a3c-12ed-410a-b810-d8be5c48571b',
+    'nm': 'http://data.ub.uio.no/entity/aa780674-ac5f-40b2-a5a6-7912901f6d5f',
+    'ngh': 'http://data.ub.uio.no/entity/e31b973e-b1b4-4768-9d47-4151aa54fefd',  // ???
   };
 
   function Concept(id, uri, label) {

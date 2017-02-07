@@ -65,10 +65,10 @@ angular.module('app.controllers.concept', ['app.services.backend',
         'nq': None,  # Tøyen
     }*/
 
-  $scope.selectWikipediaResult = function(q) {
+  $scope.selectWikidataResult = function(q) {
     if (q) {
       console.log(q);
-      $scope.currentConcept.loadCandidate(q.title, true, q.originalObject.lang);
+      $scope.currentConcept.loadCandidateByUri(q.originalObject.concepturi, true);
     }
   };
 

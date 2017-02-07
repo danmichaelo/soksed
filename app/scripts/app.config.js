@@ -7,7 +7,7 @@ angular.module('app.config', [])
     views: [
       {id: 1, name: 'default', label: 'Standard'},
       {id: 2, name: 'nn', label: 'Omsetjing til nynorsk'},
-      {id: 3, name: 'mapping', label: 'Engelsk + kategorisering + wikidata'},
+      {id: 3, name: 'mapping', label: 'Engelsk + kategorisering + Wikidata'},
       {id: 4, name: 'se', label: 'Oversetting til nordsamisk'},
     ],
     filters: [

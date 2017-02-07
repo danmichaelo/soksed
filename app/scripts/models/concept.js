@@ -122,45 +122,66 @@ angular.module('app.services.concept', ['app.config', 'app.services.backend', 'a
       }
     },
 
-    loadCandidateByUri: function(uri) {
+    loadCandidateByUri: function(uri, select) {
       var that = this;
       that.wpWorking = true;
+      console.log('[loadCandidate] By URI: ', uri);
 
       Backend.getWikidata(uri).then(function(data) {
         if (data.title) {
           data.text = $sce.trustAsHtml(data.text);
           var ids = that.candidates.map(function(s){ return s.id; });
           if (ids.indexOf(data.id) == -1) {
+            console.log('Adding candidate', data);
             that.candidates.push(data);
+            if (select) {
+              that.setSelectedCandidate(that.candidates.length - 1);
+            }
+          } else {
+            if (select) {
+              that.setSelectedCandidate(ids.indexOf(data.id));
+            }
           }
         }
         that.wpWorking = false;
-        that.selectedCandidate = 0;
+        //that.selectedCandidate = 0;
       }, function() {
         alert('FAIL!');
         that.wpWorking = false;
       });
     },
 
-    loadCandidate: function(term, select, lang) {
-      var that = this;
+    loadCandidate: function(term) {
+      var that = this, fn;
       that.wpWorking = true;
 
-      Backend.getWikipedia(term, lang).then(function(data) {
+      console.log('[loadCandidate] Looking up: ', term);
+
+      Backend.getWikipedia(term).then(function(data) {
         if (data.title) {
+          console.log('[loadCandidate] Match at Wikipedia');
+
           data.text = $sce.trustAsHtml(data.text);
           var ids = that.candidates.map(function(s){ return s.id; });
           if (ids.indexOf(data.id) == -1) {
+            console.log('Adding candidate', data);
             that.candidates.push(data);
-            if (select) {
-              that.setSelectedCandidate(that.candidates.length - 1);
-            }
           }
         }
         that.wpWorking = false;
       }, function() {
         alert('FAIL!');
         that.wpWorking = false;
+      });
+
+      Backend.searchWikidata(term).then(function(data) {
+        if (data.results.length) {
+          console.log('[loadCandidate] Match at Wikidata');
+          that.loadCandidateByUri(data.results[0].concepturi, false);
+        }
+      }, function() {
+        // alert('FAIL!');
+        // that.wpWorking = false;
       });
     },
 

@@ -71,7 +71,7 @@
 				<a tabindex="-1" target="wikidata" ng-click="$event.stopPropagation()" ng-href="https://wikidata.org/wiki/{{ candidate.id }}">{{ candidate.id }}</a> : 
 
 				<span ng-if="candidate.sitelinks.enwiki">
-					"<a tabindex="-1" ng-href="http://en.wikipedia.org/wiki/{{candidate.sitelinks.enwiki.title | space2underscore }}">{{candidate.sitelinks.enwiki.title}}</a>" @ enwiki
+					"<a tabindex="-1" target="wikidata" ng-click="$event.stopPropagation()" ng-href="http://en.wikipedia.org/wiki/{{candidate.sitelinks.enwiki.title | space2underscore }}">{{candidate.sitelinks.enwiki.title}}</a>" @ enwiki
 				</span>
 				<span ng-if="!candidate.sitelinks.enwiki">
 					{{ candidate.labels.en.value ? candidate.labels.en.value : '-'}} (en)
@@ -79,7 +79,7 @@
 
 				<span ng-if="candidate.sitelinks.nowiki">
 					/
-					"<a tabindex="-1" ng-href="http://en.wikipedia.org/wiki/{{candidate.sitelinks.nowiki.title | space2underscore }}">{{candidate.sitelinks.nowiki.title}}</a>" @ nowiki
+					"<a tabindex="-1" target="wikidata" ng-click="$event.stopPropagation()" ng-href="http://en.wikipedia.org/wiki/{{candidate.sitelinks.nowiki.title | space2underscore }}">{{candidate.sitelinks.nowiki.title}}</a>" @ nowiki
 				</span>
 				<span ng-if="!candidate.sitelinks.nowiki">
 					{{ candidate.labels.nb.value ? candidate.labels.nb.value : '-'}} (nb)

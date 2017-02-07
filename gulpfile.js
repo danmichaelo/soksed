@@ -1,7 +1,7 @@
 /* Modules
 ------------------------------------- */
 var gulp        = require('gulp'),
-    sass        = require('gulp-ruby-sass'),
+    sass        = require('gulp-sass'),
     prefix      = require('gulp-autoprefixer'),
     livereload  = require('gulp-livereload'),
     uglify      = require('gulp-uglify'),
@@ -34,12 +34,10 @@ gulp.task('lint', function () {
 ------------------------------------- */
 gulp.task('sass', function() {
 
-  return sass('public/site.scss') 
-  .on('error', function (err) {
-    console.error('Error!', err.message);
-  })
-  .pipe(gulp.dest('public/build'))
-  .pipe(livereload());
+  return gulp.src('public/site.scss')
+      .pipe(sass().on('error', sass.logError))
+      .pipe(gulp.dest('public/build'))
+      .pipe(livereload());
 
 });
 

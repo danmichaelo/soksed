@@ -198,6 +198,7 @@ angular.module('app.services.concept', ['app.config', 'app.services.backend', 'a
         console.log(response);
         if (!response.data.status) {
           that.error = response.data;
+          that.dirty = true;
           window.alert('Save failed, see concept for more info.');
           return;
         }
@@ -210,6 +211,7 @@ angular.module('app.services.concept', ['app.config', 'app.services.backend', 'a
             window.alert('Beklager, du har ikke redigeringstilgang. Hvis du nettopp har registrert deg må du vente på at kontoen blir godkjent.');
           } else {
             that.error = response.data.status;
+            that.dirty = true;
             window.alert('Save failed, see concept for more info.');
           }
           return;
@@ -218,6 +220,7 @@ angular.module('app.services.concept', ['app.config', 'app.services.backend', 'a
         that.load(true);  // Reload to get term URIs etc..
       }).catch(function(err) {
         that.saving = false;
+        that.dirty = true;
         console.log(err);
         that.error = 'Invalid response received: ' + err.message;
         window.alert('Save failed!');

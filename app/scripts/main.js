@@ -34,7 +34,7 @@ angular.module('app', ['ngSanitize',
   hotkeysProvider.includeCheatSheet = true;
 
 
-  var defaultView = 'nn';
+  var defaultView = 'mapping';
 
   // For any unmatched url, redirect to /
   //$urlRouterProvider.otherwise('/concepts');

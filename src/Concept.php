@@ -141,7 +141,12 @@ class Concept
 				return 'update_preflabel_failed';
 			}
 
-			$this->sparql->addEvent($data['uri'], $this->auth->getUserUri(), 'Updated prefLabel(s): ' . $this->printLabelDiff($removed, $added) . '.');
+            $this->sparql->addEvent(
+                $data['uri'],
+                $this->auth->getUserUri(),
+                'PrefLabel(s): ' . $this->printLabelDiff($removed, $added) . '.',
+                'uoc:SetPrefLabelEvent'
+            );
 			$modified = true;
 		}
 
@@ -153,7 +158,12 @@ class Concept
 			if (!$this->sparql->updateLabels($this->auth->getProfile(), $data['uri'], 'altLabel', $removed, $added)) {
 				return 'update_altlabel_failed';
 			}
-			$this->sparql->addEvent($data['uri'], $this->auth->getUserUri(), 'Updated altLabel(s): ' . $this->printLabelDiff($removed, $added) . '.');
+            $this->sparql->addEvent(
+                $data['uri'],
+                $this->auth->getUserUri(),
+                'AltLabel(s): ' . $this->printLabelDiff($removed, $added) . '.',
+                'uoc:SetAltLabelsEvent'
+            );
 			$modified = true;
 		}
 
@@ -166,7 +176,12 @@ class Concept
 				$values
 			);
 			$this->logger->info('satte Wikidata-mapping for <' . $data['uri'] . '> til ' . array_get($data, 'wikidataItem.0'));
-			$this->sparql->addEvent($data['uri'], $this->auth->getUserUri(), 'Updated Wikidata mapping to <a href="' . array_get($data, 'wikidataItem.0') . '">' . array_get($data, 'wikidataItem.0') . '</a>');
+            $this->sparql->addEvent(
+                $data['uri'],
+                $this->auth->getUserUri(),
+                'Set Wikidata item to <a href="' . array_get($data, 'wikidataItem.0') . '">' . array_get($data, 'wikidataItem.0') . '</a>',
+                'uoc:SetWikidataMappingEvent'
+            );
 			$modified = true;
 		}
 
@@ -177,9 +192,15 @@ class Concept
 				$data['uri'],
 				'skos:member',
 				$values
-			);
+            );
+            $catLabels = array_map([$this->sparql, 'getCategoryLabel'], $values);
 			$this->logger->info('satte kategorier for <' . $data['uri'] . '>');
-			$this->sparql->addEvent($data['uri'], $this->auth->getUserUri(), 'Updated categories');
+            $this->sparql->addEvent(
+                $data['uri'],
+                $this->auth->getUserUri(),
+                'Set categories: ' . implode(', ', $catLabels),
+                'uoc:SetCategoriesEvent'
+            );
 			$modified = true;
 		}
 
@@ -196,7 +217,12 @@ class Concept
 				$values
 			);
 			if (count($values)) {
-				$this->sparql->addEvent($data['uri'], $this->auth->getUserUri(), 'Updated editorialNote');
+                $this->sparql->addEvent(
+                    $data['uri'],
+                    $this->auth->getUserUri(),
+                    'Updated editorialNote',
+                    'uoc:SetNoteEvent'
+                );
 				$modified = true;
 			}
 		}

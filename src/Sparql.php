@@ -61,7 +61,9 @@ class Sparql extends Base
 		RdfNamespace::set('user', $this->uriBase .'/data/users/');
 		RdfNamespace::set('log', $this->uriBase .'/data/log/');
 		RdfNamespace::set('uop', $this->uriBase . '/prop#');
-		RdfNamespace::set('uoc', $this->uriBase . '/class#');
+        RdfNamespace::set('uoc', $this->uriBase . '/class#');
+
+        $this->catCache = $this->getCats();
 	}
 
 	public function setLocalGraphUri($uri)
@@ -723,21 +725,22 @@ class Sparql extends Base
 	 * @param $concept  URI for the concept
 	 * @param $user  URI for the concept
 	 * @param $data  Free text log entry
+	 * @param $cls   Event class
 	 */
-	public function addEvent($concept, $user, $data)
-	{
+	public function addEvent($concept, $user, $data, $cls = 'uoc:GenericEvent')
+    {
 		$uuid1 = Uuid::uuid1();
 		$logEntry = new Resource(RdfNamespace::expand('log:' . $uuid1->toString()));
 		$eventClass = new Resource(RdfNamespace::expand('uoc:Event'));
+		$eventClass2 = new Resource(RdfNamespace::expand($cls));
 
 		$triples = new Graph;
-		//foreach ($targetUris as $targetUri) {
 		$triples->add($logEntry, 'rdf:type', $eventClass);
+		$triples->add($logEntry, 'uop:type', $eventClass2);
 		$triples->add($logEntry, 'dcterms:date', new DateTimeLiteral());
 		$triples->add($logEntry, 'uop:concept', new Resource($concept));
 		$triples->add($logEntry, 'uop:user', new Resource($user));
 		$triples->add($logEntry, 'uop:data', $data);
-		//}
 		$response = $this->updateClient->insert($triples, $this->eventsGraphUri);
 		return $response->isSuccessful();
 	}
@@ -749,7 +752,7 @@ class Sparql extends Base
 	public function getEvents($concept = null, $user = null)
 	{
 		$query = '
-			SELECT ?concept ?user ?data ?date ?term ?username ?id
+			SELECT ?concept ?user ?data ?date ?term ?username ?id ?cls
 			WHERE
 			{
 				GRAPH <%eventsGraphUri%> {
@@ -757,6 +760,7 @@ class Sparql extends Base
 						uop:concept ?concept ;
 						uop:user ?user ;
 						uop:data ?data ;
+						uop:type ?cls ;
 						dcterms:date ?date .
 				}
 
@@ -800,14 +804,44 @@ class Sparql extends Base
 					'term' => $this->valueToString(null, $tr->term),
 				],
 				'date' => $this->valueToString('created', $tr->date),
-				'data' => $this->valueToString(null, $tr->data),
+                'data' => $this->valueToString(null, $tr->data),
+                'cls' => $this->valueToString(null, $tr->cls),
 			];
 			$events[] = $evt;
 		}
 		return ['events' => $events];
-	}
+    }
 
-	public function getCategories()
+    public function getCategories()
+    {
+        $cats = $this->getCats();
+        return ['categories' => $cats];
+    }
+
+	protected function getCats()
+    {
+        $cachefile = dirname(dirname(__FILE__)) . '/cache/cats.json';
+
+        if (file_exists($cachefile)) {
+            $cats = json_decode(file_get_contents($cachefile), true);
+        } else {
+            $cats = $this->getCategoriesFromSparql();
+            file_put_contents($cachefile, json_encode($cats));
+        }
+
+        return $cats;
+    }
+
+    public function getCategoryLabel($uri)
+    {
+        foreach ($this->catCache as $cat) {
+            if ($cat['uri'] == $uri) {
+                return $cat['label'];
+            }
+        }
+    }
+
+	protected function getCategoriesFromSparql()
 	{
 		$query = '
 			SELECT ?cat ?label
@@ -830,6 +864,6 @@ class Sparql extends Base
 			];
 			$categories[] = $cat;
 		}
-		return ['categories' => $categories];
+		return $categories;
 	}
 }

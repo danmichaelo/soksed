@@ -1,5 +1,6 @@
 
 <div class="padded">
+    <div class="main">
 	<ol class="breadcrumb">
 	  <li><a href="/">Hjem</a></li>
 	  <li class="active">Log</li>
@@ -12,9 +13,13 @@
 			<div style="color: #999; font-size: 85%">
 				{{ event.date }} -
 				{{ event.user.username }} -
-				<a ui-sref="concepts.concept({ id: event.concept.id })">{{ event.concept.term }}</a>
+				<a ui-sref="concepts.concept({ id: event.concept.id })">{{ event.concept.term }}</a> -
+                {{event.cls}}
 			</div>
-			{{ event.data }}
+            <div>
+                <span ng-bind-html="event.data"></span>
+            </div>
 		</li>
 	</ul>
+    </div>
 </div>

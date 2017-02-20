@@ -7,9 +7,10 @@
 
 	<div ng-show="currentConcept.data">
 
-		<p style="float:right; font-size:85%;">
+		<p style="background: #ffffee;">
+			<a ng-href="{{ currentConcept.katapiUrl }}" target="katapi">Vis katalogposter [c]</a> |
 			<a ng-href="{{ currentConcept.githubUrl }}" target="_blank">Meld fra om problem</a> |
-			<a ng-href="{{ currentConcept.katapiUrl }}" target="katapi">Vis katalogposter</a>
+			<a href="https://docs.google.com/document/d/1LdbfXSOSQ4Dfum25-JGRMGRQxBordqmzL52GbTwRpZo/edit?usp=sharing" target="_blank">Hjelp</a>
 		</p>
 
 		<strong>Definisjon:</strong>
@@ -17,6 +18,12 @@
 		<em ng-show="!currentConcept.data.definition">(Mangler)</em>
 
 		<h3>Kategorisering</h3>
+
+        <p>
+          Prøv å bruke bare én fagkategori (der begrepet brukes mest), men bruk flere kategorier
+          hvis begrepet brukes omtrent like mye i flere fag.
+          Flere enn tre kategorier? Bruk «Generelt» (Vanligvis)
+        </p>
 
 		<label ng-repeat="catUri in categories" class="category" ng-class="{recommended: isRecommended(catUri)}">
 			<input type="checkbox"
@@ -31,7 +38,7 @@
 		<div style="display:flex;" class="terms">
 			<div ng-repeat="lang in ['nb','en']">
 
-				<div>{{ lang }}</div>
+				<div style="font-weight:bold;">{{ lang }}:</div>
 
 				<term ng-repeat="(index,label) in currentConcept.data.prefLabel[lang]"
 				      readonly="lang=='nb'"
@@ -70,16 +77,16 @@
 			<div tabindex="0" ng-show="candidate" class="candidate" ng-class="{selected: currentConcept.selectedCandidate == $index}" ng-click="currentConcept.toggleSelectedCandidate($index)" ng-keydown="currentConcept.keyDown($index, $event)">
 				<a tabindex="-1" target="wikidata" ng-click="$event.stopPropagation()" ng-href="https://wikidata.org/wiki/{{ candidate.id }}">{{ candidate.id }}</a> : 
 
-				<span ng-if="candidate.sitelinks.enwiki">
-					"<a tabindex="-1" target="wikidata" ng-click="$event.stopPropagation()" ng-href="http://en.wikipedia.org/wiki/{{candidate.sitelinks.enwiki.title | space2underscore }}">{{candidate.sitelinks.enwiki.title}}</a>" @ enwiki
+				<span ng-click="$event.stopPropagation()" ng-if="candidate.sitelinks.enwiki">
+					"<a tabindex="-1" target="wikidata" ng-href="http://en.wikipedia.org/wiki/{{candidate.sitelinks.enwiki.title | space2underscore }}">{{candidate.sitelinks.enwiki.title}}</a>" @ enwiki
 				</span>
 				<span ng-if="!candidate.sitelinks.enwiki">
 					{{ candidate.labels.en.value ? candidate.labels.en.value : '-'}} (en)
 				</span>
 
-				<span ng-if="candidate.sitelinks.nowiki">
+				<span ng-if="candidate.sitelinks.nowiki" ng-click="$event.stopPropagation()">
 					/
-					"<a tabindex="-1" target="wikidata" ng-click="$event.stopPropagation()" ng-href="http://no.wikipedia.org/wiki/{{candidate.sitelinks.nowiki.title | space2underscore }}">{{candidate.sitelinks.nowiki.title}}</a>" @ nowiki
+					"<a tabindex="-1" target="wikidata" ng-href="http://no.wikipedia.org/wiki/{{candidate.sitelinks.nowiki.title | space2underscore }}">{{candidate.sitelinks.nowiki.title}}</a>" @ nowiki
 				</span>
 				<span ng-if="!candidate.sitelinks.nowiki">
 					{{ candidate.labels.nb.value ? candidate.labels.nb.value : '-'}} (nb)
@@ -116,7 +123,7 @@
 		<div style="padding-top:2em;">
 
 			<button ng-click="storeAndGo()" ng-disabled="!currentConcept.data || currentConcept.saving" class="btn btn-primary">
-				Lagre og gå til neste
+				Lagre og gå til neste [s]
 			</button>
 
 			<button ng-click="store()" ng-disabled="!currentConcept.data || currentConcept.saving" class="btn btn-default">

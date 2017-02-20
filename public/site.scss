@@ -177,11 +177,15 @@ ul li {
 	border-radius: 2px;
 	margin: 2px;
 	border: 1px solid #888;
-
-	&:disabled {
-		background: #dedede;
-		color: #444;
-	}
+}
+.disabled-input {
+	padding: 3px 6px;
+	width:20em;
+	border-radius: 2px;
+	margin: 2px;
+	border: 1px solid #888;
+	background: #dedede;
+	color: #444;
 }
 
 .main textarea {

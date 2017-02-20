@@ -1,6 +1,8 @@
+<div ng-if="(readonly || data.readonly) && data.value" class="disabled-input">{{ data.value }}</div>
+
+<div ng-if="!readonly && !data.readonly">
 <input type="text"
        ng-model="data.value"
-       ng-disabled="readonly || data.readonly"
        ng-focus="focus($event)"
        ng-keydown="keydown($event)"
        title="{{ data.created ? 'Opprettet ' + data.created + ' av ' + data.creator : '' }}">
@@ -15,5 +17,6 @@
 	      ng-show="originalData.proofread"><i class="fa fa-check-circle "></i> Godkjent
 	</span>
 </span>
+</div>
 
 <ng-transclude></ng-transclude>

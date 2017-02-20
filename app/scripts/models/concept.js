@@ -71,8 +71,11 @@ angular.module('app.services.concept', ['app.config', 'app.services.backend', 'a
       }
 
       var subject = encodeURIComponent(this.label);
-      this.katapiUrl = 'https://app.uio.no/ub/emnesok/realfagstermer/search?term=' + this.label;
-      var body = encodeURIComponent('\n\n\n\n--\nURI: ' + this.uri + '\nBruk: ' + this.katapiUrl);
+      var ident = data.identifier[0].value;
+      var uri_id = this.uri.split('/').pop();
+      this.katapiUrl = 'https://app.uio.no/ub/emnesok/realfagstermer/search?id=' + uri_id;
+      this.soksedUrl = 'https://soksed.biblionaut.net/concepts/' + ident ;
+      var body = encodeURIComponent('\n\n\n\n--\nURI: ' + this.uri + '\nBruk: ' + this.katapiUrl + '\nSoksed: ' + this.soksedUrl);
       this.githubUrl = 'https://github.com/realfagstermer/realfagstermer/issues/new?title=' + subject + '&body=' + body;
     },
 

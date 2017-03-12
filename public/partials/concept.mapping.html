@@ -13,10 +13,6 @@
 			<a href="https://docs.google.com/document/d/1LdbfXSOSQ4Dfum25-JGRMGRQxBordqmzL52GbTwRpZo/edit?usp=sharing" target="_blank">Hjelp</a>
 		</p>
 
-		<strong>Definisjon:</strong>
-		<span ng-repeat="def in currentConcept.data.definition">{{ def.value }}</span>
-		<em ng-show="!currentConcept.data.definition">(Mangler)</em>
-
 		<h3>Kategorisering</h3>
 
         <p>
@@ -34,6 +30,16 @@
 		</label>
 
 		<h3>Termer</h3>
+
+		<div style="padding-bottom: .4em;">
+			Definisjon:
+			<span ng-repeat="def in currentConcept.data.definition">«{{ def.value }}»</span>
+			<em ng-show="!currentConcept.data.definition">(mangler)</em>
+		</div>
+
+		<div ng-show="currentConcept.data.prefLabel.la" style="padding-bottom: .4em;">
+			Vitenskapelig navn: <em>{{currentConcept.data.prefLabel.la[0].value}}</em>
+		</div>
 
 		<div style="display:flex;" class="terms">
 			<div ng-repeat="lang in ['nb','en']">

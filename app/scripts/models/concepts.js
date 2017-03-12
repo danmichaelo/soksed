@@ -16,7 +16,7 @@ angular.module('app.services.concepts', ['app.services.backend', 'app.services.c
 
   $rootScope.$on('conceptChanged', function(evt, concept) {
     currentConcept = concept;
-    if (!currentConcept.data) {
+    if (currentConcept && !currentConcept.data) {
       currentConcept.load();
     }
   });

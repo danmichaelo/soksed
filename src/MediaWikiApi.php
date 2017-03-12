@@ -118,7 +118,10 @@ class MediaWikiApi extends Base
 	public function appendEntity(&$o, $id)
 	{
 		$entity = $this->getEntity($id);
+
 		if (!is_null($entity)) {
+			$o['id'] = $id;
+			$o['uri'] = 'http://www.wikidata.org/entity/' . $id;
 			$o['descriptions'] = $entity['descriptions'];
 			$o['labels'] = $entity['labels'];
 			$o['sitelinks'] = $entity['sitelinks'];

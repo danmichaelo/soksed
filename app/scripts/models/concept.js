@@ -1,4 +1,3 @@
-
 // Declare app level module which depends on filters, and services
 angular.module('app.services.concept', ['app.config', 'app.services.backend', 'app.directives.altlabels', 'app.directives.term'])
 
@@ -138,8 +137,11 @@ angular.module('app.services.concept', ['app.config', 'app.services.backend', 'a
       console.log('[loadCandidate] By URI: ', uri);
 
       Backend.getWikidata(uri).then(function(data) {
-        if (data.title) {
-          data.text = $sce.trustAsHtml(data.text);
+        if (data.id) {
+          if (!data.extract && data.descriptions.en) {
+            // Only on wikidata, not on wikipedia
+            data.extract = data.descriptions.en.value;
+          }
           var ids = that.candidates.map(function(s){ return s.id; });
           if (ids.indexOf(data.id) == -1) {
             console.log('Adding candidate', data);
@@ -168,10 +170,13 @@ angular.module('app.services.concept', ['app.config', 'app.services.backend', 'a
       console.log('[loadCandidate] Looking up: ', term);
 
       Backend.getWikipedia(term).then(function(data) {
-        if (data.title) {
+        if (data.id) {
           console.log('[loadCandidate] Match at Wikipedia');
+          if (!data.extract && data.descriptions.en) {
+            // Only on wikidata, not on wikipedia
+            data.extract = data.descriptions.en.value;
+          }
 
-          data.text = $sce.trustAsHtml(data.text);
           var ids = that.candidates.map(function(s){ return s.id; });
           if (ids.indexOf(data.id) == -1) {
             console.log('Adding candidate', data);

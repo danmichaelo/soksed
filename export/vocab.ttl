@@ -4,4 +4,5 @@
 @prefix skos: <http://www.w3.org/2004/02/skos/core#> .
 @prefix xl: <http://www.w3.org/2008/05/skos-xl#> .
 @prefix user: <http://trans.biblionaut.net/onto/user#> .
+@prefix ubo: <http://data.ub.uio.no/onto#> .
 @prefix rto: <http://data.ub.uio.no/onto/rto#> .

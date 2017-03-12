@@ -27,14 +27,14 @@ try() { "$@" || die "$0: Cannot $*"; }
 SCRIPTDIR="$( cd $(dirname $0) ; pwd -P )"
 try cd "$SCRIPTDIR"
 
-test -z "$GRAPH" && GRAPH=http://trans.biblionaut.net/graph/trans
+test -z "$GRAPH" && GRAPH=http://trans.biblionaut.net/graph/trans2
 
 echo
 date
 echo "SCRIPTDIR: $SCRIPTDIR"
 echo "GRAPH: $GRAPH"
 
-LOCAL_REPO=prosjekt-nynorsk
+LOCAL_REPO=prosjekt-kinderegg
 
 #==========================================================
 # Setup environment 
@@ -82,7 +82,7 @@ cd "$SCRIPTDIR"
 #==========================================================
 
 if [ ! -d "$LOCAL_REPO" ]; then
-    try git clone "git@github.com:realfagstermer/prosjekt-nynorsk.git" "$LOCAL_REPO"
+    try git clone "git@github.com:realfagstermer/prosjekt-kinderegg.git" "$LOCAL_REPO"
 fi
 
 #==========================================================
@@ -90,7 +90,38 @@ fi
 #==========================================================
 
 echo "Get data from Fuseki"
-curl -X GET -o current.ttl -s -H "Content-Type: text/turtle" -G --data-urlencode "graph=$GRAPH" "http://localhost:3030/ds/get"
+
+try curl -s http://localhost:3030/ds/query --data-urlencode "query@-" << EOF >| current.ttl
+
+PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+PREFIX xl: <http://www.w3.org/2008/05/skos-xl#>
+PREFIX uoc: <http://trans.biblionaut.net/class#>
+PREFIX g: <http://trans.biblionaut.net/graph/>
+
+CONSTRUCT {
+  ?entity a ?cls .
+  ?entity ?prop ?value .
+}
+WHERE {
+  GRAPH ?g {
+    ?entity a ?cls .
+    FILTER ( ?cls IN (skos:Concept, xl:Label, uoc:Category ))
+  }
+  {
+    GRAPH g:meta {
+      ?entity a uoc:Category ;
+        ?prop ?value .
+    }
+  } UNION {
+    GRAPH g:trans2 {
+      ?entity ?prop ?value .
+    }
+  }
+}
+
+EOF
+
+# curl -X GET -o current.ttl -s -H "Content-Type: text/turtle" -G --data-urlencode "graph=$GRAPH" "http://localhost:3030/ds/get"
 if [ $? != 0 ]; then
     die "Could not fetch data from Fuseki using 's-get'. Is it in your PATH?"
 fi
@@ -113,13 +144,17 @@ try cd "$LOCAL_REPO"
 git config user.name "ubo-bot"
 git config user.email "danmichaelo+ubobot@gmail.com"
 
-try git reset --hard origin/master
+#try git reset --hard origin/master
 
-for file in data-skosxl.ttl data-unverified.ttl data-verified.ttl status.json sonja.txt; do
+for file in data-skosxl.ttl stats.csv sonja.txt; do
 	mv -f "../$file" "./"
 	git add "$file"
 done
 
-git commit -m "Update data"
+dt=$(tail stats.csv -n 1 | awk -F',' '{print $1}')
+tc=$(tail stats.csv -n 1 | awk -F',' '{print $4}')
+pc=$(tail stats.csv -n 1 | awk -F',' '{print $2}')
+
+git commit -m "$dt: $tc concepts processed, $pc proofread"
 git push origin master
 

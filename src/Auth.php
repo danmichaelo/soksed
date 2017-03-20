@@ -146,6 +146,8 @@ class Auth extends Base
 		$this->storage->clearAllTokens();
 		setcookie('uotoken', '', time() - 3600, '/');
 		$this->setUser(null);
+		header('Location: https://github.com/logout');
+		exit();
 	}
 
 }

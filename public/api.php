@@ -4,9 +4,16 @@ require_once __DIR__ . '/../bootstrap.php';
 
 use Scriptotek\RtWp\Auth;
 use Scriptotek\RtWp\Concept;
+use Scriptotek\RtWp\Config;
 use Scriptotek\RtWp\Label;
 use Scriptotek\RtWp\MediaWikiApi;
 use Scriptotek\RtWp\Sparql as SparqlClient;
+
+$sentryClient = new Raven_Client(Config::get('sentry.dsn'));
+$error_handler = new Raven_ErrorHandler($sentryClient);
+$error_handler->registerExceptionHandler();
+$error_handler->registerErrorHandler();
+$error_handler->registerShutdownFunction();
 
 $sparql = new SparqlClient;
 $sparql->setLocalGraphUri($sparql->getUriBase() . '/graph/trans2');

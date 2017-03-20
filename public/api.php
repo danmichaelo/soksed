@@ -108,12 +108,24 @@ switch ($action) {
 	/** USER ACTIONS **/
 
 	case 'get_user':
-		$id = isset($_GET['$id']) ? $_GET['$id'] : null;
+		if (isset($_GET['id'])) {
+
+			if (!$auth->hasPermission('edit')) {
+				jsonOut(array(
+					'status' => 'no_permission',
+				));
+			}
+
+			jsonOut([
+				'user' => $sparql->findUser($_GET['id'], null, true),
+			]);
+		}
 		jsonOut([
 			'user' => $auth->getProfile(),
 			'loginUrl' => $auth->getLoginUrl(),
 			'logoutUrl' => $auth->getLogoutUrl(),
 		]);
+
 
 	case 'get_users':
 
@@ -132,15 +144,19 @@ switch ($action) {
 
 	case 'get_concept':
 
+		if (!$auth->authenticated()) {
+			jsonOut(['error' => 'Du er ikke lenger innlogget. Prøv å laste siden på nytt. Evt. logg ut og inn igjen.']);
+		}
+
 		$concept = new Concept($_GET['uri'], $auth, $sparql);
 		jsonOut($concept->toArray());
 
 	case 'put_concept':
-
+		if (!$auth->authenticated()) {
+			jsonOut(['status' => 'not_authenticated']);
+		}
 		if (!$auth->hasPermission('edit')) {
-			jsonOut(array(
-				'status' => 'no_permission',
-			));
+			jsonOut(['status' => 'no_permission']);
 		}
 
 		$concept = new Concept($input['data']['uri'], $auth, $sparql);

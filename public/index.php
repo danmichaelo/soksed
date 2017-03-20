@@ -41,7 +41,7 @@ setcookie('user', json_encode($auth->getProfile()), time()+60, '/');
 	<!-- <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap-theme.min.css">-->
 
 	<!-- Font Awesome -->
-	<link href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" rel="stylesheet">
+	<link href="//maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
 
 	<link href="/lib/angular-hotkeys/build/hotkeys.min.css" rel="stylesheet">
 	<link href="/lib/angular-tooltips/dist/angular-tooltips.css" rel="stylesheet" type="text/css" />
@@ -79,7 +79,6 @@ setcookie('user', json_encode($auth->getProfile()), time()+60, '/');
 		</div>
 
 		<h1>
-			<a href="#" ng-click="toggleMenu()" ng-show="menuAvailable" title="Veksle meny"><i class="fa fa-bars"></i></a> 
 			<a href="/">soksed</a>
 		</h1>
 	</header>

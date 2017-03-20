@@ -18,6 +18,8 @@ class Auth extends Base
 	{
 		parent::__construct();
 
+		$this->profile = null;
+
 		// Session storage
 		$this->storage = new Session(false);
 
@@ -85,6 +87,11 @@ class Auth extends Base
 
 	}
 
+	public function authenticated()
+	{
+		return !is_null($this->profile);
+	}
+
 	public function getProfile()
 	{
 		return $this->profile ?: null;
@@ -97,7 +104,8 @@ class Auth extends Base
 
 	public function setUserFromToken($token)
 	{
-		$this->profile = $this->sparql->findUser(null, $token) ?: null;		
+		$this->profile = $this->sparql->findUser(null, $token) ?: null;
+		unset($this->profile['activity']);
 	}
 
 	protected function setUser($username) {

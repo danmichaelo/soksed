@@ -17,8 +17,7 @@ angular.module('app.config', [])
       { value: '-exists:prefLabel@nn', label: 'Mangler språk:nynorsk' },
       { value: 'exists:prefLabel@en', label: 'Har språk:engelsk', graphOption: true },
       { value: '-exists:prefLabel@en', label: 'Mangler språk:engelsk' },
-      { value: 'exists:prefLabel@se', label: 'Har språk:nordsamisk', graphOption: true },
-      { value: '-exists:prefLabel@se', label: 'Mangler språk:nordsamisk' },
+      { value: 'exists:prefLabel@la,-exists:prefLabel@en', label: 'Har latin, mangler engelsk', graphOption: true },
       { value: 'has:editorialNote', label: 'Har noter', graphOption: true },
       { value: 'has:wikidataItem', label: 'Har wikidata-mapping', graphOption: true }
      ],

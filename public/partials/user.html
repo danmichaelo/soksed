@@ -1,18 +1,50 @@
 <div class="padded">
+	<div class="main">
 	<ol class="breadcrumb">
 	  <li><a href="/">Hjem</a></li>
 	  <li><a href="/users">Brukere</a></li>
 	  <li class="active">{{ user.username[0] }}</li>
 	</ol>
 	<p>
-		Bruker: {{ user.username[0] }}
+		<h3>{{ user.username[0] }}</h3>
+	</p>
+	<p>
+		ID: {{ user.id[0] }}
 	</p>
 	<p>
 		Tilganger:
 		<em ng-if="!user.permission || !user.permission.length">(ingen tilganger enda)</em>
 		<span ng-repeat-start="permission in user.permission"></span>
-			<span class="label label-info">{{ permission }}</span> 
+			<span class="label label-info">{{ permission }}</span>
 		<span ng-repeat-end></span>
 	</p>
+	<p>
+		<i class="fa fa-star" aria-hidden="true"></i>
+		Aktivitet: {{ user.stats.total }} handlinger, {{ user.stats.today }} i dag.
+		<ul ng-show="user.stats.total">
+			<li>
+				Kategorisert {{ user.stats.events['http://trans.biblionaut.net/class#SetCategoriesEvent'] }} begreper.
+			</li>
+			<li>
+				Oversatt indeksterm for {{ user.stats.events['http://trans.biblionaut.net/class#SetPrefLabelEvent'] }} begreper.
+			</li>
+			<li>
+				Oversatt (én eller flere) alternative termer for {{ user.stats.events['http://trans.biblionaut.net/class#SetAltLabelsEvent'] }} begreper.
+			</li>
+			<li>
+				Mappet {{ user.stats.events['http://trans.biblionaut.net/class#SetWikidataMappingEvent'] }} begreper.
+			</li>
+		</ul>
+	</p>
 
+	<h3>Siste aktivitet</h3>
+
+	<ul>
+		<li ng-repeat="event in user.activity">
+			{{event.date}}
+			<a ng-href="https://soksed.biblionaut.net/concepts/{{ event.concept.id }}">{{ event.concept.term }}</a>:
+			<span ng-bind-html="event.data"></span>
+		</li>
+	</ul>
+</div>
 </div>

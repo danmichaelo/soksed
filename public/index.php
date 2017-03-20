@@ -53,11 +53,24 @@ setcookie('user', json_encode($auth->getProfile()), time()+60, '/');
 <body class="menuVisible">
 
 	<header class="header" ng-controller="HeaderController">
-		<div style="padding: 10px; float:right;" ng-show="user">
+		<div style="float:right;" ng-show="user">
 			<div ng-show="user.username">
-				<a ui-sref="user({ id: user.username[0] })">{{ user.username[0] }}</a> 
+
+				<a ui-sref="user({ id: user.id[0] })" class="nav-el">
+					<i class="fa fa-user-circle-o" aria-hidden="true"></i>
+					{{ user.username[0] }}
+				</a>
+
+				<a ng-show="stats.total !== undefined" ui-sref="user({ id: user.id[0] })" class="nav-el">
+					<i class="fa fa-star" aria-hidden="true"></i>
+					{{ stats.total }} ({{ stats.today }})
+				</a>
+
 				<!-- target="_self" to override the AngularJS router --> 
-				<a href="/callback.php?logout" target="_self" title="Logg ut"><i class="fa fa-sign-out"></i></a>
+				<a href="/callback.php?logout" target="_self" title="Logg ut" class="nav-el">
+					<i class="fa fa-sign-out"></i>
+					Logg ut
+				</a>
 			</div>
 			<div ng-show="!user.username">
 				<!-- target="_self" to override the AngularJS router --> 

@@ -181,6 +181,18 @@ switch ($action) {
 
 		jsonOut($sparql->getEvents());
 
+	case 'get_stats':
+		if (!$auth->hasPermission('edit')) {
+			jsonOut(array(
+				'status' => 'no_permission',
+			));
+		}
+
+		$o = $sparql->getEventStats($auth->getProfile());
+		$o2 = $sparql->getEventStats($auth->getProfile(), 'FILTER(?date >= "' . strftime('%F') . 'T00:00:00Z"^^xsd:dateTime)');
+		$o['today'] = $o2['total'];
+		jsonOut($o);
+
 	/** CATEGORY ACTIONS **/
 
 	case 'get_categories':

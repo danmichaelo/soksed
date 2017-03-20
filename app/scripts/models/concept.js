@@ -254,6 +254,7 @@ angular.module('app.services.concept', ['app.config', 'app.services.backend', 'a
         }
         that.saved = true;
         that.load(true);  // Reload to get term URIs etc..
+        $rootScope.$broadcast('conceptSaved', that);
       }).catch(function(err) {
         that.saving = false;
         that.dirty = true;

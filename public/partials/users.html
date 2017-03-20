@@ -10,13 +10,12 @@
 
 	<ul class="list-group">
 		<li ng-repeat="user in users" class="list-group-item">
-			<a ui-sref="user({ id: user.username[0] })">{{ user.username[0] }}</a>
-			- registrert {{ user.created[0] }}
-			- tilganger:
+			<a ui-sref="user({ id: user.id[0] })">{{ user.username[0] }}</a>
 			<span ng-repeat-start="permission in user.permission"></span>
 				<span class="label label-info">{{ permission }}</span> 
 			<span ng-repeat-end></span>
-
+			<i class="fa fa-star" aria-hidden="true"></i>
+			{{ user.stats.total }}
 		</li>
 	</ul>
     </div>

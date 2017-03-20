@@ -58,10 +58,11 @@ class Sparql extends Base
 		$this->userGraphUri = $this->uriBase . '/graph/users';
 		$this->eventsGraphUri = $this->uriBase . '/graph/events';
 		RdfNamespace::set('uo', $this->uriBase . '/onto/user#');
-		RdfNamespace::set('user', $this->uriBase .'/data/users/');
+		RdfNamespace::set('user', 'http://soksed.biblionaut.net/users/');
 		RdfNamespace::set('log', $this->uriBase .'/data/log/');
 		RdfNamespace::set('uop', $this->uriBase . '/prop#');
         RdfNamespace::set('uoc', $this->uriBase . '/class#');
+		RdfNamespace::set('g', $this->uriBase . '/graph/');
 
         $this->catCache = $this->getCats();
 	}
@@ -439,14 +440,9 @@ class Sparql extends Base
 	 */
 	public function updateLabels($user, $uri, $labelType, $delete, $add)
 	{
-		// if (!$this->user['verified'])) {
-		//     die('Permission denied');
-		// }
-
 		$propMap = [
 			'creator' => 'user:creator',
 		];
-
 
 		if (!in_array($labelType, ['prefLabel', 'altLabel', 'hiddenLabel'])) {
 			die('Invalid labelType "' . $labelType . '"');
@@ -527,11 +523,11 @@ class Sparql extends Base
 		', ['localGraphUri' => $this->localGraphUri, 'uri' => $uri]);
 	}
 
-	public function findUser($username=null, $token=null)
+	public function findUser($username=null, $token=null, $includeStats=false)
 	{
 		$props = ['graph' => $this->userGraphUri];
 		if ($username) {
-			$filter = '?user uo:username "%username%"';
+			$filter = '?user (uo:id|uo:username) "%username%"';
 			$props['username'] = $username;
 		} elseif ($token) {
 			$filter = '?user uo:token "%token%"';
@@ -543,11 +539,14 @@ class Sparql extends Base
 		$result = $this->query('
 			SELECT * WHERE {
 				GRAPH <%graph%> {
+					?user a uo:User ;
+						?prop ?value .
+
 					' . $filter . ';
-						?prop ?value
 				}
 			}', $props
 		);
+
 
 		if (count($result) == 0) {
 			return false;
@@ -563,6 +562,12 @@ class Sparql extends Base
 		foreach ($this->dateFields as $field) {
 			if (isset($out[$field])) $out[$field] = $out[$field][0];
 		}
+		if ($includeStats) {
+			$out['stats'] = $this->getEventStats($out);
+			$out['stats']['today'] = $this->getEventStats($out, 'FILTER(?date >= "' . strftime('%F') . 'T00:00:00Z"^^xsd:dateTime)')['total'];
+			$out['activity'] = $this->getEvents(null, $out['uri'], 20)['events'];
+		}
+
 		return $out;
 	}
 
@@ -572,10 +577,12 @@ class Sparql extends Base
 
 		if (!$user) {
 			$uuid1 = Uuid::uuid1();
-			$uri = new Resource(RdfNamespace::expand('user:' . $uuid1->toString()));
+			$id = $uuid1->toString();
+			$uri = new Resource(RdfNamespace::expand('user:' . $id));
 			$triples = new Graph;
 			$triples->add($uri, 'rdf:type', new Resource(RdfNamespace::expand('uo:User')));
 			$triples->add($uri, 'uo:username', $username);
+			$triples->add($uri, 'uo:id', $id);
 			// $triples->add($uri, 'uo:active', new BooleanLiteral(false));
 			$triples->add($uri, 'dct:created', new DateTimeLiteral);
 			$response = $this->updateClient->insert($triples, $this->userGraphUri);
@@ -650,14 +657,22 @@ class Sparql extends Base
 		);
 
 		$users = [];
-		foreach ($triples as $tr) {            
+		foreach ($triples as $tr) {
 			$uri = strval($tr->user->getUri());
 			$prop = RdfNamespace::splitUri($tr->prop->getUri())[1];
 			if ($prop == 'token') continue;
 			if (!isset($users[$uri])) $users[$uri] = [];
 			$users[$uri][$prop][] = $this->valueToString($prop, $tr->value);
+			$users[$uri]['uri'] = $uri;
 		}
-		return ['users' => $users];
+		$stats = $this->getEventStats();
+		foreach ($users as $k => $v) {
+			$users[$k]['stats'] = ['events' => [], 'total' => 0];
+		}
+		foreach ($stats['users'] as $k => $v) {
+			$users[$k]['stats'] = $v;
+		}
+		return ['users' => array_values($users)];
 	}
 
 	public function markReviewed($uri, $user)
@@ -749,7 +764,7 @@ class Sparql extends Base
 	 * @param $concept  URI for the concept
 	 * @param $user  URI for the concept
 	 */
-	public function getEvents($concept = null, $user = null)
+	public function getEvents($concept = null, $user = null, $limit=500)
 	{
 		$query = '
 			SELECT ?concept ?user ?data ?date ?term ?username ?id ?cls
@@ -778,6 +793,7 @@ class Sparql extends Base
 
 			}
 			ORDER BY DESC(?date)
+			LIMIT ' . intval($limit) . '
 		';
 		if (!is_null($concept)) {
 			$query .= ' VALUES ?concept { <' . $concept . '> }';
@@ -866,4 +882,48 @@ class Sparql extends Base
 		}
 		return $categories;
 	}
+
+	public function getEventStats($user=null, $filter='')
+	{
+		$query = '
+			SELECT ?user ?cls (COUNT(DISTINCT ?concept) as ?c)
+			WHERE {
+			  GRAPH g:events {
+			    ?entry a uoc:Event ;
+				  uop:concept ?concept ;
+			      uop:type ?cls ;
+			      uop:concept ?concept ;
+			      uop:user ?user ;
+			      dct:date ?date .
+			  }
+			  ' . $filter . '
+			}
+			GROUP BY ?user ?cls
+		';
+
+
+		$triples = $this->query($query, []);
+
+		$out = ['users' => []];
+
+		foreach ($triples as $tr) {
+			if (!isset($tr->cls)) continue;
+			if (!isset($out['users'][$tr->user->getUri()]['total'])) {
+				$out['users'][$tr->user->getUri()]['total'] = 0;
+			}
+			$out['users'][$tr->user->getUri()]['events'][$tr->cls->getUri()] = $tr->c->getValue();
+			$out['users'][$tr->user->getUri()]['total'] += $tr->c->getValue();
+		}
+
+		if (!is_null($user)) {
+			if (isset($out['users'][$user['uri']])) {
+				$out = $out['users'][$user['uri']];
+			} else {
+				$out = ['events' => [], 'total' => 0];
+			}
+		}
+
+		return $out;
+	}
+
 }

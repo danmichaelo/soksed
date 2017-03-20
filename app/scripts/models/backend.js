@@ -74,4 +74,8 @@ angular.module('app.services.backend', [])
     return getRequest('get_wikidata', opts);
   };
 
+  this.getUserStats = function() {
+    return getRequest('get_stats', {});
+  };
+
 }]);

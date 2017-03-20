@@ -31,15 +31,22 @@
 
 		<h3>Termer</h3>
 
-		<div style="padding-bottom: .4em;">
+		<p ng-show="currentConcept.data.type.indexOf('ubo:Time') != -1" style="background: #ffffcc;">
+			Type: Tidsperiode
+		</p>
+
+		<p ng-show="currentConcept.data.type.indexOf('ubo:Place') != -1" style="background: #ffffcc;">
+			Type: Geografisk sted
+		</p>
+
+		<p style="background: #ffffcc;" ng-show="currentConcept.data.definition">
 			Definisjon:
 			<span ng-repeat="def in currentConcept.data.definition">«{{ def.value }}»</span>
-			<em ng-show="!currentConcept.data.definition">(mangler)</em>
-		</div>
+		</p>
 
-		<div ng-show="currentConcept.data.prefLabel.la" style="padding-bottom: .4em;">
+		<p ng-show="currentConcept.data.prefLabel.la && currentConcept.data.prefLabel.la.length && currentConcept.data.prefLabel.la[0].value.length">
 			Vitenskapelig navn: <em>{{currentConcept.data.prefLabel.la[0].value}}</em>
-		</div>
+		</p>
 
 		<div style="display:flex;" class="terms">
 			<div ng-repeat="lang in ['nb','en']">

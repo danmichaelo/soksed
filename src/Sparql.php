@@ -133,6 +133,8 @@ class Sparql extends Base
 		$filterQueries = [];
 		$parameters = [];
 		$graph = null;
+		$conceptTypes = ['ubo:Topic', 'ubo:Place', 'ubo:Time'];
+
 		if (!empty($filters)) {
 			$filters = explode(',', $filters);
 
@@ -168,6 +170,10 @@ class Sparql extends Base
 					$parameters["lang$n"] = $langcode;
 					$filterQuery = 'GRAPH ' . ($graph ?: "?graph$n") . ' { ' . $filterQuery . '}';
 					$filterQueries[] = 'FILTER ' . $op . ' { ' . $filterQuery . '}';
+
+
+				} elseif (preg_match('/^type:([a-z]+)/i', $filter, $m)) {
+					$conceptTypes = ['ubo:' . ucfirst($m[1])];
 
 				} elseif (preg_match('/^has:unverified/', $filter, $m)) {
 					$filterQuery = "
@@ -236,12 +242,13 @@ class Sparql extends Base
 
 		$whereQuery = ' WHERE {
 				GRAPH ?graph {
-					?concept a ubo:Topic ;
+					?concept a ?conceptType ;
 						dct:identifier ?id ;
 						xl:prefLabel ?labelNode .
 					?labelNode xl:literalForm ?label
 					FILTER(langMatches(lang(?label), "nb"))
 					FILTER NOT EXISTS { ?concept owl:deprecated true . }
+					VALUES ?conceptType { ' . implode(' ', $conceptTypes) . ' }
 				}
 				' . implode("\n", $filterQueries) . '
 			}';

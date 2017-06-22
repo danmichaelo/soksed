@@ -173,7 +173,24 @@ class Sparql extends Base
 
 
 				} elseif (preg_match('/^type:([a-z]+)/i', $filter, $m)) {
-					$conceptTypes = ['ubo:' . ucfirst($m[1])];
+                    $conceptTypes = ['ubo:' . ucfirst($m[1])];
+
+				} elseif (preg_match('/^cat:([a-zA-Z]+)/i', $filter, $m)) {
+                    $cat = ucfirst($m[1]);
+
+                    $filterQuery = "
+						?concept skos:member ?catNode$n . 
+					";
+                    $filterQuery = 'GRAPH ' . ($graph ?: "?graph$n") . ' { ' . $filterQuery . '}';
+                    $filterQueries[] = $filterQuery ;
+
+                    $filterQuery = "
+						?catNode$n rdfs:label ?catLabel$n .
+						FILTER(STR(?catLabel$n) = \"%cat$n%\")
+					";
+					$parameters["cat$n"] = $cat;
+                    $filterQuery = 'GRAPH ' . ($graph ?: "?graphX$n") . ' { ' . $filterQuery . '}';
+					$filterQueries[] = $filterQuery ;
 
 				} elseif (preg_match('/^has:unverified/', $filter, $m)) {
 					$filterQuery = "

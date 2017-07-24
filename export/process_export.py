@@ -7,6 +7,8 @@ import sqlite3
 from rdflib import Graph, Literal
 from rdflib.namespace import SKOS, Namespace
 import pandas as pd
+import plotly.plotly as py
+import plotly.graph_objs as go
 
 
 XL = Namespace('http://www.w3.org/2008/05/skos-xl#')
@@ -61,6 +63,21 @@ WHERE {
 }
 """)
 
+metrics['wikidata_mappings'] = get_single_value("""
+SELECT
+  (COUNT(DISTINCT ?item) as ?count)
+WHERE {
+  ?item ubo:wikidataItem ?wd .
+}
+""")
+
+metrics['categorized'] = get_single_value("""
+SELECT
+  (COUNT(DISTINCT ?item) as ?count)
+WHERE {
+  ?item skos:member ?cat .
+}
+""")
 
 db = sqlite3.connect('stats.db')
 cur = db.cursor()
@@ -82,7 +99,7 @@ for row in cur:
 
 df = pd.DataFrame.from_dict(rows, orient='index')
 df.index.name = 'date'
-df.to_csv('stats.csv')
+df.to_csv('stats.csv')  # , na_rep='0')
 
 # Query for generating SKOS from SKOS-XL
 q = """

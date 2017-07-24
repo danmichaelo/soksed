@@ -133,6 +133,7 @@ fi
 
 echo "Processing"
 try python process_export.py
+try python plot.py
 
 mv -f current.ttl prev.ttl
 
@@ -146,7 +147,7 @@ git config user.email "danmichaelo+ubobot@gmail.com"
 
 #try git reset --hard origin/master
 
-for file in data-skosxl.ttl stats.csv sonja.txt; do
+for file in data-skosxl.ttl stats.csv sonja.txt terms.png concepts.png; do
 	mv -f "../$file" "./"
 	git add "$file"
 done

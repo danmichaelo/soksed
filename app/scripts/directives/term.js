@@ -35,7 +35,7 @@ angular.module('app.directives.term', ['app.services.state', 'app.services.backe
           //scope.$parent.items.push({value:''});
         }
         if (evt.keyCode === 40 || evt.keyCode === 38) {
-          var $term = $(evt.target).parent();
+          var $term = $(evt.target).parent().parent();
           var $terms = $term.parent().children('term');
           var $next;
 

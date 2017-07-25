@@ -10,8 +10,10 @@ angular.module('app.directives.term', ['app.services.state', 'app.services.backe
     transclude: true,
     templateUrl: '/partials/term.html',
     replace: false,
-    scope: { data: '=', originalData: '=', readonly: '=' },
-
+    scope: {
+      data: '=', originalData: '=', readonly: '=',
+      onEnterPress: '&' // bind method to directive scope
+    },
     link: function(scope, element, attrs) {
       // console.log(element);
       // console.log(attrs);
@@ -33,6 +35,9 @@ angular.module('app.directives.term', ['app.services.state', 'app.services.backe
         // console.log(this);
         if (evt.keyCode === 13) { // Enter
           //scope.$parent.items.push({value:''});
+          if (scope.onEnterPress) {
+            scope.onEnterPress();
+          }
         }
         if (evt.keyCode === 40 || evt.keyCode === 38) {
           var $term = $(evt.target).parent().parent();

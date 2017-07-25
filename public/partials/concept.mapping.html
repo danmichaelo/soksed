@@ -55,6 +55,7 @@
 
 				<term ng-repeat="(index,label) in currentConcept.data.prefLabel[lang]"
 				      readonly="lang=='nb'"
+				      on-enter-press="store()"
 				      data="label"
 				      original-data="currentConcept.originalData.prefLabel[lang][index]"
 				      class="prefLabel">
@@ -69,6 +70,7 @@
 
 				<term ng-repeat="(index,label) in currentConcept.data.altLabel[lang]"
 					  readonly="lang=='nb'"
+				      on-enter-press="store()"
 				      data="label"
 				      original-data="currentConcept.originalData.altLabel[lang][index]"
 				      class="altLabel">

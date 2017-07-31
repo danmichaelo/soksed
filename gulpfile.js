@@ -83,7 +83,7 @@ gulp.task('deps', function() {
 /* Watch Task
 ------------------------------------- */
 
-gulp.task('watch', function() {
+gulp.task('watch', ['build'], function() {
   livereload.listen({
     basePath: path.join(__dirname, 'public'),
   });
@@ -95,9 +95,12 @@ gulp.task('watch', function() {
   });
 });
 
+/* Build Task
+------------------------------------- */
+
+gulp.task('build', ['deps', 'scripts', 'sass']);
+
 /* Default Task
 ------------------------------------- */
 
-gulp.task('default', ['deps', 'scripts', 'sass', 'watch'], function() {
-
-});
+gulp.task('default', ['build']);

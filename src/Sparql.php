@@ -29,6 +29,7 @@ class Sparql extends Base
 	// Fields to be transformed from DateTimes to strings
 	protected $dateFields = array('created', 'modified', 'proofread');
 	protected $simpleFields = array('libCode');
+	protected $simpleSingleFields = array('locked');
 
 	protected $logger;
 	protected $client;
@@ -334,7 +335,8 @@ class Sparql extends Base
 			'altLabel' => [],
 			'wikidataItem' => [],
 			'libCode' => [],
-			'member' => [],
+            'member' => [],
+            'locked' => false,
 		];
 		$labels = ['prefLabel' => [], 'altLabel' => [], 'hiddenLabel' => []];
 		foreach ($result as $row) {
@@ -347,6 +349,8 @@ class Sparql extends Base
 						$xld[$prop][] = $row->value->getValue();
 					} else if (in_array($prop, $this->simpleFields)) {
 						$xld[$prop][] = $row->value->getValue();
+					} else if (in_array($prop, $this->simpleSingleFields)) {
+						$xld[$prop] = $row->value->getValue();
 					} else {
 						$xld[$prop][] = [
 							'value' => $row->value->getValue(),

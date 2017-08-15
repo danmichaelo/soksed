@@ -90,7 +90,7 @@ layout = go.Layout(title='Prosjekt Kinderegg: Terms translated',
 fig = go.Figure(data=data, layout=layout)
 
 py.plot(fig, filename='kinderegg_terms_translated', auto_open=False)
-py.image.save_as(fig,'prosjekt-kinderegg/terms_translated.png', scale=1.5)
+py.image.save_as(fig,'terms_translated.png', scale=1.5)
 
 # -----------------------------------------------------------------------------------------------
 
@@ -140,7 +140,7 @@ layout = go.Layout(title='Prosjekt Kinderegg: Terms processed',
 fig = go.Figure(data=data, layout=layout)
 
 py.plot(fig, filename='kinderegg_terms', auto_open=False)
-py.image.save_as(fig,'prosjekt-kinderegg/terms.png', scale=1.5)
+py.image.save_as(fig,'terms.png', scale=1.5)
 
 # -----------------------------------------------------------------------------------------------
 
@@ -205,5 +205,5 @@ layout = go.Layout(title='Prosjekt Kinderegg: Concepts processed',
 fig = go.Figure(data=data, layout=layout)
 
 py.plot(fig, filename='kinderegg_concepts', auto_open=False)
-py.image.save_as(fig,'prosjekt-kinderegg/concepts.png', scale=1.5)
+py.image.save_as(fig,'concepts.png', scale=1.5)
 

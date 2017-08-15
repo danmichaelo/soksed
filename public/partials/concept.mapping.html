@@ -48,13 +48,20 @@
 			Vitenskapelig navn: <em>{{currentConcept.data.prefLabel.la[0].value}}</em>
 		</p>
 
+        <div ng-if="currentConcept.data.locked" style="background: #FFDC00; padding:10px;">
+            <i class="fa fa-lock" aria-hidden="true"></i>
+            Termene under er låst fordi de har blitt importert til Sonja.
+            Endringer kan foreslås på GitHub eller gjøres i Sonja.
+            Mappinger og kategorier kan fortsatt redigeres her i Soksed.
+        </div ng-if>
+
 		<div style="display:flex;" class="terms">
 			<div ng-repeat="lang in ['nb','en']">
 
 				<div style="font-weight:bold;">{{ lang }}:</div>
 
 				<term ng-repeat="(index,label) in currentConcept.data.prefLabel[lang]"
-				      readonly="lang=='nb'"
+				      readonly="lang=='nb' || currentConcept.data.locked"
 				      on-enter-press="store()"
 				      data="label"
 				      original-data="currentConcept.originalData.prefLabel[lang][index]"
@@ -69,7 +76,7 @@
 				</term>
 
 				<term ng-repeat="(index,label) in currentConcept.data.altLabel[lang]"
-					  readonly="lang=='nb'"
+					  readonly="lang=='nb' || currentConcept.data.locked"
 				      on-enter-press="store()"
 				      data="label"
 				      original-data="currentConcept.originalData.altLabel[lang][index]"

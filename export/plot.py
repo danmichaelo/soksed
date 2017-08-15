@@ -101,7 +101,7 @@ data = [
                mode='lines',
                line={
                   'shape': 'hv',
-                  'width': 2,
+                  'width': 1.5,
                   'color': (cs[0]),
               }),
     go.Scatter(x=df['date'],
@@ -110,7 +110,7 @@ data = [
                mode='lines',
                line={
                   'shape': 'hv',
-                  'width': 2,
+                  'width': 1.5,
                   'color': (cs2[0]),
               }),
     add_lin('total_terms', 14, cs[1]),
@@ -118,7 +118,7 @@ data = [
     add_lin('total_terms', 120, cs[3]),
 ]
 
-layout = go.Layout(title='Prosjekt Kinderegg: Terms',
+layout = go.Layout(title='Prosjekt Kinderegg: Terms processed',
                    showlegend=True,
                    font=dict(size=18, color='#7f7f7f'),
                    xaxis={
@@ -151,26 +151,8 @@ data = [
                mode='lines',
                line={
                   'shape': 'hv',
-                  'width': 2,
+                  'width': 1.5,
                   'color': (cs[0]),
-              }),
-    go.Scatter(x=df['date'],
-               y=df['proofread_concepts'],
-               name='Concepts proofread',
-               mode='lines',
-               line={
-                  'shape': 'hv',
-                  'width': 2,
-                  'color': (cs[1]),
-              }),
-    go.Scatter(x=df['date'],
-               y=df['wikidata_mappings'],
-               name='Wikidata mappings',
-               mode='lines',
-               line={
-                  'shape': 'hv',
-                  'width': 2,
-                  'color': (cs[2]),
               }),
     go.Scatter(x=df['date'],
                y=df['categorized'],
@@ -178,8 +160,26 @@ data = [
                mode='lines',
                line={
                   'shape': 'hv',
-                  'width': 2,
+                  'width': 1.5,
                   'color': (cs[3]),
+              }),
+    go.Scatter(x=df['date'],
+               y=df['wikidata_mappings'],
+               name='Wikidata mappings',
+               mode='lines',
+               line={
+                  'shape': 'hv',
+                  'width': 1.5,
+                  'color': (cs[2]),
+              }),
+    go.Scatter(x=df['date'],
+               y=df['proofread_concepts'],
+               name='Concepts proofread',
+               mode='lines',
+               line={
+                  'shape': 'hv',
+                  'width': 1.5,
+                  'color': (cs2[0]),
               }),
 ]
 

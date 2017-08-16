@@ -91,7 +91,7 @@ fi
 
 echo "Get data from Fuseki"
 
-try curl -s http://localhost:3030/ds/query --data-urlencode "query@-" << EOF >| current.ttl
+try curl --fail -s http://localhost:3030/ds/query --data-urlencode "query@-" << EOF >| current.ttl
 
 PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
 PREFIX xl: <http://www.w3.org/2008/05/skos-xl#>
@@ -123,7 +123,7 @@ EOF
 
 # Verified and not yet locked:
 
-try curl -s http://localhost:3030/ds/query --data-urlencode "query@-" << EOF >| current_verified.ttl
+try curl --fail -s http://localhost:3030/ds/query --data-urlencode "query@-" << EOF >| current_verified.ttl
 PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
 PREFIX xl: <http://www.w3.org/2008/05/skos-xl#>
 PREFIX uo: <http://trans.biblionaut.net/onto/user#>
@@ -133,7 +133,7 @@ CONSTRUCT
 {
   ?concept ?skosProp ?labelValue .
   ?concept skos:closeMatch ?item .
-  ?concept skos:member ?cat .
+  ?cat skos:member ?member .
 }
 WHERE
 {
@@ -183,19 +183,26 @@ WHERE
 EOF
 
 
-try curl -s http://localhost:3030/ds/query --data-urlencode "query@-" << EOF >| categories_and_mappings.ttl
+try curl --fail -s http://localhost:3030/ds/query --data-urlencode "query@-" << EOF >| categories_and_mappings.ttl
 PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
 PREFIX xl: <http://www.w3.org/2008/05/skos-xl#>
 PREFIX uo: <http://trans.biblionaut.net/onto/user#>
 PREFIX ubo: <http://data.ub.uio.no/onto#>
+PREFIX uoc: <http://trans.biblionaut.net/class#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX real: <http://data.ub.uio.no/realfagstermer/>
+PREFIX wd: <http://www.wikidata.org/entity/>
 
 CONSTRUCT
 {
   ?concept skos:closeMatch ?item .
-  ?concept skos:member ?cat .
+  ?cat skos:member ?concept .
+  ?cat a uoc:Category .
+  ?cat rdfs:label ?catLabel .
 }
 WHERE
 {
+  {
   GRAPH <http://trans.biblionaut.net/graph/trans2>
   {
       {
@@ -205,6 +212,12 @@ WHERE
       {
         ?concept skos:member ?cat  .
       }
+  }
+  }
+  UNION
+  {
+        ?cat a uoc:Category ;
+            rdfs:label ?catLabel .
   }
 }
 

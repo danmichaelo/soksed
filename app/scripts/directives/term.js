@@ -8,6 +8,7 @@ angular.module('app.directives.term', ['app.services.state', 'app.services.backe
 
     restrict : 'E',  // element names only
     transclude: true,
+    priority: 1, // Priority lower than 600 to execute after ng-if
     templateUrl: '/partials/term.html',
     replace: false,
     scope: {

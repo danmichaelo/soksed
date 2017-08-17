@@ -65,6 +65,7 @@
 				<div style="font-weight:bold;">{{ lang }}:</div>
 
 				<term ng-repeat="(index,label) in currentConcept.data.prefLabel[lang]"
+				      ng-if="!currentConcept.data.locked || label.graph == 'http://trans.biblionaut.net/graph/real'"
 				      readonly="lang=='nb' || currentConcept.data.locked"
 				      on-enter-press="store()"
 				      data="label"
@@ -80,6 +81,7 @@
 				</term>
 
 				<term ng-repeat="(index,label) in currentConcept.data.altLabel[lang]"
+				      ng-if="!currentConcept.data.locked || label.graph == 'http://trans.biblionaut.net/graph/real'"
 					  readonly="lang=='nb' || currentConcept.data.locked"
 				      on-enter-press="store()"
 				      data="label"

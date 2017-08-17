@@ -13,8 +13,8 @@
 			<a href="https://docs.google.com/document/d/1LdbfXSOSQ4Dfum25-JGRMGRQxBordqmzL52GbTwRpZo/edit?usp=sharing" target="_blank">Hjelp</a>
 		</p>
 
-		<div ng-if="currentConcept.data.deprecated" style="background: #FF4136; color: white; font-weight: bold; padding:10px;">
-			OBS: Dette begrepet er tatt ut av bruk.
+		<div ng-if="currentConcept.data.deprecated" style="border-radius: 3px; background: #FF4136; color: white; font-weight: bold; padding:10px;">
+			Dette begrepet er tatt ut av bruk.
 		</div>
 
 		<h3>Kategorisering</h3>
@@ -52,7 +52,7 @@
 			Vitenskapelig navn: <em>{{currentConcept.data.prefLabel.la[0].value}}</em>
 		</p>
 
-        <div ng-if="currentConcept.data.locked" style="background: #FFDC00; padding:10px;">
+        <div ng-if="currentConcept.data.locked" style="border-radius: 3px; background: #FFDC00; padding:10px;">
             <i class="fa fa-lock" aria-hidden="true"></i>
             Termene under er låst fordi de har blitt importert til Sonja.
             Endringer kan foreslås på GitHub eller gjøres i Sonja.

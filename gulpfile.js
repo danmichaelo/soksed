@@ -9,8 +9,8 @@ var gulp        = require('gulp'),
     concat      = require('gulp-concat'),
     rename      = require('gulp-rename'),
     jshint      = require('gulp-jshint'),
-    path        = require('path');
-
+    path        = require('path'),
+    templateCache = require('gulp-angular-templatecache');
 
 
 /* Paths
@@ -41,11 +41,24 @@ gulp.task('sass', function() {
 
 });
 
+/* Templates
+------------------------------------- */
+
+gulp.task('templates', function () {
+  return gulp.src('public/partials/**/*.html')
+    .pipe(templateCache({standalone: true}))
+    .pipe(gulp.dest('public/build'));
+});
+
 /* Concatenate & Minify JS
 ------------------------------------- */
 
-gulp.task('scripts', ['lint'], function() {
-  return gulp.src(['app/scripts/*.js', 'app/scripts/*/*.js'])
+gulp.task('scripts', ['lint', 'templates'], function() {
+  return gulp.src([
+          'public/build/templates.js',
+          'app/scripts/*.js',
+          'app/scripts/*/*.js',
+    ])
     .pipe(sourcemaps.init())
     .pipe(concat('app.js'))
     .pipe(gulp.dest('public/build'))

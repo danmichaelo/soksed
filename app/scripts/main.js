@@ -6,6 +6,7 @@ angular.module('app', ['ngSanitize',
                        'ui.router',
                        '720kb.tooltips',
                        'angucomplete-alt',
+                       'templates',
 
                        'app.config',
                        'app.controllers.header',
@@ -43,16 +44,14 @@ angular.module('app', ['ngSanitize',
     '^REAL([0-9]+)$': 'http://data.ub.uio.no/realfagstermer/c'
   };
 
-  var tplVersion = '?ver=2';  // Increase to purge cache
-
   $stateProvider
     .state('home', {
       url: '/',
-      templateUrl: 'partials/home.html' + tplVersion
+      templateUrl: 'home.html',
     })
     .state('concepts', {
       url: '/concepts?q',
-      templateUrl: 'partials/concepts.html' + tplVersion,
+      templateUrl: 'concepts.html',
       needsPermission: 'edit',
       controller: 'ConceptsController'
     })
@@ -60,7 +59,7 @@ angular.module('app', ['ngSanitize',
       needsPermission: 'edit',
       url: '/:id?view',
       templateUrl: function ($stateParams) {
-        return '/partials/concept.' + ($stateParams.view ? $stateParams.view : defaultView) + '.html' + tplVersion;
+        return 'concept.' + ($stateParams.view ? $stateParams.view : defaultView) + '.html';
       },
       controller: 'ConceptController',
       resolve: {
@@ -96,7 +95,7 @@ angular.module('app', ['ngSanitize',
     })
     .state('events', {
       url: '/events',
-      templateUrl: 'partials/events.html' + tplVersion,
+      templateUrl: 'events.html',
       controller: 'EventsController',
       needsPermission: 'edit',
       resolve: {
@@ -107,7 +106,7 @@ angular.module('app', ['ngSanitize',
     })
     .state('users', {
       url: '/users',
-      templateUrl: 'partials/users.html' + tplVersion,
+      templateUrl: 'users.html',
       controller: 'UsersController',
       needsPermission: 'edit',
       resolve: {
@@ -118,7 +117,7 @@ angular.module('app', ['ngSanitize',
     })
     .state('user', {
       url: '/users/:id',
-      templateUrl: 'partials/user.html' + tplVersion,
+      templateUrl: 'user.html',
       controller: 'UserController',
       needsPermission: 'view',
       resolve: {
@@ -129,7 +128,7 @@ angular.module('app', ['ngSanitize',
     })
     .state('auth', {
       url: '/auth?returnTo',
-      templateUrl: 'partials/auth.html' + tplVersion,
+      templateUrl: 'auth.html',
       controller: 'AuthController',
       resolve: {
         returnTo: ['$stateParams', function($stateParams) {
@@ -139,7 +138,7 @@ angular.module('app', ['ngSanitize',
     })
     .state('forbidden', {
       url: '/forbidden',
-      templateUrl: 'partials/forbidden.html' + tplVersion,
+      templateUrl: 'forbidden.html',
     }) ;
 
   // use the HTML5 History API

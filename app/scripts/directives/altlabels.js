@@ -7,7 +7,7 @@ angular.module('app.directives.altlabels', ['app.services.state'])
   return {
 
     restrict : 'E',  // element names only
-    templateUrl: '/partials/altlabels.html',
+    templateUrl: 'altlabels.html',
     replace: false,
     scope: { items: '=', originalItems: '=', lang: '@', disabled: '@' },
 

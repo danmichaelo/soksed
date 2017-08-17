@@ -7,7 +7,7 @@ angular.module('app.directives.conceptnav', ['app.config', 'app.services.concept
   return {
 
     restrict : 'E',  // element names only
-    templateUrl: '/partials/conceptnav.html',
+    templateUrl: 'conceptnav.html',
     replace: false,
     scope: {
       'filterobj': '='  // Two-way data binding

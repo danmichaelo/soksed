@@ -29,7 +29,7 @@ class Sparql extends Base
 	// Fields to be transformed from DateTimes to strings
 	protected $dateFields = array('created', 'modified', 'proofread');
 	protected $simpleFields = array('libCode');
-	protected $simpleSingleFields = array('locked');
+	protected $simpleSingleFields = array('deprecated', 'locked');
 
 	protected $logger;
 	protected $client;
@@ -337,6 +337,7 @@ class Sparql extends Base
 			'libCode' => [],
             'member' => [],
             'locked' => false,
+            'deprecated' => false,
 		];
 		$labels = ['prefLabel' => [], 'altLabel' => [], 'hiddenLabel' => []];
 		foreach ($result as $row) {

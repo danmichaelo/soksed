@@ -106,6 +106,7 @@ class Sparql extends Base
 	protected function query($query, $parameters = [])
 	{
 		$query = $this->bind($query, $parameters);
+
 		# print $query;
 		try {
 			return $this->client->query($query);
@@ -137,10 +138,11 @@ class Sparql extends Base
 		$conceptTypes = ['ubo:Topic', 'ubo:Place', 'ubo:Time'];
 
 		if (!empty($filters)) {
-			$filters = explode(',', $filters);
+			$filters = mb_split('(,|AND)', $filters);
 
 			for ($i=count($filters)-1; $i >= 0; $i--) { 
-				if (preg_match('/^graph:([a-z]+)/', $filters[$i], $m)) {
+				$filter = trim($filters[$i]);
+				if (preg_match('/^graph:([a-z]+)/', $filter, $m)) {
 					$graph = $m[1];
 					array_splice($filters, $i, 1);
 				}
@@ -160,6 +162,8 @@ class Sparql extends Base
 				if (empty($filter)) continue;
 				$n++;
 
+				$filter = trim($filter);
+
 				if (preg_match('/^(-)?exists:prefLabel@([a-z]{2,3})/', $filter, $m)) {
 					$op = ($m[1] == '-') ? 'NOT EXISTS' : 'EXISTS';
 					$langcode = $m[2];
@@ -176,18 +180,19 @@ class Sparql extends Base
 				} elseif (preg_match('/^type:([a-z]+)/i', $filter, $m)) {
                     $conceptTypes = ['ubo:' . ucfirst($m[1])];
 
-				} elseif (preg_match('/^cat:([a-zA-Z]+)/i', $filter, $m)) {
-                    $cat = ucfirst($m[1]);
+				} elseif (preg_match('/^(-)?cat:([a-zA-Z]+)/i', $filter, $m)) {
+					$op = ($m[1] == '-') ? 'NOT EXISTS' : 'EXISTS';
+
+                    $cat = ucfirst($m[2]);
 
                     $filterQuery = "
 						?concept skos:member ?catNode$n . 
 					";
                     $filterQuery = 'GRAPH ' . ($graph ?: "?graph$n") . ' { ' . $filterQuery . '}';
-                    $filterQueries[] = $filterQuery ;
+					$filterQueries[] = 'FILTER ' . $op . ' { ' . $filterQuery . '}';
 
                     $filterQuery = "
-						?catNode$n rdfs:label ?catLabel$n .
-						FILTER(STR(?catLabel$n) = \"%cat$n%\")
+						?catNode$n rdfs:label \"%cat$n%\"@nb
 					";
 					$parameters["cat$n"] = $cat;
                     $filterQuery = 'GRAPH ' . ($graph ?: "?graphX$n") . ' { ' . $filterQuery . '}';
@@ -209,12 +214,15 @@ class Sparql extends Base
 					$filterQuery = 'GRAPH ' . ($graph ?: "?graph$n") . ' { ' . $filterQuery . '}';
 					$filterQueries[] = 'FILTER EXISTS { ' . $filterQuery . '}';
 
-				} elseif (preg_match('/^has:wikidataItem/', $filter, $m)) {
+				} elseif (preg_match('/^(-)?has:(wikidataItem)/', $filter, $m)) {
+					$op = ($m[1] == '-') ? 'NOT EXISTS' : 'EXISTS';
+
 					$filterQuery = "
 						?concept ubo:wikidataItem ?wd .
 					";
 					$filterQuery = 'GRAPH ' . ($graph ?: "?graph$n") . ' { ' . $filterQuery . '}';
-					$filterQueries[] = 'FILTER EXISTS { ' . $filterQuery . '}';
+
+					$filterQueries[] = 'FILTER ' . $op . ' { ' . $filterQuery . '}';
 
 				} elseif (preg_match('/^(.*)\*$/', $filter, $m)) {
 					// $filterQuery = "
@@ -299,6 +307,10 @@ class Sparql extends Base
 			'cursor' => $cursor,
 			'count' => $count,
 			'concepts' => $out,
+			'query' => [
+				'query' => str_replace(["\n", "\t"], [" ", " "], $selectQuery),
+				'parameters' => $parameters,
+			],
 			'dt' => microtime(true) - $t0,
 		];
 	}

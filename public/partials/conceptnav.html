@@ -25,7 +25,18 @@
 			</div>
 
 			<button type="submit" ng-disabled="busy">Vis</button>
+			<a href="#" ng-click="showHelp = !showHelp">Søketips</a>
 		</form>
+
+		<div ng-show="showHelp">
+			<code>type:Place</code> : Stedstermer<br>
+			<code>has:wikidataItem</code> : Har Wikidata-mapping<br>
+			<code>-has:wikidataItem</code> : Har ikke Wikidata-mapping<br>
+			<code>cat:Biologi</code> : I kategorien «Biologi»<br>
+			<code>-cat:Biologi</code> : Ikke i kategorien «Biologi»<br>
+			Flere utsagn kan kombineres med <code>AND</code>. Eks:<br>
+			<code>exists:prefLabel@en AND -has:wikidataItem AND -cat:Biologi		</code>
+		</div>
 
 	</div>
 

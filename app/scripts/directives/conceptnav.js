@@ -20,6 +20,7 @@ angular.module('app.directives.conceptnav', ['app.config', 'app.services.concept
       scope.filters = config.filters;
       scope.concepts = [];
       scope.busy = true;
+      scope.showHelp = false;
       scope.totalCount = Concepts.count;
 
       hotkeys.bindTo(scope)

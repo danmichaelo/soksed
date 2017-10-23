@@ -157,7 +157,7 @@ angular.module('app', ['ngSanitize',
         if (Auth.isLoggedIn()) {
           $state.go('forbidden');
         } else {
-          $state.go('auth', { returnTo: url });
+          window.location.href = '/callback.php?login&returnTo=' + encodeURIComponent(url);
         }
       }
     });

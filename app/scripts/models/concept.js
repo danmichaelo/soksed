@@ -164,13 +164,13 @@ angular.module('app.services.concept', ['app.config', 'app.services.backend', 'a
       });
     },
 
-    loadCandidate: function(term) {
+    loadCandidate: function(terms) {
       var that = this, fn;
       that.wpWorking = true;
 
-      console.log('[loadCandidate] Looking up: ', term);
+      console.log('[loadCandidate] Looking up: ', terms);
 
-      Backend.getWikipedia(term).then(function(data) {
+      Backend.getWikipedia(terms[0]).then(function(data) {
         if (data.id) {
           console.log('[loadCandidate] Match at Wikipedia');
           if (!data.extract && data.descriptions.en) {
@@ -186,19 +186,25 @@ angular.module('app.services.concept', ['app.config', 'app.services.backend', 'a
         }
         that.wpWorking = false;
       }, function() {
-        alert('FAIL!');
+        alert('Failed to load Wikidata candidate. Temporary server issues?');
         that.wpWorking = false;
       });
 
-      Backend.searchWikidata(term).then(function(data) {
-        if (data.results.length) {
-          console.log('[loadCandidate] Match at Wikidata');
-          that.loadCandidateByUri(data.results[0].concepturi, false);
-        }
-      }, function() {
-        // alert('FAIL!');
-        // that.wpWorking = false;
-      });
+      function checkNextCandidate() {
+        var term = terms.shift();
+        Backend.searchWikidata(term).then(function(data) {
+          if (data.results.length) {
+            console.log('[loadCandidate] Match at Wikidata');
+            that.loadCandidateByUri(data.results[0].concepturi, false);
+            if (data.results.length > 1) {
+              that.loadCandidateByUri(data.results[1].concepturi, false);
+            }
+          } else if (terms.length) {
+            checkNextCandidate();
+          }
+        });
+      }
+      checkNextCandidate();
     },
 
     /**
@@ -303,7 +309,15 @@ angular.module('app.services.concept', ['app.config', 'app.services.backend', 'a
           if (that.data.wikidataItem && that.data.wikidataItem.length) {
             that.loadCandidateByUri(that.data.wikidataItem[0], true);
           } else {
-            that.loadCandidate(that.data.prefLabel.nb[0].value);
+            var terms = [that.data.prefLabel.nb[0].value];
+            if (that.data.prefLabel.en.length && that.data.prefLabel.en[0].value) {
+              var x = that.data.prefLabel.en[0].value;
+              // if (x[x.length - 1] == 's') {
+              //   x = x.substr(0, x.length - 1);
+              // }
+              terms.push(x);
+            }
+            that.loadCandidate(terms);
           }
 
 

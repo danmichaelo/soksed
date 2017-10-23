@@ -90,7 +90,7 @@ class MediaWikiApi extends Base
 	public function getFromUri($uri)
 	{
 		$uri = explode('/', $uri);
-		$q = array_pop($uri);
+        $q = array_pop($uri);
 
 		$o = [];
 		$this->appendEntity($o, $q);
@@ -98,7 +98,7 @@ class MediaWikiApi extends Base
 			$this->appendExtract($o, $o['sitelinks']['nowiki']['title'], 'no.wikipedia.org');
 		} else if (isset($o['sitelinks']) && isset($o['sitelinks']['enwiki'])) {
 			$this->appendExtract($o, $o['sitelinks']['enwiki']['title'], 'en.wikipedia.org');
-		}
+        }
 
 		return $o;
 	}
@@ -108,8 +108,9 @@ class MediaWikiApi extends Base
 		$request = \Requests::get($this->getUrl(array(
 			'action' => 'wbgetentities',
 			'ids' => $q,
-		), 'wikidata.org'));
-		$data =  json_decode($request->body, true);
+        ), 'wikidata.org'));
+
+        $data =  json_decode($request->body, true);
 		foreach ($data['entities'] as $id => $d) {
 			return $d;
 		}
@@ -117,14 +118,14 @@ class MediaWikiApi extends Base
 
 	public function appendEntity(&$o, $id)
 	{
-		$entity = $this->getEntity($id);
+        $entity = $this->getEntity($id);
 
-		if (!is_null($entity)) {
+        if (!is_null($entity)) {
 			$o['id'] = $id;
 			$o['uri'] = 'http://www.wikidata.org/entity/' . $id;
 			$o['descriptions'] = $entity['descriptions'];
 			$o['labels'] = $entity['labels'];
-			$o['sitelinks'] = $entity['sitelinks'];
+            $o['sitelinks'] = $entity['sitelinks'];
 		}
 	}
 
@@ -143,11 +144,13 @@ class MediaWikiApi extends Base
 		foreach ($data['query']['pages'] as $id => $d) {
 			if (isset($d['missing'])) {
 				return;
-			}
+            }
 			$o['title'] = $d['title'];
-			$o['extract'] = $d['extract'];
-			$o['id'] = $d['pageprops']['wikibase_item'];
-			$o['uri'] = 'http://www.wikidata.org/entity/' . $o['id'];
+            $o['extract'] = $d['extract'];
+            if (!isset($o['id'])) {
+			  $o['id'] = $d['pageprops']['wikibase_item'];
+			  $o['uri'] = 'http://www.wikidata.org/entity/' . $o['id'];
+            }
 			return;
 		}
 	}

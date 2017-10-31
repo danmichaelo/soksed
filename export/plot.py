@@ -207,3 +207,51 @@ fig = go.Figure(data=data, layout=layout)
 py.plot(fig, filename='kinderegg_concepts', auto_open=False)
 py.image.save_as(fig,'concepts.png', scale=1.5)
 
+# -----------------------------------------------------------------------------------------------
+
+tot_concepts = 10900. / 100.
+data = [
+    go.Scatter(x=df['date'],
+               y=df['total_concepts'] / tot_concepts,
+               name='Translation',
+               mode='lines',
+               line={
+                  'shape': 'hv',
+                  'width': 1.5,
+                  'color': cs[0],
+              }),
+    go.Scatter(x=df['date'],
+               y=df['proofread_concepts'] / tot_concepts,
+               name='Proofreading',
+               mode='lines',
+               line={
+                  'shape': 'hv',
+                  'width': 1.5,
+                  'color': cs2[0],
+              }),
+]
+
+layout = go.Layout(title='Prosjekt Kinderegg: % completed (approximate)',
+                   showlegend=True,
+                   font=dict(size=18, color='#7f7f7f'),
+                   xaxis={
+                       'showline': True,
+                       'fixedrange': True,
+                       'range': [df['date'].min(), df['date'].max() + timedelta(days=3)],
+                       'autotick': True,
+                       'ticks': 'outside',
+                   },
+                   yaxis={
+                       'showline': True,
+                       'fixedrange': True,
+                       'range': [0, 100.],
+                       'dtick': 10,
+                       'ticks': 'outside',
+                   },
+	           annotations=annotations)
+
+fig = go.Figure(data=data, layout=layout)
+
+py.plot(fig, filename='kinderegg_concepts_percentage', auto_open=False)
+py.image.save_as(fig,'concepts_percentage.png', scale=1.5)
+

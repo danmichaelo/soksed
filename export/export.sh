@@ -255,7 +255,7 @@ git config user.email "danmichaelo+ubobot@gmail.com"
 
 #try git reset --hard origin/master
 
-for file in data-skosxl.ttl stats.csv terms.png concepts.png sonja_todo.json categories_and_mappings.ttl; do
+for file in data-skosxl.ttl stats.csv terms.png concepts.png concepts_percentage.png sonja_todo.json categories_and_mappings.ttl; do
 	mv -f "../$file" "./"
 	git add "$file"
 done

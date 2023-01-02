@@ -19,7 +19,15 @@ angular.module('app.config', [])
       { value: '-exists:prefLabel@en', label: 'Mangler språk:engelsk' },
       { value: 'exists:prefLabel@la,-exists:prefLabel@en', label: 'Har latin, mangler engelsk', graphOption: true },
       { value: 'has:editorialNote', label: 'Har noter', graphOption: true },
-      { value: 'has:wikidataItem', label: 'Har wikidata-mapping', graphOption: true }
-     ],
+      { value: 'has:wikidataItem', label: 'Har wikidata-mapping', graphOption: true },
+    ],
+    sortOptions: [
+      { value: 'label:asc', label: 'A-Å' },
+      { value: 'label:desc', label: 'Å-A' },
+      { value: 'modified:asc', label: 'eldste' },
+      { value: 'modified:desc', label: 'nyeste (sist endret)' },
+      { value: 'upstream:asc', label: 'eldste oppstrøms' },
+      { value: 'upstream:desc', label: 'nyeste oppstrøms (sist endret)' },
+    ],
     languages: ['nb', 'nn', 'en', 'la', 'se']
   });

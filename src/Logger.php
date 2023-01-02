@@ -27,7 +27,7 @@ class Logger
 		// Set the format
 		$dateFormat = 'Y-m-d H:i:s';
 //		$output = '%datetime% ' . $host . ' soksed - - - %level_name%: %message%';
-		$output = '[%datetime% %level_name%] %message%\n';
+		$output = "[%datetime% %level_name%] %message%\n";
 		$formatter = new LineFormatter($output, $dateFormat);
 
 		// Setup the logger

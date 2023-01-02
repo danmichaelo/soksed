@@ -321,3 +321,10 @@ WHERE {
 }
 EOF
 ```
+
+
+If the lock status gets out of sync:
+
+```
+curl -s http://localhost:3030/ds/update --data-urlencode "update@-" < fix_lock.rq
+```

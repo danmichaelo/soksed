@@ -10,7 +10,8 @@ angular.module('app.directives.conceptnav', ['app.config', 'app.services.concept
     templateUrl: 'conceptnav.html',
     replace: false,
     scope: {
-      'filterobj': '='  // Two-way data binding
+      'filterobj': '=',  // Two-way data binding
+      'sortobj': '=',    // Two-way data binding
     },
 
     link: function(scope, element, attrs) {
@@ -18,6 +19,7 @@ angular.module('app.directives.conceptnav', ['app.config', 'app.services.concept
       // console.log(attrs);
       console.log('>>> Linking conceptnav');
       scope.filters = config.filters;
+      scope.sortOptions = config.sortOptions;
       scope.concepts = [];
       scope.busy = true;
       scope.showHelp = false;
@@ -40,6 +42,10 @@ angular.module('app.directives.conceptnav', ['app.config', 'app.services.concept
       scope.selectConcept = function() {
         // console.log(this.concept);
         Concepts.show(this.concept);
+      };
+
+      scope.checkScroll = function(x) {
+        console.log('next page', x);
       };
 
       scope.currentConcept = StateService.getConcept();
@@ -80,7 +86,10 @@ angular.module('app.directives.conceptnav', ['app.config', 'app.services.concept
         if (scope.graphOptionEnabled() && scope.filterobj.local) filterString.push('graph:local');
         console.log(filterString);
 
-        $state.go('concepts.concept', {q: filterString.join(',')});
+        $state.go('concepts.concept', {
+          q: filterString.join(','),
+          sort: scope.sortobj.value,
+        });
       };
 
       var q = [];
@@ -98,7 +107,7 @@ angular.module('app.directives.conceptnav', ['app.config', 'app.services.concept
       console.log(q);
       if (!Concepts.busy) {
         scope.busy = true;
-        Concepts.fetch(q).then(function(concepts) {
+        Concepts.fetch(q, scope.sortobj.value).then(function(concepts) {
           scope.concepts = concepts;
           scope.totalCount = Concepts.count;
           scope.busy = false;

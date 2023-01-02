@@ -16,7 +16,7 @@ angular.module('app', ['ngSanitize',
                        'app.controllers.concept',
                        'app.controllers.concepts',
                        'app.controllers.auth',
- 
+
                        'app.services.user',
                        'app.services.backend',
                        'app.services.auth',
@@ -25,7 +25,9 @@ angular.module('app', ['ngSanitize',
                        'app.services.state',
 
                        'app.directives.altlabels',
-                       'app.directives.conceptnav'])
+                       'app.directives.conceptnav',
+                       'app.directives.scroll',
+                       ])
 
 
 .config(['$stateProvider', '$urlRouterProvider', '$locationProvider', '$logProvider', 'hotkeysProvider', function($stateProvider, $urlRouterProvider, $locationProvider, $logProvider, hotkeysProvider) {
@@ -50,7 +52,7 @@ angular.module('app', ['ngSanitize',
       templateUrl: 'home.html',
     })
     .state('concepts', {
-      url: '/concepts?q',
+      url: '/concepts?q&sort',
       templateUrl: 'concepts.html',
       needsPermission: 'edit',
       controller: 'ConceptsController'

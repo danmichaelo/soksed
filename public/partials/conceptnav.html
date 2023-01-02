@@ -17,6 +17,11 @@
 
 			</div>
 
+			<div>
+				Sortering: <select ng-model="sortobj"
+				              ng-options="f.label for f in sortOptions track by f.value"></select>
+			</div>
+
 			<div style="float:right;">
 				<i class="fa fa-cog fa-spin" ng-show="busy"></i>
 				<span ng-show="!busy">
@@ -29,13 +34,33 @@
 		</form>
 
 		<div ng-show="showHelp">
-			<code>type:Place</code> : Stedstermer<br>
-			<code>has:wikidataItem</code> : Har Wikidata-mapping<br>
-			<code>-has:wikidataItem</code> : Har ikke Wikidata-mapping<br>
-			<code>cat:Biologi</code> : I kategorien «Biologi»<br>
-			<code>-cat:Biologi</code> : Ikke i kategorien «Biologi»<br>
-			Flere utsagn kan kombineres med <code>AND</code>. Eks:<br>
-			<code>exists:prefLabel@en AND -has:wikidataItem AND -cat:Biologi		</code>
+			<ul>
+				<li style="list-style-type: square; margin-left: 1em;">
+					Type: <code>type:Place</code>,
+					<code>type:Time</code> : Tidsperioder<br>
+					<code>type:GenreForm</code>
+				</li>
+				<li style="list-style-type: square; margin-left: 1em;">
+					WD: <code>has:wikidataItem</code> : Har Wikidata-mapping<br>
+					<code>-has:wikidataItem</code> : Har ikke Wikidata-mapping<br>
+				</li>
+				<li style="list-style-type: square; margin-left: 1em;">
+					Kategori: <code>cat:Biologi</code> : I kategorien «Biologi»<br>
+                    <code>-cat:Biologi</code> : Ikke i kategorien «Biologi»<br>
+					<code>-has:cat</code> : Ukategorisert<br>
+
+				</li>
+				<li style="list-style-type: square; margin-left: 1em;">
+					Samling: <code>coll:ni</code> : brukt på bøker fra informatikksamlingen<br>
+					<small>(ns: Generelt, na: Astro, nf: Fysikk, nb: Biologi, nc: Geo, ne: Farmasi,
+					 nk: Kjemi, ni: Informatikk, nm: Matematikk, ngh: Geo/naturhist., fa: FA-saml,
+					 ns: Fellesbibl., nq: Tøyen)</small>
+				</li>
+				<li style="list-style-type: square; margin-left: 1em;">
+					Kombinasjon: Flere utsagn kan kombineres med <code>AND</code>. Eks:<br>
+					<code>exists:prefLabel@en AND -has:wikidataItem AND -cat:Biologi		</code>
+				</li>
+			</ul>
 		</div>
 
 	</div>
@@ -43,15 +68,15 @@
 	<div ng-show="!busy && totalCount == 0">
 		<div style="padding: 1em; font-weight: 200; font-size: 130%; text-align:center;">
 			<span ng-show="!error">
-				Ingen begreper matcher søkekriteriene.			
+				Ingen begreper matcher søkekriteriene.
 			</span>
 			<span ng-show="error" style="color: red;">
-				{{ error }}			
+				{{ error }}
 			</span>
 		</div>
 	</div>
 
-	<div class="scrollerwrapper concepts" vs-repeat vs-autoresize>
+	<div class="scrollerwrapper concepts" vs-repeat vs-autoresize app-scroll="checkScroll">
 	  	<div ng-repeat="concept in concepts">
 			<a ui-sref='concepts.concept({ id: concept.id })'
 			   ng-class="{selected: concept.uri == currentConcept.uri }"

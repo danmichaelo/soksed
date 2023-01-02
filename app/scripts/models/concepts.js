@@ -26,7 +26,7 @@ angular.module('app.services.concepts', ['app.services.backend', 'app.services.c
 //    that.sort();
   });
 
-  this.fetch = function(filter) {
+  this.fetch = function(filter, orderBy) {
     if (that.busy) return;
     var deferred = $q.defer();
 
@@ -38,7 +38,7 @@ angular.module('app.services.concepts', ['app.services.backend', 'app.services.c
     console.log('[Concepts] fetchConcepts');
 
     that.busy = true;
-    Backend.getConcepts(that.cursor, filter).then(function(results) {
+    Backend.getConcepts(that.cursor, filter, orderBy).then(function(results) {
       that.busy = false;
       if (!results.concepts) {
         console.log('[Concepts] Fetch failed!');

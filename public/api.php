@@ -15,6 +15,9 @@ $error_handler->registerExceptionHandler();
 $error_handler->registerErrorHandler();
 $error_handler->registerShutdownFunction();
 
+header("Access-Control-Allow-Origin: http://ub-www01.uio.no");
+
+
 $sparql = new SparqlClient;
 $sparql->setLocalGraphUri($sparql->getUriBase() . '/graph/trans2');
 $auth = new Auth;
@@ -137,7 +140,8 @@ switch ($action) {
 
 		$concepts = $sparql->getConcepts(
 			intval(array_get($_GET, 'cursor', 0)),
-			array_get($_GET, 'filter')
+			array_get($_GET, 'filter'),
+			array_get($_GET, 'sort')
 		);
 
 		jsonOut($concepts);
@@ -196,6 +200,14 @@ switch ($action) {
 	case 'get_events':
 
 		jsonOut($sparql->getEvents());
+
+	case 'get_events_by_day':
+
+		jsonOut($sparql->getEventsByDayAndType());
+
+	case 'get_events_by_day_and_user':
+
+		jsonOut($sparql->getEventsByDayAndUser());
 
 	case 'get_stats':
 		if (!$auth->hasPermission('edit')) {

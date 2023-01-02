@@ -7,11 +7,11 @@
 		</span>
 		<span ng-show="!currentConcept">
 			&nbsp;
-		</span>	
+		</span>
 		<select ng-options="view.label for view in views" ng-model="selectedView" style="float:right;"></select>
 	</div>
 	<div class="padded" ui-view></div>
 </div>
 
 <!-- Concept list -->
-<conceptnav class="conceptnav" filterobj="filterobj" />
+<conceptnav class="conceptnav" filterobj="filterobj" sortobj="sortobj" />

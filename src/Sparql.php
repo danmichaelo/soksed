@@ -3,6 +3,7 @@
 use EasyRdf\RdfNamespace;
 use EasyRdf\Sparql\Client as SparqlClient;
 use EasyRdf\Graph;
+use EasyRdf\Http;
 use EasyRdf\Resource;
 use EasyRdf\Literal;
 use EasyRdf\Literal\DateTime as DateTimeLiteral;
@@ -50,7 +51,14 @@ class Sparql extends Base
 	protected $updateEndpoint = 'http://localhost:3030/ds/update';
 
 	public function __construct($logger=null)
-	{
+    {
+		$http = Http::getDefaultHttpClient();
+		$http->setConfig([
+			'maxredirects'    => 5,
+			'useragent'       => 'EasyRdf HTTP Client',
+			'timeout'         => 40,
+		]);
+ 
 		$this->logger = is_null($logger) ? new Logger : $logger;
 		$this->client = new SparqlClient($this->queryEndpoint);
 		$this->updateClient = new SparqlClient($this->updateEndpoint);
@@ -58,6 +66,7 @@ class Sparql extends Base
 		$this->localGraphUri = $this->uriBase . '/graph/trans';
 		$this->userGraphUri = $this->uriBase . '/graph/users';
 		$this->eventsGraphUri = $this->uriBase . '/graph/events';
+		RdfNamespace::set('xsd', 'http://www.w3.org/2001/XMLSchema#');
 		RdfNamespace::set('uo', $this->uriBase . '/onto/user#');
 		RdfNamespace::set('user', 'http://soksed.biblionaut.net/users/');
 		RdfNamespace::set('log', $this->uriBase .'/data/log/');
@@ -128,14 +137,15 @@ class Sparql extends Base
 		return $response->isSuccessful();
 	}
 
-	public function getConcepts($cursor, $filters)
+	public function getConcepts($cursor, $filters, $sort)
 	{
 		$limit = 1500;
 
 		$filterQueries = [];
 		$parameters = [];
 		$graph = null;
-		$conceptTypes = ['ubo:Topic', 'ubo:Place', 'ubo:Time'];
+		$conceptTypes = ['ubo:Topic', 'ubo:Place', 'ubo:Time', 'ubo:GenreForm'];
+		$parameters['localGraphUri'] = $this->localGraphUri;
 
 		if (!empty($filters)) {
 			$filters = mb_split('(,|AND)', $filters);
@@ -147,8 +157,6 @@ class Sparql extends Base
 					array_splice($filters, $i, 1);
 				}
 			}
-
-			$parameters['localGraphUri'] = $this->localGraphUri;
 
 			if ($graph == 'local') {
 				$graph = '<%localGraphUri%>';
@@ -168,7 +176,7 @@ class Sparql extends Base
 					$op = ($m[1] == '-') ? 'NOT EXISTS' : 'EXISTS';
 					$langcode = $m[2];
 					$filterQuery = "
-						?concept xl:prefLabel ?labelNode$n . 
+						?concept xl:prefLabel ?labelNode$n .
 						?labelNode$n xl:literalForm ?label$n .
 						FILTER(langMatches(lang(?label$n), \"%lang$n%\"))
 					";
@@ -180,13 +188,25 @@ class Sparql extends Base
 				} elseif (preg_match('/^type:([a-z]+)/i', $filter, $m)) {
                     $conceptTypes = ['ubo:' . ucfirst($m[1])];
 
+				} elseif (preg_match('/^(-)?coll:([a-zA-Z]+)/i', $filter, $m)) {
+					$op = ($m[1] == '-') ? 'NOT EXISTS' : 'EXISTS';
+
+                    $coll = strtolower($m[2]);
+
+                    $filterQuery = "
+						?concept ubo:libCode \"%coll$n%\" .
+					";
+					$parameters["coll$n"] = $coll;
+                    $filterQuery = 'GRAPH ' . ($graph ?: "?graph$n") . ' { ' . $filterQuery . '}';
+					$filterQueries[] = 'FILTER ' . $op . ' { ' . $filterQuery . '}';
+
 				} elseif (preg_match('/^(-)?cat:([a-zA-Z]+)/i', $filter, $m)) {
 					$op = ($m[1] == '-') ? 'NOT EXISTS' : 'EXISTS';
 
                     $cat = ucfirst($m[2]);
 
                     $filterQuery = "
-						?concept skos:member ?catNode$n . 
+						?concept skos:member ?catNode$n .
 					";
                     $filterQuery = 'GRAPH ' . ($graph ?: "?graph$n") . ' { ' . $filterQuery . '}';
 					$filterQueries[] = 'FILTER ' . $op . ' { ' . $filterQuery . '}';
@@ -222,6 +242,16 @@ class Sparql extends Base
 					";
 					$filterQuery = 'GRAPH ' . ($graph ?: "?graph$n") . ' { ' . $filterQuery . '}';
 
+                    $filterQueries[] = 'FILTER ' . $op . ' { ' . $filterQuery . '}';
+
+				} elseif (preg_match('/^(-)?has:(cat)/', $filter, $m)) {
+					$op = ($m[1] == '-') ? 'NOT EXISTS' : 'EXISTS';
+
+					$filterQuery = "
+						?concept skos:member ?someCat .
+					";
+					$filterQuery = 'GRAPH ' . ($graph ?: "?graph$n") . ' { ' . $filterQuery . '}';
+
 					$filterQueries[] = 'FILTER ' . $op . ' { ' . $filterQuery . '}';
 
 				} elseif (preg_match('/^(.*)\*$/', $filter, $m)) {
@@ -242,6 +272,9 @@ class Sparql extends Base
 					// $filterQuery = "
 					// 	FILTER(regex(str(?label), \"%regexp$n%\", \"i\"))
 					// ";
+
+					// Note: For some reason, (xl:prefLabel|xl:altLabel) is super-slow,
+					// so that's why we use this thing instead:
 					$filterQuery = "
 						FILTER (
 							EXISTS { GRAPH ?graph$n {
@@ -270,18 +303,48 @@ class Sparql extends Base
 				GRAPH ?graph {
 					?concept a ?conceptType ;
 						dct:identifier ?id ;
+						dct:modified ?upstream ;
 						xl:prefLabel ?labelNode .
 					?labelNode xl:literalForm ?label
 					FILTER(langMatches(lang(?label), "nb"))
 					FILTER NOT EXISTS { ?concept owl:deprecated true . }
 					VALUES ?conceptType { ' . implode(' ', $conceptTypes) . ' }
 				}
+				OPTIONAL { GRAPH <%localGraphUri%> {
+					?concept dct:modified ?modified .
+				}}
 				' . implode("\n", $filterQueries) . '
 			}';
 
+		switch ($sort) {
+			case 'upstream:desc':
+				$orderBy = 'DESC(?upstream)';
+				break;
+
+			case 'upstream:asc':
+				$orderBy = 'ASC(?upstream)';
+				break;
+
+			case 'modified:desc':
+				$orderBy = 'DESC(?modified)';
+				break;
+
+			case 'modified:asc':
+				$orderBy = 'ASC(?modified)';
+				break;
+
+			case 'label:desc':
+				$orderBy = 'DESC(?label)';
+				break;
+
+			default:
+				$orderBy = 'ASC(?label)';
+				break;
+		}
+
 		$countQuery = 'SELECT (COUNT(?concept) AS ?count)' . $whereQuery;
 		$selectQuery = 'SELECT ?graph ?concept ?id ?label' . $whereQuery . '
-			ORDER BY ?label ?id
+			ORDER BY ' . $orderBy . ' ASC(?id)
 			OFFSET '. $cursor . '
 			LIMIT ' . $limit . '
 		';
@@ -552,7 +615,7 @@ class Sparql extends Base
 
 			DELETE WHERE
 			{ GRAPH <%localGraphUri%>
-			  { <%uri%> dcterms:modified ?mod } 
+			  { <%uri%> dcterms:modified ?mod }
 			};
 
 			INSERT
@@ -865,6 +928,122 @@ class Sparql extends Base
                 'cls' => $this->valueToString(null, $tr->cls),
 			];
 			$events[] = $evt;
+		}
+		return ['events' => $events];
+    }
+
+	/**
+	 */
+	public function getEventsByDayAndType($limit=30)
+	{
+		$dt = Carbon::now();
+		$daynames = [];
+		$isodates = [];
+		$events = [];
+
+		$catMap = [
+			'uoc:SetPrefLabelEvent' => 'Translation',
+			'uoc:SetWikidataMappingEvent' => 'WikidataMapping',
+			'uoc:SetCategoriesEvent' => 'Categorization',
+			'uoc:SetAltLabelsEvent' => 'Translation',
+		];
+
+		setlocale(LC_TIME, 'nb_NO.utf8');
+
+		foreach (range(0, 7) as $n) {
+			$isodates[] = $dt->formatLocalized('%Y-%m-%d');
+			$daynames[] = $dt->formatLocalized('%A');
+			$dt->subDay();
+
+			// $daynames
+			$events[$isodates[$n]] = [
+				'day' => $daynames[$n],
+				'date' => $isodates[$n],
+				'events' => [
+					'Translation' => 0,
+					'WikidataMapping' => 0,
+					'Categorization' => 0,
+				],
+			];
+		}
+
+		$daysStr = '"' . implode('" "', $isodates) . '"';
+
+		$query = '
+			SELECT ?day ?cls (COUNT(?entry) as ?count)
+			WHERE
+			{
+				GRAPH <%eventsGraphUri%> {
+					?entry a uoc:Event ;
+						uop:type ?cls ;
+						uop:user ?user ;
+						dcterms:date ?date .
+				}
+				GRAPH <%userGraphUri%> {
+					?user a uo:User ;
+						uo:username ?username .
+				}
+				BIND(SUBSTR(str(?date), 0, 11) as ?day) .
+				FILTER(?username != "danmichaelo@gmail.com") .
+				VALUES ?day { ' . $daysStr . ' } .
+			}
+			GROUP BY ?day ?cls
+			ORDER BY DESC(?day)
+			LIMIT 30
+		';
+
+		$triples = $this->query($query, [
+			'eventsGraphUri' => $this->eventsGraphUri,
+			'userGraphUri' => $this->userGraphUri,
+		]);
+
+		foreach ($triples as $tr) {
+			$day = (string)$tr->day;
+			$cls = $this->valueToString(null, $tr->cls);
+			$cls = $catMap[$cls];
+			$events[$day]['events'][$cls] += $tr->count->getValue();
+		}
+		return ['events' => $events];
+    }
+
+	/**
+	 */
+	public function getEventsByDayAndUser($limit=30)
+	{
+		$query = '
+			SELECT ?day ?username (COUNT(?entry) as ?count)
+			WHERE
+			{
+				GRAPH <%eventsGraphUri%> {
+					?entry a uoc:Event ;
+						uop:user ?user ;
+						dcterms:date ?date .
+				}
+				GRAPH <%userGraphUri%> {
+					?user a uo:User ;
+						uo:username ?username .
+				}
+				FILTER(?username != "danmichaelo@gmail.com")
+				BIND(xsd:date(SUBSTR(str(?date), 0, 11)) as ?day)
+			}
+			GROUP BY ?day ?username
+			ORDER BY DESC(?day)
+			LIMIT 30
+		';
+
+		$triples = $this->query($query, [
+			'eventsGraphUri' => $this->eventsGraphUri,
+			'userGraphUri' => $this->userGraphUri,
+		]);
+
+		$events = [];
+		foreach ($triples as $tr) {
+			$day = $tr->day->format("Y-m-d");
+			$username = $this->valueToString(null, $tr->username);
+			if (!isset($events[$day])) {
+				$events[$day] = [];
+			}
+			$events[$day][$username] = $tr->count->getValue();
 		}
 		return ['events' => $events];
     }

@@ -10,6 +10,7 @@ angular.module('app.controllers.concepts', ['app.config', 'app.services.backend'
   // console.log($stateParams);
 
   $scope.filterobj = {};
+  $scope.sortobj = config.sortOptions[0];
   if ($stateParams.q) {
     $stateParams.q.split(',').forEach(function(p) {
       var filterKeys = config.filters.map(function(x) { return x.value; });
@@ -22,6 +23,13 @@ angular.module('app.controllers.concepts', ['app.config', 'app.services.backend'
         $scope.filterobj.query = p;
       }
     });
+  }
+  if ($stateParams.sort) {
+    var sortKeys = config.sortOptions.map(function(x) { return x.value; });
+    var f = config.sortOptions[sortKeys.indexOf($stateParams.sort)];
+    if (f !== undefined) {
+      $scope.sortobj = f;
+    }
   }
   if (!$scope.filterobj.select) {
     $scope.filterobj.select = config.filters[0];

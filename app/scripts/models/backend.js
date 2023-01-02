@@ -38,8 +38,8 @@ angular.module('app.services.backend', [])
     return getRequest('get_users');
   };
 
-  this.getConcepts = function(cursor, filter) {
-    return getRequest('get_concepts', {cursor: cursor, filter: filter});
+  this.getConcepts = function(cursor, filter, orderBy) {
+    return getRequest('get_concepts', {cursor: cursor, filter: filter, sort: orderBy});
   };
 
   this.getConcept = function(uri) {

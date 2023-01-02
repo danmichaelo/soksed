@@ -24,6 +24,8 @@
     "angular-ui-router": "~0.4.2",
     "angular-vs-repeat": "~1.1.7",
     "angular-tooltips": "~1.1.10",
-    "angucomplete-alt": "^3.0.0"
+    "angucomplete-alt": "^3.0.0",
+    "ng-scroll": "*",
+    "ng-scroll-pager": "*"
   }
 }
